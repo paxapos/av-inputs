@@ -20,8 +20,8 @@ export const config: Config = {
     },
     angularOutputTarget({
       componentCorePackage: 'input-file-from-webcam',
-      directivesProxyFile: 'angular/components.ts',
-      directivesArrayFile: 'angular/index.ts',
+      directivesProxyFile: 'dist/angular/components.ts',
+      directivesArrayFile: 'dist/angular/index.ts',
     }),
   ],
 };
