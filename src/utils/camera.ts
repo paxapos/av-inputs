@@ -9,7 +9,7 @@ export class CameraService {
 
     public fotoActual: any;
 
-    initCamera( elVideo: HTMLVideoElement, elCanvas: HTMLCanvasElement, facingMode: ConstrainDOMString = {exact: "user"} ) {
+    initCamera( elVideo: HTMLVideoElement, elCanvas: HTMLCanvasElement, facingMode: ConstrainDOMString = {exact: "user"}, drawImageCb: Function = null ) {
         this.resetCamera();
         this.elVideo = elVideo;
         this.canvas = elCanvas
@@ -29,7 +29,7 @@ export class CameraService {
                 this.stream = stream;
                 this.elVideo.srcObject = this.stream;
 
-                this.renderToCanvas();
+                this.renderToCanvas( drawImageCb );
             })
             .catch(function (err0r) {
                 console.log("Something went wrong!", err0r);
@@ -38,7 +38,7 @@ export class CameraService {
     }
 
 
-    renderToCanvas() {
+    renderToCanvas( drawImageCb: Function = null) {
 
         let ctx = this.canvas.getContext('2d');
 
@@ -52,7 +52,11 @@ export class CameraService {
     	var left = (imgWidth - imgSize) / 2;
     	var top = (imgHeight - imgSize) / 2;
 
-        ctx.drawImage(this.elVideo, left, top, imgSize, imgSize, 0,0, this.canvas.width, this.canvas.height);
+        if ( typeof drawImageCb == 'function' ) {
+            drawImageCb.call(ctx, this.elVideo, left, top, imgSize, imgSize, 0,0, this.canvas.width, this.canvas.height)
+        } else {
+            ctx.drawImage(this.elVideo, left, top, imgSize, imgSize, 0,0, this.canvas.width, this.canvas.height);
+        }
 
         requestAnimationFrame(() => this.renderToCanvas() );
 

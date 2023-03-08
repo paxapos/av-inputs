@@ -7,10 +7,22 @@
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 export namespace Components {
     interface InputFileFromWebcam {
-        "height": number;
+        /**
+          * you can pass a function and override the canvas.drawImage function so you can change the image adding filters or any kind of magin in your image  you just need to crear a function with all canvas.-drawImage arguments  here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
+         */
+        "drawImageCb"?: Function;
+        /**
+          * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
+         */
+        "facingMode"?: "user"|"environment";
+        "height"?: number;
         "takePic": () => Promise<File>;
-        "width": number;
+        "width"?: number;
     }
+}
+export interface InputFileFromWebcamCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLInputFileFromWebcamElement;
 }
 declare global {
     interface HTMLInputFileFromWebcamElement extends Components.InputFileFromWebcam, HTMLStencilElement {
@@ -25,7 +37,17 @@ declare global {
 }
 declare namespace LocalJSX {
     interface InputFileFromWebcam {
+        /**
+          * you can pass a function and override the canvas.drawImage function so you can change the image adding filters or any kind of magin in your image  you just need to crear a function with all canvas.-drawImage arguments  here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
+         */
+        "drawImageCb"?: Function;
+        /**
+          * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
+         */
+        "facingMode"?: "user"|"environment";
         "height"?: number;
+        "onFacingModeChanged"?: (event: InputFileFromWebcamCustomEvent<ConstrainDOMString>) => void;
+        "onPictureTaken"?: (event: InputFileFromWebcamCustomEvent<File>) => void;
         "width"?: number;
     }
     interface IntrinsicElements {

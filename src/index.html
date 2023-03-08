@@ -15,10 +15,15 @@
       const elInputFileFromWebcam = document.getElementById("my-input");
       console.info("elInputFileFromWebcam", elInputFileFromWebcam);
       elInputFileFromWebcam.addEventListener("click", (ev) => {
-        console.info("el evento es desde el INDEX", ev)
 
-        elInputFileFromWebcam.takePic().then( (pic) => console.info("la foto es", pic))
+        elInputFileFromWebcam.takePic().then( (pic) => console.info("I clicked and get this picture", pic))
       });
+
+
+      elInputFileFromWebcam.addEventListener("pictureTaken", (pic) => console.info("here is my pic from callback", pic))
+
+      elInputFileFromWebcam.addEventListener("facingModeChanged", (fm) => console.info("here is your facing Mode now", fm))
+
     </script>
 
     <style>
