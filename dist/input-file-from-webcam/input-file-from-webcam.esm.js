@@ -1,0 +1,2 @@
+import{p as e,b as a}from"./p-d57d6a67.js";export{s as setNonce}from"./p-d57d6a67.js";const c=()=>{const a=import.meta.url;const c={};if(a!==""){c.resourcesUrl=new URL(".",a).href}return e(c)};c().then((e=>a([["p-c3c4e36a",[[1,"input-file-from-webcam",{width:[2],height:[2],facingMode:[1,"facing-mode"],drawImageCb:[16],__facingMode:[32],takePic:[64]},[[0,"click","onClickHandler"]]]]]],e)));
+//# sourceMappingURL=input-file-from-webcam.esm.js.map
