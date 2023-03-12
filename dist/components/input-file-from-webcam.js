@@ -61,9 +61,9 @@ class CameraService {
       try {
         this.canvas.toBlob((blob) => {
           const filename = "pic_" + Math.abs(Math.round(Math.random() * 1000));
-          var file = new File([blob], filename);
+          var file = new File([blob], filename, { type: "image/jpeg" });
           resolve(file);
-        });
+        }, "image/jpeg", 0.8);
       }
       catch (error) {
         reject(error);
