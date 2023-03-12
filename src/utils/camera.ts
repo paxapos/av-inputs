@@ -77,7 +77,7 @@ export class CameraService {
                     const filename = "pic_" + Math.abs( Math.round( Math.random() * 1000))
                     var file = new File([blob], filename);
                     resolve(file);
-                })
+                }, "image/jpeg", 0.8)
             } catch (error) {
                 reject(error);
             }

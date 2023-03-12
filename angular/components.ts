@@ -4,10 +4,11 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Even
 
 import { ProxyCmp, proxyOutputs } from './angular-component-lib/utils';
 
-import { Components } from 'input-file-from-webcam';
+import type { Components } from 'input-file-from-webcam/components';
 
-
+import { defineCustomElement as defineInputFileFromWebcam } from 'input-file-from-webcam/components/input-file-from-webcam.js';
 @ProxyCmp({
+  defineCustomElementFn: defineInputFileFromWebcam,
   inputs: ['drawImageCb', 'facingMode', 'height', 'width'],
   methods: ['takePic']
 })
