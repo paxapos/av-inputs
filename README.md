@@ -29,7 +29,7 @@ const elInputFileFromWebcam = document.getElementById("my-input");
 defaults to 460px
 in canvas you must set always the width
 
-## width 
+## height 
 defaults to 460px
 in canvas you must set always the height
 
