@@ -4,15 +4,17 @@ export class InputFileFromWebcam {
   constructor() {
     this.width = 460;
     this.height = 460;
-    this.facingMode = null;
+    this.facingMode = "user";
     this.drawImageCb = null;
-    this.__facingMode = 'user';
   }
   async takePic() {
     // show a prompt
     const pic = await camera.takePic();
     this.pictureTaken.emit(pic);
     return pic;
+  }
+  async toggleCamera() {
+    this.__toogleFacingMode();
   }
   onClickHandler() {
     this.__toogleFacingMode();
@@ -22,19 +24,14 @@ export class InputFileFromWebcam {
    * you can block this behaviour by setting the facingMode Property
    */
   __toogleFacingMode() {
-    if (this.facingMode == null) {
-      // only change if no facinMode property was set
-      this.__facingMode = (this.__facingMode == "environment") ? "user" : "environment";
-      this.facingModeChanged.emit(this.__createfacingModeConstrainDOMString());
-    }
+    // only change if no facinMode property was set
+    this.facingMode = (this.facingMode != "user") ? "user" : "environment";
+    this.facingModeChanged.emit(this.facingMode);
   }
   __createfacingModeConstrainDOMString() {
-    return { ideal: this.__facingMode };
+    return { ideal: this.facingMode };
   }
   componentWillMount() {
-    if (this.facingMode) {
-      this.__facingMode = this.facingMode;
-    }
   }
   async componentDidRender() {
     camera.initCamera(this.elVideo, this.elCanvas, this.__createfacingModeConstrainDOMString(), this.drawImageCb);
@@ -97,11 +94,16 @@ export class InputFileFromWebcam {
       },
       "facingMode": {
         "type": "string",
-        "mutable": false,
+        "mutable": true,
         "complexType": {
-          "original": "\"user\"|\"environment\"",
+          "original": "cameratipes",
           "resolved": "\"environment\" | \"user\"",
-          "references": {}
+          "references": {
+            "cameratipes": {
+              "location": "local",
+              "path": "/home/alevilar/Works/input-file-from-webcam/src/components/input-file-from-webcam/input-file-from-webcam.tsx"
+            }
+          }
         },
         "required": false,
         "optional": true,
@@ -110,8 +112,8 @@ export class InputFileFromWebcam {
           "text": "FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value"
         },
         "attribute": "facing-mode",
-        "reflect": false,
-        "defaultValue": "null"
+        "reflect": true,
+        "defaultValue": "\"user\""
       },
       "drawImageCb": {
         "type": "unknown",
@@ -133,11 +135,6 @@ export class InputFileFromWebcam {
         },
         "defaultValue": "null"
       }
-    };
-  }
-  static get states() {
-    return {
-      "__facingMode": {}
     };
   }
   static get events() {
@@ -171,11 +168,12 @@ export class InputFileFromWebcam {
           "text": ""
         },
         "complexType": {
-          "original": "ConstrainDOMString",
-          "resolved": "ConstrainDOMStringParameters | string | string[]",
+          "original": "cameratipes",
+          "resolved": "\"environment\" | \"user\"",
           "references": {
-            "ConstrainDOMString": {
-              "location": "global"
+            "cameratipes": {
+              "location": "local",
+              "path": "/home/alevilar/Works/input-file-from-webcam/src/components/input-file-from-webcam/input-file-from-webcam.tsx"
             }
           }
         }
@@ -196,6 +194,22 @@ export class InputFileFromWebcam {
             }
           },
           "return": "Promise<File>"
+        },
+        "docs": {
+          "text": "",
+          "tags": []
+        }
+      },
+      "toggleCamera": {
+        "complexType": {
+          "signature": "() => Promise<void>",
+          "parameters": [],
+          "references": {
+            "Promise": {
+              "location": "global"
+            }
+          },
+          "return": "Promise<void>"
         },
         "docs": {
           "text": "",

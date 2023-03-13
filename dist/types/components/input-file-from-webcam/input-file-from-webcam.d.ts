@@ -1,13 +1,14 @@
 import { EventEmitter } from '../../stencil-public-runtime';
+export type cameratipes = "user" | "environment";
 export declare class InputFileFromWebcam {
   private elVideo;
   private elCanvas;
   width?: number;
   height?: number;
   /**
- * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
- */
-  facingMode?: "user" | "environment";
+   * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
+   */
+  facingMode?: cameratipes;
   /**
    * you can pass a function and override the canvas.drawImage function so you
    * can change the image adding filters or any kind of magin in your image
@@ -18,9 +19,9 @@ export declare class InputFileFromWebcam {
    */
   drawImageCb?: Function;
   takePic(): Promise<File>;
+  toggleCamera(): Promise<void>;
   pictureTaken: EventEmitter<File>;
-  facingModeChanged: EventEmitter<ConstrainDOMString>;
-  __facingMode: string;
+  facingModeChanged: EventEmitter<cameratipes>;
   onClickHandler(): void;
   /**
    * Toogle webcam, for example in mobile show front or back camera

@@ -1,5 +1,5 @@
-import { p as promiseResolve, b as bootstrapLazy } from './index-3064199e.js';
-export { s as setNonce } from './index-3064199e.js';
+import { p as promiseResolve, b as bootstrapLazy } from './index-c1c8f3ff.js';
+export { s as setNonce } from './index-c1c8f3ff.js';
 
 /*
  Stencil Client Patch Browser v3.1.0 | MIT Licensed | https://stenciljs.com
@@ -17,7 +17,7 @@ const patchBrowser = () => {
 };
 
 patchBrowser().then(options => {
-  return bootstrapLazy([["input-file-from-webcam",[[1,"input-file-from-webcam",{"width":[2],"height":[2],"facingMode":[1,"facing-mode"],"drawImageCb":[16],"__facingMode":[32],"takePic":[64]},[[0,"click","onClickHandler"]]]]]], options);
+  return bootstrapLazy([["input-file-from-webcam",[[1,"input-file-from-webcam",{"width":[2],"height":[2],"facingMode":[1537,"facing-mode"],"drawImageCb":[16],"takePic":[64],"toggleCamera":[64]},[[0,"click","onClickHandler"]]]]]], options);
 });
 
 //# sourceMappingURL=input-file-from-webcam.js.map

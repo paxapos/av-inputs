@@ -11,6 +11,8 @@
   <body>
     <input-file-from-webcam id="my-input"></input-file-from-webcam>
 
+    <button id="fm_change">Change facing mode</button>
+
     <script>
       const elInputFileFromWebcam = document.getElementById("my-input");
       console.info("elInputFileFromWebcam", elInputFileFromWebcam);
@@ -24,6 +26,11 @@
 
       elInputFileFromWebcam.addEventListener("facingModeChanged", (fm) => console.info("here is your facing Mode now", fm))
 
+
+      document.getElementById("fm_change").addEventListener("click", (e) =>  {
+        elInputFileFromWebcam.toggleCamera();
+        console.info("clickeo para cambiar camara");
+      })
     </script>
 
     <style>

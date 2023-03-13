@@ -84,15 +84,17 @@ const InputFileFromWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTM
     this.facingModeChanged = createEvent(this, "facingModeChanged", 6);
     this.width = 460;
     this.height = 460;
-    this.facingMode = null;
+    this.facingMode = "user";
     this.drawImageCb = null;
-    this.__facingMode = 'user';
   }
   async takePic() {
     // show a prompt
     const pic = await camera.takePic();
     this.pictureTaken.emit(pic);
     return pic;
+  }
+  async toggleCamera() {
+    this.__toogleFacingMode();
   }
   onClickHandler() {
     this.__toogleFacingMode();
@@ -102,19 +104,14 @@ const InputFileFromWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTM
    * you can block this behaviour by setting the facingMode Property
    */
   __toogleFacingMode() {
-    if (this.facingMode == null) {
-      // only change if no facinMode property was set
-      this.__facingMode = (this.__facingMode == "environment") ? "user" : "environment";
-      this.facingModeChanged.emit(this.__createfacingModeConstrainDOMString());
-    }
+    // only change if no facinMode property was set
+    this.facingMode = (this.facingMode != "user") ? "user" : "environment";
+    this.facingModeChanged.emit(this.facingMode);
   }
   __createfacingModeConstrainDOMString() {
-    return { ideal: this.__facingMode };
+    return { ideal: this.facingMode };
   }
   componentWillMount() {
-    if (this.facingMode) {
-      this.__facingMode = this.facingMode;
-    }
   }
   async componentDidRender() {
     camera.initCamera(this.elVideo, this.elCanvas, this.__createfacingModeConstrainDOMString(), this.drawImageCb);
@@ -129,10 +126,10 @@ const InputFileFromWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTM
 }, [1, "input-file-from-webcam", {
     "width": [2],
     "height": [2],
-    "facingMode": [1, "facing-mode"],
+    "facingMode": [1537, "facing-mode"],
     "drawImageCb": [16],
-    "__facingMode": [32],
-    "takePic": [64]
+    "takePic": [64],
+    "toggleCamera": [64]
   }, [[0, "click", "onClickHandler"]]]);
 function defineCustomElement$1() {
   if (typeof customElements === "undefined") {

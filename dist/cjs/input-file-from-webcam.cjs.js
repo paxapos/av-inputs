@@ -2,7 +2,7 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const index = require('./index-97ab21e5.js');
+const index = require('./index-4bc4af0e.js');
 
 /*
  Stencil Client Patch Browser v3.1.0 | MIT Licensed | https://stenciljs.com
@@ -20,7 +20,7 @@ const patchBrowser = () => {
 };
 
 patchBrowser().then(options => {
-  return index.bootstrapLazy([["input-file-from-webcam.cjs",[[1,"input-file-from-webcam",{"width":[2],"height":[2],"facingMode":[1,"facing-mode"],"drawImageCb":[16],"__facingMode":[32],"takePic":[64]},[[0,"click","onClickHandler"]]]]]], options);
+  return index.bootstrapLazy([["input-file-from-webcam.cjs",[[1,"input-file-from-webcam",{"width":[2],"height":[2],"facingMode":[1537,"facing-mode"],"drawImageCb":[16],"takePic":[64],"toggleCamera":[64]},[[0,"click","onClickHandler"]]]]]], options);
 });
 
 exports.setNonce = index.setNonce;

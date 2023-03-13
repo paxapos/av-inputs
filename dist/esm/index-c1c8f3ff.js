@@ -1,25 +1,3 @@
-'use strict';
-
-function _interopNamespace(e) {
-  if (e && e.__esModule) return e;
-  var n = Object.create(null);
-  if (e) {
-    Object.keys(e).forEach(function (k) {
-      if (k !== 'default') {
-        var d = Object.getOwnPropertyDescriptor(e, k);
-        Object.defineProperty(n, k, d.get ? d : {
-          enumerable: true,
-          get: function () {
-            return e[k];
-          }
-        });
-      }
-    });
-  }
-  n['default'] = e;
-  return Object.freeze(n);
-}
-
 const NAMESPACE = 'input-file-from-webcam';
 
 /**
@@ -731,9 +709,14 @@ const callNodeRefs = (vNode) => {
  */
 const renderVdom = (hostRef, renderFnResults) => {
     const hostElm = hostRef.$hostElement$;
+    const cmpMeta = hostRef.$cmpMeta$;
     const oldVNode = hostRef.$vnode$ || newVNode(null, null);
     const rootVnode = isHost(renderFnResults) ? renderFnResults : h(null, null, renderFnResults);
     hostTagName = hostElm.tagName;
+    if (cmpMeta.$attrsToReflect$) {
+        rootVnode.$attrs$ = rootVnode.$attrs$ || {};
+        cmpMeta.$attrsToReflect$.map(([propName, attribute]) => (rootVnode.$attrs$[attribute] = hostElm[propName]));
+    }
     rootVnode.$tag$ = null;
     rootVnode.$flags$ |= 4 /* VNODE_FLAGS.isHost */;
     hostRef.$vnode$ = rootVnode;
@@ -1038,6 +1021,9 @@ const proxyComponent = (Cstr, cmpMeta, flags) => {
                 .map(([propName, m]) => {
                 const attrName = m[1] || propName;
                 attrNameToPropName.set(attrName, propName);
+                if (m[0] & 512 /* MEMBER_FLAGS.ReflectAttr */) {
+                    cmpMeta.$attrsToReflect$.push([propName, attrName]);
+                }
                 return attrName;
             });
         }
@@ -1203,6 +1189,9 @@ const bootstrapLazy = (lazyBundles, options = {}) => {
             {
                 cmpMeta.$listeners$ = compactMeta[3];
             }
+            {
+                cmpMeta.$attrsToReflect$ = [];
+            }
             const tagName = cmpMeta.$tagName$;
             const HostElement = class extends HTMLElement {
                 // StencilLazyHost
@@ -1342,12 +1331,12 @@ const loadModule = (cmpMeta, hostRef, hmrVersionId) => {
         return module[exportName];
     }
     /*!__STENCIL_STATIC_IMPORT_SWITCH__*/
-    return Promise.resolve().then(function () { return /*#__PURE__*/_interopNamespace(require(
+    return import(
     /* @vite-ignore */
     /* webpackInclude: /\.entry\.js$/ */
     /* webpackExclude: /\.system\.entry\.js$/ */
     /* webpackMode: "lazy" */
-    `./${bundleId}.entry.js${''}`)); }).then((importedModule) => {
+    `./${bundleId}.entry.js${''}`).then((importedModule) => {
         {
             cmpModules.set(bundleId, importedModule);
         }
@@ -1419,12 +1408,6 @@ const flush = () => {
 const nextTick = /*@__PURE__*/ (cb) => promiseResolve().then(cb);
 const writeTask = /*@__PURE__*/ queueTask(queueDomWrites, true);
 
-exports.Host = Host;
-exports.bootstrapLazy = bootstrapLazy;
-exports.createEvent = createEvent;
-exports.h = h;
-exports.promiseResolve = promiseResolve;
-exports.registerInstance = registerInstance;
-exports.setNonce = setNonce;
+export { Host as H, bootstrapLazy as b, createEvent as c, h, promiseResolve as p, registerInstance as r, setNonce as s };
 
-//# sourceMappingURL=index-97ab21e5.js.map
+//# sourceMappingURL=index-c1c8f3ff.js.map

@@ -1,5 +1,7 @@
-import { Component, Host, h, Method, Listen, State, Prop, Event, EventEmitter } from '@stencil/core';
+import { Component, Host, h, Method, Listen, Prop, Event, EventEmitter } from '@stencil/core';
 import { camera } from '../../utils/camera';
+
+export type cameratipes = "user"|"environment"
 
 @Component({
   tag: 'input-file-from-webcam',
@@ -18,7 +20,7 @@ export class InputFileFromWebcam {
   /**
    * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
    */
-  @Prop({ mutable: true, reflect: true }) facingMode?: "user"|"environment" = "user"
+  @Prop({ mutable: true, reflect: true }) facingMode?: cameratipes = "user"
 
   /**
    * you can pass a function and override the canvas.drawImage function so you
@@ -39,7 +41,7 @@ export class InputFileFromWebcam {
   }
 
   @Method()
-  toggleCamera(): void {
+  async toggleCamera(): Promise<void>{
     this.__toogleFacingMode()
   }
 
@@ -56,7 +58,7 @@ export class InputFileFromWebcam {
     composed: true,
     cancelable: false,
     bubbles: true,
-  }) facingModeChanged: EventEmitter<ConstrainDOMString>;
+  }) facingModeChanged: EventEmitter<cameratipes>;
 
 
 
@@ -72,11 +74,9 @@ export class InputFileFromWebcam {
    * you can block this behaviour by setting the facingMode Property
    */
   private __toogleFacingMode() {
-    if ( this.facingMode == null) {
-      // only change if no facinMode property was set
-      this.facingMode = (this.facingMode == "environment") ? "user" : "environment"
-      this.facingModeChanged.emit( this.__createfacingModeConstrainDOMString() )
-    }
+    // only change if no facinMode property was set
+    this.facingMode = (this.facingMode != "user") ? "user" : "environment"
+    this.facingModeChanged.emit( this.facingMode   )
   }
 
   __createfacingModeConstrainDOMString(): ConstrainDOMString {

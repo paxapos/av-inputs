@@ -10,7 +10,7 @@ import { defineCustomElement as defineInputFileFromWebcam } from 'input-file-fro
 @ProxyCmp({
   defineCustomElementFn: defineInputFileFromWebcam,
   inputs: ['drawImageCb', 'facingMode', 'height', 'width'],
-  methods: ['takePic']
+  methods: ['takePic', 'toggleCamera']
 })
 @Component({
   selector: 'input-file-from-webcam',
@@ -29,11 +29,13 @@ export class InputFileFromWebcam {
 }
 
 
+import type { cameratipes as IInputFileFromWebcamcameratipes } from 'input-file-from-webcam/components';
+
 export declare interface InputFileFromWebcam extends Components.InputFileFromWebcam {
 
   pictureTaken: EventEmitter<CustomEvent<File>>;
 
-  facingModeChanged: EventEmitter<CustomEvent<ConstrainDOMString>>;
+  facingModeChanged: EventEmitter<CustomEvent<IInputFileFromWebcamcameratipes>>;
 }
 
 

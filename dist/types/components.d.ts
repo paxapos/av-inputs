@@ -5,6 +5,8 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "./stencil-public-runtime";
+import { cameratipes } from "./components/input-file-from-webcam/input-file-from-webcam";
+export { cameratipes } from "./components/input-file-from-webcam/input-file-from-webcam";
 export namespace Components {
     interface InputFileFromWebcam {
         /**
@@ -14,9 +16,10 @@ export namespace Components {
         /**
           * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
          */
-        "facingMode"?: "user"|"environment";
+        "facingMode"?: cameratipes;
         "height"?: number;
         "takePic": () => Promise<File>;
+        "toggleCamera": () => Promise<void>;
         "width"?: number;
     }
 }
@@ -44,9 +47,9 @@ declare namespace LocalJSX {
         /**
           * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
          */
-        "facingMode"?: "user"|"environment";
+        "facingMode"?: cameratipes;
         "height"?: number;
-        "onFacingModeChanged"?: (event: InputFileFromWebcamCustomEvent<ConstrainDOMString>) => void;
+        "onFacingModeChanged"?: (event: InputFileFromWebcamCustomEvent<cameratipes>) => void;
         "onPictureTaken"?: (event: InputFileFromWebcamCustomEvent<File>) => void;
         "width"?: number;
     }
