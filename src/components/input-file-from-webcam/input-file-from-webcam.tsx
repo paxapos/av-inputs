@@ -15,10 +15,10 @@ export class InputFileFromWebcam {
   @Prop() width?: number = 460
   @Prop() height?: number = 460
 
-    /**
+  /**
    * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
    */
-  @Prop() facingMode?: "user"|"environment" = null
+  @Prop({ mutable: true, reflect: true }) facingMode?: "user"|"environment" = "user"
 
   /**
    * you can pass a function and override the canvas.drawImage function so you
@@ -38,6 +38,11 @@ export class InputFileFromWebcam {
     return pic
   }
 
+  @Method()
+  toggleCamera(): void {
+    this.__toogleFacingMode()
+  }
+
 
   @Event({
     eventName: 'pictureTaken',
@@ -54,8 +59,6 @@ export class InputFileFromWebcam {
   }) facingModeChanged: EventEmitter<ConstrainDOMString>;
 
 
-  @State() __facingMode: string = 'user'
-
 
   @Listen('click')
   onClickHandler() {
@@ -71,20 +74,18 @@ export class InputFileFromWebcam {
   private __toogleFacingMode() {
     if ( this.facingMode == null) {
       // only change if no facinMode property was set
-      this.__facingMode = (this.__facingMode == "environment") ? "user" : "environment"
+      this.facingMode = (this.facingMode == "environment") ? "user" : "environment"
       this.facingModeChanged.emit( this.__createfacingModeConstrainDOMString() )
     }
   }
 
   __createfacingModeConstrainDOMString(): ConstrainDOMString {
-    return {ideal: this.__facingMode}
+    return {ideal: this.facingMode}
   }
 
 
   componentWillMount() {
-    if ( this.facingMode) {
-      this.__facingMode = this.facingMode
-    }
+   
 
   }
   
