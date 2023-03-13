@@ -57,10 +57,18 @@ functionCallback.call(ctx, elVideo, left, top, imgSize, imgSize, 0,0, this.canva
 # Methods
 
 ## takePic
-yoy can easily take a picture by calling this method in your element
+you can easily take a picture by calling this method in your element
 
 ```js
     elInputFileFromWebcam.takePic().then( (pic) => console.info("here is your picture", pic))
+```
+
+
+## toggleCamera
+Change front or back camera
+
+```js
+    elInputFileFromWebcam.toggleCamera()
 ```
 
 
