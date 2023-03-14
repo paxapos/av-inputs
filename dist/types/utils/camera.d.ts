@@ -4,7 +4,8 @@ export declare class CameraService {
   canvas: HTMLCanvasElement;
   constructor();
   fotoActual: any;
-  initCamera(elVideo: HTMLVideoElement, elCanvas: HTMLCanvasElement, facingMode?: ConstrainDOMString, drawImageCb?: Function): void;
+  capacitorTakePicture(): Promise<import("@capacitor/camera").Photo>;
+  initCamera(elVideo: HTMLVideoElement, elCanvas: HTMLCanvasElement, facingMode?: ConstrainDOMString, drawImageCb?: Function): Promise<void>;
   renderToCanvas(drawImageCb?: Function): void;
   resetCamera(): void;
   takePic(): Promise<File>;

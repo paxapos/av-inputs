@@ -1,12 +1,28 @@
+import { Camera, CameraResultType } from '@capacitor/camera';
 export class CameraService {
   constructor() {
   }
-  initCamera(elVideo, elCanvas, facingMode = { exact: "user" }, drawImageCb = null) {
+  async capacitorTakePicture() {
+    const image = await Camera.getPhoto({
+      quality: 90,
+      allowEditing: true,
+      resultType: CameraResultType.Base64
+    });
+    /*
+    const blob = new Blob([new Uint8Array(decode(image.base64String))], {
+      type: `image/${image.format}`,
+  });
+  */
+    return image;
+  }
+  async initCamera(elVideo, elCanvas, facingMode = { exact: "user" }, drawImageCb = null) {
+    var _a;
+    console.info(await this.capacitorTakePicture());
     this.resetCamera();
     this.elVideo = elVideo;
     this.canvas = elCanvas;
     this.elVideo.parentNode.insertBefore(this.canvas, this.elVideo.nextSibling);
-    if (navigator.mediaDevices.getUserMedia) {
+    if ((_a = navigator === null || navigator === void 0 ? void 0 : navigator.mediaDevices) === null || _a === void 0 ? void 0 : _a.getUserMedia) {
       navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {

@@ -1,3 +1,4 @@
+import { Camera, CameraResultType } from '@capacitor/camera';
 
 export class CameraService {
 
@@ -9,14 +10,35 @@ export class CameraService {
 
     public fotoActual: any;
 
-    initCamera( elVideo: HTMLVideoElement, elCanvas: HTMLCanvasElement, facingMode: ConstrainDOMString = {exact: "user"}, drawImageCb: Function = null ) {
+
+    async capacitorTakePicture() {
+        const image = await Camera.getPhoto({
+            quality: 90,
+            allowEditing: true,
+            resultType: CameraResultType.Base64
+          });
+
+          /*
+          const blob = new Blob([new Uint8Array(decode(image.base64String))], {
+            type: `image/${image.format}`,
+        });
+        */
+        
+         return image;
+    }
+
+    async initCamera( elVideo: HTMLVideoElement, elCanvas: HTMLCanvasElement, facingMode: ConstrainDOMString = {exact: "user"}, drawImageCb: Function = null ) {
+        
+       console.info( await this.capacitorTakePicture() )
+        
         this.resetCamera();
         this.elVideo = elVideo;
         this.canvas = elCanvas
         
         this.elVideo.parentNode.insertBefore(this.canvas, this.elVideo.nextSibling);
 
-        if (navigator.mediaDevices.getUserMedia) {
+
+        if (navigator?.mediaDevices?.getUserMedia) {
             navigator.mediaDevices.getUserMedia({
                 audio: false,
                 video: {
@@ -35,6 +57,7 @@ export class CameraService {
                 console.log("Something went wrong!", err0r);
             });
         }
+
     }
 
 
