@@ -1,5 +1,11 @@
 # input-file-from-webcam
-stencil js component for adding an &lt;input /> style component that stores a File (picture) from webcam. Showing a video preview.
+stencil.js component that shows the webcam and allow you to take pictures easily and changes from to back camera with one click
+
+![image](https://user-images.githubusercontent.com/222193/225028312-5d30ae4c-4c49-4665-9d49-6d0977e5e2d9.png)
+
+
+
+
 
 
 # How it works?
