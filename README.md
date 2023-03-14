@@ -1,6 +1,11 @@
 # input-file-from-webcam
 stencil.js component that shows the webcam and allow you to take pictures easily and changes from to back camera with one click
 
+
+```html
+<input-file-from-webcam id="my-input"></input-file-from-webcam>
+```
+
 ![image](https://user-images.githubusercontent.com/222193/225028312-5d30ae4c-4c49-4665-9d49-6d0977e5e2d9.png)
 
 
@@ -15,9 +20,7 @@ just add:
 npm install https://github.com/alevilar/input-file-from-webcam
 
 
-```html
-<input-file-from-webcam id="my-input"></input-file-from-webcam>
-```
+
 
 
 ```js
