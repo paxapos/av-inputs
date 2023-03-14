@@ -33,12 +33,12 @@ in canvas you must set always the width
 defaults to 460px
 in canvas you must set always the height
 
-## facingMode 
+## facing-mode 
 we uses "user" or "environment" but you have others. If you don't write this property. the element will change facinbg Mode each time you click the element
 
 For more FacingModel optiones you cant read here https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
 
-## callback for drawing on cangas 
+## callback for drawing on canvas 
 you can override the default behaviour by adding a callback function here.
 if you put something here. will execute this function for doing a canvas.drawImage
 
