@@ -5,17 +5,25 @@ export class WebCamera {
   }
   async initCamera(parentElement, direction, drawImageCb = null) {
     this.resetCamera();
-    if (!this.elVideo) {
+    const videos = parentElement.getElementsByTagName("video");
+    if (videos.length == 0) {
       this.elVideo = document.createElement("video");
       this.elVideo.autoplay = true;
       this.elVideo.style.display = "none";
       parentElement.appendChild(this.elVideo);
     }
-    if (!this.canvas) {
+    else {
+      this.elVideo = videos[0];
+    }
+    const canvasss = parentElement.getElementsByTagName("canvas");
+    if (canvasss.length === 0) {
       this.canvas = document.createElement("canvas");
       this.canvas.width = parseInt(parentElement.getAttribute("width"));
       this.canvas.height = parseInt(parentElement.getAttribute("height"));
       parentElement.appendChild(this.canvas);
+    }
+    else {
+      this.canvas = canvasss[0];
     }
     this.direction = CameraDirection.Front;
     if (navigator.mediaDevices.getUserMedia) {
