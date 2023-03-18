@@ -1,44 +1,51 @@
-import { Camera, CameraResultType } from '@capacitor/camera';
+import { Camera, CameraDirection, CameraResultType } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
-export class CameraService {
+
+interface SuperCamera {
+    initCamera(parentElement: HTMLElement, direction: CameraDirection, drawImageCb: Function): Promise<void>,
+    takePicture(): Promise<Blob>,
+    resetCamera(): void,
+}
+
+
+export class WebCamera implements SuperCamera {
 
     elVideo: HTMLVideoElement;
     stream: MediaStream;
     canvas: HTMLCanvasElement;
+    direction: CameraDirection
+
     constructor() {
     }
 
     public fotoActual: any;
 
-
-    async capacitorTakePicture() {
-        const image = await Camera.getPhoto({
-            quality: 90,
-            allowEditing: true,
-            resultType: CameraResultType.Base64
-          });
-
-          /*
-          const blob = new Blob([new Uint8Array(decode(image.base64String))], {
-            type: `image/${image.format}`,
-        });
-        */
-        
-         return image;
-    }
-
-    async initCamera( elVideo: HTMLVideoElement, elCanvas: HTMLCanvasElement, facingMode: ConstrainDOMString = {exact: "user"}, drawImageCb: Function = null ) {
-        
-       console.info( await this.capacitorTakePicture() )
+    async initCamera( parentElement: HTMLElement, direction: CameraDirection, drawImageCb: Function = null ) {
         
         this.resetCamera();
-        this.elVideo = elVideo;
-        this.canvas = elCanvas
+
+        if ( !this.elVideo ) {
+            this.elVideo = document.createElement("video")
+            this.elVideo.autoplay = true;
+            this.elVideo.style.display = "none"
+            parentElement.appendChild( this.elVideo )
+        }
         
-        this.elVideo.parentNode.insertBefore(this.canvas, this.elVideo.nextSibling);
+        if ( !this.canvas ) {
+            this.canvas = document.createElement("canvas")
+            this.canvas.width = parseInt( parentElement.getAttribute("width") );
+            this.canvas.height = parseInt( parentElement.getAttribute("height") );
+            parentElement.appendChild( this.canvas )
+        }
 
 
-        if (navigator?.mediaDevices?.getUserMedia) {
+        this.direction = CameraDirection.Front
+        
+        if (navigator.mediaDevices.getUserMedia) {
+            console.info("la camara")
+            const facingMode = (direction == CameraDirection.Front) ? "user": "environment"
+
             navigator.mediaDevices.getUserMedia({
                 audio: false,
                 video: {
@@ -49,6 +56,7 @@ export class CameraService {
             })
             .then((stream) => {
                 this.stream = stream;
+                console.info("la camara", this.stream)
                 this.elVideo.srcObject = this.stream;
 
                 this.renderToCanvas( drawImageCb );
@@ -57,7 +65,6 @@ export class CameraService {
                 console.log("Something went wrong!", err0r);
             });
         }
-
     }
 
 
@@ -93,7 +100,7 @@ export class CameraService {
         if (this.elVideo) this.elVideo.srcObject = null;
     }
 
-    async takePic(): Promise<File> {
+    async takePicture(): Promise<File> {
         return new Promise((resolve, reject) => {
             try {
                 this.canvas.toBlob( (blob) => {
@@ -111,4 +118,65 @@ export class CameraService {
 
 }
 
-export const camera = new CameraService();
+
+export class CapacitorCamera implements SuperCamera {
+
+    async initCamera( ) {
+
+    }
+
+    async takePicture(): Promise<Blob>{
+        const image = await Camera.getPhoto({
+            quality: 90,
+            allowEditing: true,
+            direction: CameraDirection.Front,
+            resultType: CameraResultType.Base64
+          });
+
+        const base64Data = image.base64String;
+        const contentType = 'image/jpeg'; // or image/png, depending on the format of the image
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: contentType });
+        return blob;
+    }
+
+    resetCamera(): void{
+
+    }
+
+}
+
+export class CameraService {
+
+    private camaraManager: SuperCamera
+
+    constructor() {
+        if ( Capacitor.getPlatform() === 'web' ) {
+            this.camaraManager = new WebCamera()
+        } else {
+            this.camaraManager = new CapacitorCamera()
+        }
+    }
+
+
+    async initCamera( parentElement: HTMLElement, cameraDirection: CameraDirection , drawImageCb: Function = null ) {
+       this.camaraManager.initCamera( parentElement, cameraDirection, drawImageCb )
+    }
+
+    async takePicture(): Promise<Blob> {
+        return await this.camaraManager.takePicture()
+    }
+
+    async resetCamera() {
+
+    }
+}
+
+
+
+export const camera = new CameraService()

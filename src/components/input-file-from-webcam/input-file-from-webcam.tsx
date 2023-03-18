@@ -1,7 +1,7 @@
-import { Component, Host, h, Method, Listen, Prop, Event, EventEmitter } from '@stencil/core';
+import { CameraDirection } from '@capacitor/camera';
+import { Component, Host, h, Method, Listen, Prop, Event, EventEmitter, Element } from '@stencil/core';
 import { camera } from '../../utils/camera';
 
-export type cameratipes = "user"|"environment"
 
 @Component({
   tag: 'input-file-from-webcam',
@@ -10,17 +10,17 @@ export type cameratipes = "user"|"environment"
 })
 export class InputFileFromWebcam {
 
-  private elVideo: HTMLVideoElement
-  private elCanvas: HTMLCanvasElement
+
+  @Element() el: HTMLElement;
 
 
-  @Prop() width?: number = 460
-  @Prop() height?: number = 460
+  @Prop({reflect: true, mutable: true}) width?: number = 460
+  @Prop({reflect: true, mutable: true}) height?: number = 460
 
   /**
    * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
    */
-  @Prop({ mutable: true, reflect: true }) facingMode?: cameratipes = "user"
+  @Prop({ mutable: true, reflect: true }) facingMode?: CameraDirection = CameraDirection.Front
 
   /**
    * you can pass a function and override the canvas.drawImage function so you
@@ -33,9 +33,9 @@ export class InputFileFromWebcam {
   @Prop() drawImageCb?: Function = null
 
   @Method()
-  async takePic(): Promise<File> {
+  async takePic(): Promise<Blob> {
     // show a prompt
-    const pic = await camera.takePic()
+    const pic = await camera.takePicture()
     this.pictureTaken.emit(pic);
     return pic
   }
@@ -51,14 +51,14 @@ export class InputFileFromWebcam {
     composed: true,
     cancelable: false,
     bubbles: true,
-  }) pictureTaken: EventEmitter<File>;
+  }) pictureTaken: EventEmitter<Blob>;
 
   @Event({
     eventName: 'facingModeChanged',
     composed: true,
     cancelable: false,
     bubbles: true,
-  }) facingModeChanged: EventEmitter<cameratipes>;
+  }) facingModeChanged: EventEmitter<CameraDirection>;
 
 
 
@@ -75,22 +75,18 @@ export class InputFileFromWebcam {
    */
   private __toogleFacingMode() {
     // only change if no facinMode property was set
-    this.facingMode = (this.facingMode != "user") ? "user" : "environment"
+    this.facingMode = (this.facingMode != CameraDirection.Front) ? CameraDirection.Front : CameraDirection.Rear
     this.facingModeChanged.emit( this.facingMode   )
   }
 
-  __createfacingModeConstrainDOMString(): ConstrainDOMString {
-    return {ideal: this.facingMode}
-  }
-
+ 
 
   componentWillMount() {
    
-
   }
   
   async componentDidRender() {
-    camera.initCamera( this.elVideo, this.elCanvas, this.__createfacingModeConstrainDOMString(), this.drawImageCb );
+    camera.initCamera( this.el, CameraDirection.Front, this.drawImageCb );
   }
 
   async disconnectedCallback() {
@@ -99,11 +95,9 @@ export class InputFileFromWebcam {
 
   render() {
     return (
-      <Host>
+      <Host style={{height: this.height+"px", width: this.width+"px"}}>
 
         <slot name='before'></slot>
-        <video autoplay="true" ref={(el) => this.elVideo = el }></video>
-        <canvas ref={(el) => this.elCanvas = el } width={this.width} height={this.height}></canvas>
         
         <slot></slot>
 

@@ -1,14 +1,13 @@
+import { CameraDirection } from '@capacitor/camera';
 import { EventEmitter } from '../../stencil-public-runtime';
-export type cameratipes = "user" | "environment";
 export declare class InputFileFromWebcam {
-  private elVideo;
-  private elCanvas;
+  el: HTMLElement;
   width?: number;
   height?: number;
   /**
    * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
    */
-  facingMode?: cameratipes;
+  facingMode?: CameraDirection;
   /**
    * you can pass a function and override the canvas.drawImage function so you
    * can change the image adding filters or any kind of magin in your image
@@ -18,17 +17,16 @@ export declare class InputFileFromWebcam {
    * here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
    */
   drawImageCb?: Function;
-  takePic(): Promise<File>;
+  takePic(): Promise<Blob>;
   toggleCamera(): Promise<void>;
-  pictureTaken: EventEmitter<File>;
-  facingModeChanged: EventEmitter<cameratipes>;
+  pictureTaken: EventEmitter<Blob>;
+  facingModeChanged: EventEmitter<CameraDirection>;
   onClickHandler(): void;
   /**
    * Toogle webcam, for example in mobile show front or back camera
    * you can block this behaviour by setting the facingMode Property
    */
   private __toogleFacingMode;
-  __createfacingModeConstrainDOMString(): ConstrainDOMString;
   componentWillMount(): void;
   componentDidRender(): Promise<void>;
   disconnectedCallback(): Promise<void>;
