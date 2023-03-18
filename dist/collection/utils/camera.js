@@ -124,6 +124,7 @@ export class CameraService {
     return await this.camaraManager.takePicture();
   }
   async resetCamera() {
+    return await this.camaraManager.resetCamera();
   }
 }
 export const camera = new CameraService();

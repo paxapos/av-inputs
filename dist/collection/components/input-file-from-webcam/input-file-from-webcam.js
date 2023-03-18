@@ -14,6 +14,10 @@ export class InputFileFromWebcam {
     this.pictureTaken.emit(pic);
     return pic;
   }
+  async resetCamera() {
+    // show a prompt
+    camera.resetCamera();
+  }
   async toggleCamera() {
     this.__toogleFacingMode();
   }
@@ -192,6 +196,22 @@ export class InputFileFromWebcam {
             }
           },
           "return": "Promise<Blob>"
+        },
+        "docs": {
+          "text": "",
+          "tags": []
+        }
+      },
+      "resetCamera": {
+        "complexType": {
+          "signature": "() => Promise<void>",
+          "parameters": [],
+          "references": {
+            "Promise": {
+              "location": "global"
+            }
+          },
+          "return": "Promise<void>"
         },
         "docs": {
           "text": "",

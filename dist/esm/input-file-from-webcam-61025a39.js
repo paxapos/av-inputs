@@ -1,6 +1,4 @@
-'use strict';
-
-const index = require('./index-b1cac988.js');
+import { r as registerInstance, c as createEvent, h, H as Host, g as getElement } from './index-6a3f1e31.js';
 
 /*! Capacitor: https://capacitorjs.com/ - MIT License */
 
@@ -598,7 +596,7 @@ registerPlugin('CapacitorHttp', {
     web: () => new CapacitorHttpPluginWeb(),
 });
 
-exports.CameraSource = void 0;
+var CameraSource;
 (function (CameraSource) {
     /**
      * Prompts the user to select either the photo album or take a photo.
@@ -612,12 +610,12 @@ exports.CameraSource = void 0;
      * Pick an existing photo from the gallery or photo album.
      */
     CameraSource["Photos"] = "PHOTOS";
-})(exports.CameraSource || (exports.CameraSource = {}));
-exports.CameraDirection = void 0;
+})(CameraSource || (CameraSource = {}));
+var CameraDirection;
 (function (CameraDirection) {
     CameraDirection["Rear"] = "REAR";
     CameraDirection["Front"] = "FRONT";
-})(exports.CameraDirection || (exports.CameraDirection = {}));
+})(CameraDirection || (CameraDirection = {}));
 var CameraResultType;
 (function (CameraResultType) {
     CameraResultType["Uri"] = "uri";
@@ -626,7 +624,7 @@ var CameraResultType;
 })(CameraResultType || (CameraResultType = {}));
 
 const Camera = registerPlugin('Camera', {
-    web: () => Promise.resolve().then(function () { return require('./web-46eef82b.js'); }).then(m => new m.CameraWeb()),
+    web: () => import('./web-9870cffa.js').then(m => new m.CameraWeb()),
 });
 
 class WebCamera {
@@ -646,10 +644,10 @@ class WebCamera {
       this.canvas.height = parseInt(parentElement.getAttribute("height"));
       parentElement.appendChild(this.canvas);
     }
-    this.direction = exports.CameraDirection.Front;
+    this.direction = CameraDirection.Front;
     if (navigator.mediaDevices.getUserMedia) {
       console.info("la camara");
-      const facingMode = (direction == exports.CameraDirection.Front) ? "user" : "environment";
+      const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
       navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
@@ -720,7 +718,7 @@ class CapacitorCamera {
     const image = await Camera.getPhoto({
       quality: 90,
       allowEditing: true,
-      direction: exports.CameraDirection.Front,
+      direction: CameraDirection.Front,
       resultType: CameraResultType.Base64
     });
     const base64Data = image.base64String;
@@ -753,6 +751,7 @@ class CameraService {
     return await this.camaraManager.takePicture();
   }
   async resetCamera() {
+    return await this.camaraManager.resetCamera();
   }
 }
 const camera = new CameraService();
@@ -761,12 +760,12 @@ const inputFileFromWebcamCss = ":host{display:inline-block;width:100px;filter:dr
 
 const InputFileFromWebcam = class {
   constructor(hostRef) {
-    index.registerInstance(this, hostRef);
-    this.pictureTaken = index.createEvent(this, "pictureTaken", 6);
-    this.facingModeChanged = index.createEvent(this, "facingModeChanged", 6);
+    registerInstance(this, hostRef);
+    this.pictureTaken = createEvent(this, "pictureTaken", 6);
+    this.facingModeChanged = createEvent(this, "facingModeChanged", 6);
     this.width = 460;
     this.height = 460;
-    this.facingMode = exports.CameraDirection.Front;
+    this.facingMode = CameraDirection.Front;
     this.drawImageCb = null;
   }
   async takePic() {
@@ -774,6 +773,10 @@ const InputFileFromWebcam = class {
     const pic = await camera.takePicture();
     this.pictureTaken.emit(pic);
     return pic;
+  }
+  async resetCamera() {
+    // show a prompt
+    camera.resetCamera();
   }
   async toggleCamera() {
     this.__toogleFacingMode();
@@ -787,26 +790,24 @@ const InputFileFromWebcam = class {
    */
   __toogleFacingMode() {
     // only change if no facinMode property was set
-    this.facingMode = (this.facingMode != exports.CameraDirection.Front) ? exports.CameraDirection.Front : exports.CameraDirection.Rear;
+    this.facingMode = (this.facingMode != CameraDirection.Front) ? CameraDirection.Front : CameraDirection.Rear;
     this.facingModeChanged.emit(this.facingMode);
   }
   componentWillMount() {
   }
   async componentDidRender() {
-    camera.initCamera(this.el, exports.CameraDirection.Front, this.drawImageCb);
+    camera.initCamera(this.el, CameraDirection.Front, this.drawImageCb);
   }
   async disconnectedCallback() {
     camera.resetCamera();
   }
   render() {
-    return (index.h(index.Host, { style: { height: this.height + "px", width: this.width + "px" } }, index.h("slot", { name: 'before' }), index.h("slot", null), index.h("slot", { name: 'after' })));
+    return (h(Host, { style: { height: this.height + "px", width: this.width + "px" } }, h("slot", { name: 'before' }), h("slot", null), h("slot", { name: 'after' })));
   }
-  get el() { return index.getElement(this); }
+  get el() { return getElement(this); }
 };
 InputFileFromWebcam.style = inputFileFromWebcamCss;
 
-exports.CapacitorException = CapacitorException;
-exports.InputFileFromWebcam = InputFileFromWebcam;
-exports.WebPlugin = WebPlugin;
+export { CameraSource as C, InputFileFromWebcam as I, WebPlugin as W, CameraDirection as a, CapacitorException as b };
 
-//# sourceMappingURL=input-file-from-webcam-061dc859.js.map
+//# sourceMappingURL=input-file-from-webcam-61025a39.js.map

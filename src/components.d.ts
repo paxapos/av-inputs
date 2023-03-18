@@ -18,6 +18,7 @@ export namespace Components {
          */
         "facingMode"?: CameraDirection;
         "height"?: number;
+        "resetCamera": () => Promise<void>;
         "takePic": () => Promise<Blob>;
         "toggleCamera": () => Promise<void>;
         "width"?: number;

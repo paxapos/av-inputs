@@ -173,7 +173,7 @@ export class CameraService {
     }
 
     async resetCamera() {
-
+        return await this.camaraManager.resetCamera()
     }
 }
 

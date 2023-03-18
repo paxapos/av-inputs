@@ -751,6 +751,7 @@ class CameraService {
     return await this.camaraManager.takePicture();
   }
   async resetCamera() {
+    return await this.camaraManager.resetCamera();
   }
 }
 const camera = new CameraService();
@@ -774,6 +775,10 @@ const InputFileFromWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTM
     const pic = await camera.takePicture();
     this.pictureTaken.emit(pic);
     return pic;
+  }
+  async resetCamera() {
+    // show a prompt
+    camera.resetCamera();
   }
   async toggleCamera() {
     this.__toogleFacingMode();
@@ -809,6 +814,7 @@ const InputFileFromWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTM
     "facingMode": [1537, "facing-mode"],
     "drawImageCb": [16],
     "takePic": [64],
+    "resetCamera": [64],
     "toggleCamera": [64]
   }, [[0, "click", "onClickHandler"]]]);
 function defineCustomElement$1() {

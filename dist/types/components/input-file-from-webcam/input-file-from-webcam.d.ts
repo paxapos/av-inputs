@@ -18,6 +18,7 @@ export declare class InputFileFromWebcam {
    */
   drawImageCb?: Function;
   takePic(): Promise<Blob>;
+  resetCamera(): Promise<void>;
   toggleCamera(): Promise<void>;
   pictureTaken: EventEmitter<Blob>;
   facingModeChanged: EventEmitter<CameraDirection>;

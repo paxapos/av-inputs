@@ -25,6 +25,16 @@
 
 ## Methods
 
+### `resetCamera() => Promise<void>`
+
+
+
+#### Returns
+
+Type: `Promise<void>`
+
+
+
 ### `takePic() => Promise<Blob>`
 
 

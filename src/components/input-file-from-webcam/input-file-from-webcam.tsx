@@ -41,6 +41,12 @@ export class InputFileFromWebcam {
   }
 
   @Method()
+  async resetCamera(): Promise<void> {
+    // show a prompt
+    camera.resetCamera()
+  }
+
+  @Method()
   async toggleCamera(): Promise<void>{
     this.__toogleFacingMode()
   }

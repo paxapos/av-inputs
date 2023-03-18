@@ -10,7 +10,7 @@ import { defineCustomElement as defineInputFileFromWebcam } from 'input-file-fro
 @ProxyCmp({
   defineCustomElementFn: defineInputFileFromWebcam,
   inputs: ['drawImageCb', 'facingMode', 'height', 'width'],
-  methods: ['takePic', 'toggleCamera']
+  methods: ['takePic', 'resetCamera', 'toggleCamera']
 })
 @Component({
   selector: 'input-file-from-webcam',

@@ -1,6 +1,6 @@
 'use strict';
 
-const inputFileFromWebcam_entry = require('./input-file-from-webcam-061dc859.js');
+const inputFileFromWebcam_entry = require('./input-file-from-webcam-ea6179d4.js');
 require('./index-b1cac988.js');
 
 class CameraWeb extends inputFileFromWebcam_entry.WebPlugin {
@@ -249,4 +249,4 @@ const Camera = new CameraWeb();
 exports.Camera = Camera;
 exports.CameraWeb = CameraWeb;
 
-//# sourceMappingURL=web-46eef82b.js.map
+//# sourceMappingURL=web-f5d653d6.js.map

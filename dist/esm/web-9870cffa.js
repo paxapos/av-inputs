@@ -1,4 +1,4 @@
-import { W as WebPlugin, C as CameraSource, a as CameraDirection, b as CapacitorException } from './input-file-from-webcam-74034e22.js';
+import { W as WebPlugin, C as CameraSource, a as CameraDirection, b as CapacitorException } from './input-file-from-webcam-61025a39.js';
 import './index-6a3f1e31.js';
 
 class CameraWeb extends WebPlugin {
@@ -246,4 +246,4 @@ const Camera = new CameraWeb();
 
 export { Camera, CameraWeb };
 
-//# sourceMappingURL=web-0110f983.js.map
+//# sourceMappingURL=web-9870cffa.js.map
