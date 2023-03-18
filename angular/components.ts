@@ -29,13 +29,13 @@ export class InputFileFromWebcam {
 }
 
 
-import type { cameratipes as IInputFileFromWebcamcameratipes } from 'input-file-from-webcam/components';
+import type { CameraDirection as IInputFileFromWebcamCameraDirection } from 'input-file-from-webcam/components';
 
 export declare interface InputFileFromWebcam extends Components.InputFileFromWebcam {
 
-  pictureTaken: EventEmitter<CustomEvent<File>>;
+  pictureTaken: EventEmitter<CustomEvent<Blob>>;
 
-  facingModeChanged: EventEmitter<CustomEvent<IInputFileFromWebcamcameratipes>>;
+  facingModeChanged: EventEmitter<CustomEvent<IInputFileFromWebcamCameraDirection>>;
 }
 
 
