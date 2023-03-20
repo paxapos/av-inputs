@@ -2,7 +2,7 @@
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
-const inputFileFromWebcam_entry = require('./input-file-from-webcam-130fdca9.js');
+const inputFileFromWebcam_entry = require('./input-file-from-webcam-bc5aa86d.js');
 require('./index-b1cac988.js');
 
 

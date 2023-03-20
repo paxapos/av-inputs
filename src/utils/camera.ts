@@ -162,11 +162,10 @@ export class CameraService {
     private camaraManager: SuperCamera
 
     constructor() {
-        if ( Capacitor.getPlatform() === 'web' ) {
-            this.camaraManager = new WebCamera()
-        } else {
-            this.camaraManager = new CapacitorCamera()
+        if ( Capacitor.getPlatform() !== 'web' ) {
+        //    this.camaraManager = new CapacitorCamera()
         }
+        this.camaraManager = new WebCamera()
     }
 
 

@@ -118,12 +118,10 @@ export class CapacitorCamera {
 }
 export class CameraService {
   constructor() {
-    if (Capacitor.getPlatform() === 'web') {
-      this.camaraManager = new WebCamera();
+    if (Capacitor.getPlatform() !== 'web') {
+      //    this.camaraManager = new CapacitorCamera()
     }
-    else {
-      this.camaraManager = new CapacitorCamera();
-    }
+    this.camaraManager = new WebCamera();
   }
   async initCamera(parentElement, cameraDirection, drawImageCb = null) {
     this.camaraManager.initCamera(parentElement, cameraDirection, drawImageCb);

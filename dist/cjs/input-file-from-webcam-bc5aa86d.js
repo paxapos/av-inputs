@@ -625,8 +625,8 @@ var CameraResultType;
     CameraResultType["DataUrl"] = "dataUrl";
 })(CameraResultType || (CameraResultType = {}));
 
-const Camera = registerPlugin('Camera', {
-    web: () => Promise.resolve().then(function () { return require('./web-f5a7792e.js'); }).then(m => new m.CameraWeb()),
+registerPlugin('Camera', {
+    web: () => Promise.resolve().then(function () { return require('./web-d697ec81.js'); }).then(m => new m.CameraWeb()),
 });
 
 class WebCamera {
@@ -721,38 +721,10 @@ class WebCamera {
     });
   }
 }
-class CapacitorCamera {
-  async initCamera() {
-  }
-  async takePicture() {
-    const image = await Camera.getPhoto({
-      quality: 90,
-      allowEditing: true,
-      direction: exports.CameraDirection.Front,
-      resultType: CameraResultType.Base64
-    });
-    const base64Data = image.base64String;
-    const contentType = 'image/jpeg'; // or image/png, depending on the format of the image
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: contentType });
-    return blob;
-  }
-  resetCamera() {
-  }
-}
 class CameraService {
   constructor() {
-    if (Capacitor.getPlatform() === 'web') {
-      this.camaraManager = new WebCamera();
-    }
-    else {
-      this.camaraManager = new CapacitorCamera();
-    }
+    if (Capacitor.getPlatform() !== 'web') ;
+    this.camaraManager = new WebCamera();
   }
   async initCamera(parentElement, cameraDirection, drawImageCb = null) {
     this.camaraManager.initCamera(parentElement, cameraDirection, drawImageCb);
@@ -822,4 +794,4 @@ exports.CapacitorException = CapacitorException;
 exports.InputFileFromWebcam = InputFileFromWebcam;
 exports.WebPlugin = WebPlugin;
 
-//# sourceMappingURL=input-file-from-webcam-130fdca9.js.map
+//# sourceMappingURL=input-file-from-webcam-bc5aa86d.js.map

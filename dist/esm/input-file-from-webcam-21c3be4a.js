@@ -623,8 +623,8 @@ var CameraResultType;
     CameraResultType["DataUrl"] = "dataUrl";
 })(CameraResultType || (CameraResultType = {}));
 
-const Camera = registerPlugin('Camera', {
-    web: () => import('./web-297ca955.js').then(m => new m.CameraWeb()),
+registerPlugin('Camera', {
+    web: () => import('./web-7312efa4.js').then(m => new m.CameraWeb()),
 });
 
 class WebCamera {
@@ -719,38 +719,10 @@ class WebCamera {
     });
   }
 }
-class CapacitorCamera {
-  async initCamera() {
-  }
-  async takePicture() {
-    const image = await Camera.getPhoto({
-      quality: 90,
-      allowEditing: true,
-      direction: CameraDirection.Front,
-      resultType: CameraResultType.Base64
-    });
-    const base64Data = image.base64String;
-    const contentType = 'image/jpeg'; // or image/png, depending on the format of the image
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: contentType });
-    return blob;
-  }
-  resetCamera() {
-  }
-}
 class CameraService {
   constructor() {
-    if (Capacitor.getPlatform() === 'web') {
-      this.camaraManager = new WebCamera();
-    }
-    else {
-      this.camaraManager = new CapacitorCamera();
-    }
+    if (Capacitor.getPlatform() !== 'web') ;
+    this.camaraManager = new WebCamera();
   }
   async initCamera(parentElement, cameraDirection, drawImageCb = null) {
     this.camaraManager.initCamera(parentElement, cameraDirection, drawImageCb);
@@ -818,4 +790,4 @@ InputFileFromWebcam.style = inputFileFromWebcamCss;
 
 export { CameraSource as C, InputFileFromWebcam as I, WebPlugin as W, CameraDirection as a, CapacitorException as b };
 
-//# sourceMappingURL=input-file-from-webcam-a3a214a6.js.map
+//# sourceMappingURL=input-file-from-webcam-21c3be4a.js.map

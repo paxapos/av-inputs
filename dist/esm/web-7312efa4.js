@@ -1,16 +1,14 @@
-'use strict';
+import { W as WebPlugin, C as CameraSource, a as CameraDirection, b as CapacitorException } from './input-file-from-webcam-21c3be4a.js';
+import './index-6a3f1e31.js';
 
-const inputFileFromWebcam_entry = require('./input-file-from-webcam-130fdca9.js');
-require('./index-b1cac988.js');
-
-class CameraWeb extends inputFileFromWebcam_entry.WebPlugin {
+class CameraWeb extends WebPlugin {
     async getPhoto(options) {
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
-            if (options.webUseInput || options.source === inputFileFromWebcam_entry.CameraSource.Photos) {
+            if (options.webUseInput || options.source === CameraSource.Photos) {
                 this.fileInputExperience(options, resolve);
             }
-            else if (options.source === inputFileFromWebcam_entry.CameraSource.Prompt) {
+            else if (options.source === CameraSource.Prompt) {
                 let actionSheet = document.querySelector('pwa-action-sheet');
                 if (!actionSheet) {
                     actionSheet = document.createElement('pwa-action-sheet');
@@ -47,14 +45,14 @@ class CameraWeb extends inputFileFromWebcam_entry.WebPlugin {
         if (customElements.get('pwa-camera-modal')) {
             const cameraModal = document.createElement('pwa-camera-modal');
             cameraModal.facingMode =
-                options.direction === inputFileFromWebcam_entry.CameraDirection.Front ? 'user' : 'environment';
+                options.direction === CameraDirection.Front ? 'user' : 'environment';
             document.body.appendChild(cameraModal);
             try {
                 await cameraModal.componentOnReady();
                 cameraModal.addEventListener('onPhoto', async (e) => {
                     const photo = e.detail;
                     if (photo === null) {
-                        reject(new inputFileFromWebcam_entry.CapacitorException('User cancelled photos app'));
+                        reject(new CapacitorException('User cancelled photos app'));
                     }
                     else if (photo instanceof Error) {
                         reject(photo);
@@ -129,14 +127,14 @@ class CameraWeb extends inputFileFromWebcam_entry.WebPlugin {
         }
         input.accept = 'image/*';
         input.capture = true;
-        if (options.source === inputFileFromWebcam_entry.CameraSource.Photos ||
-            options.source === inputFileFromWebcam_entry.CameraSource.Prompt) {
+        if (options.source === CameraSource.Photos ||
+            options.source === CameraSource.Prompt) {
             input.removeAttribute('capture');
         }
-        else if (options.direction === inputFileFromWebcam_entry.CameraDirection.Front) {
+        else if (options.direction === CameraDirection.Front) {
             input.capture = 'user';
         }
-        else if (options.direction === inputFileFromWebcam_entry.CameraDirection.Rear) {
+        else if (options.direction === CameraDirection.Rear) {
             input.capture = 'environment';
         }
         input.click();
@@ -246,7 +244,6 @@ class CameraWeb extends inputFileFromWebcam_entry.WebPlugin {
 }
 const Camera = new CameraWeb();
 
-exports.Camera = Camera;
-exports.CameraWeb = CameraWeb;
+export { Camera, CameraWeb };
 
-//# sourceMappingURL=web-f5a7792e.js.map
+//# sourceMappingURL=web-7312efa4.js.map
