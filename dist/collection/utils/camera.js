@@ -1,5 +1,8 @@
-import { Camera, CameraDirection, CameraResultType } from '@capacitor/camera';
-import { Capacitor } from '@capacitor/core';
+export var CameraDirection;
+(function (CameraDirection) {
+  CameraDirection["Rear"] = "REAR";
+  CameraDirection["Front"] = "FRONT";
+})(CameraDirection || (CameraDirection = {}));
 export class WebCamera {
   constructor() {
   }
@@ -92,35 +95,8 @@ export class WebCamera {
     });
   }
 }
-export class CapacitorCamera {
-  async initCamera() {
-  }
-  async takePicture() {
-    const image = await Camera.getPhoto({
-      quality: 90,
-      allowEditing: true,
-      direction: CameraDirection.Front,
-      resultType: CameraResultType.Base64
-    });
-    const base64Data = image.base64String;
-    const contentType = 'image/jpeg'; // or image/png, depending on the format of the image
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: contentType });
-    return blob;
-  }
-  resetCamera() {
-  }
-}
 export class CameraService {
   constructor() {
-    if (Capacitor.getPlatform() !== 'web') {
-      //    this.camaraManager = new CapacitorCamera()
-    }
     this.camaraManager = new WebCamera();
   }
   async initCamera(parentElement, cameraDirection, drawImageCb = null) {

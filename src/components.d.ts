@@ -5,8 +5,8 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
-import { CameraDirection } from "@capacitor/camera";
-export { CameraDirection } from "@capacitor/camera";
+import { CameraDirection } from "./utils/camera";
+export { CameraDirection } from "./utils/camera";
 export namespace Components {
     interface InputFileFromWebcam {
         /**

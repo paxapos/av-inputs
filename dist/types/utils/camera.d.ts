@@ -1,4 +1,7 @@
-import { CameraDirection } from '@capacitor/camera';
+export declare enum CameraDirection {
+  Rear = "REAR",
+  Front = "FRONT"
+}
 interface SuperCamera {
   initCamera(parentElement: HTMLElement, direction: CameraDirection, drawImageCb: Function): Promise<void>;
   takePicture(): Promise<Blob>;
@@ -15,11 +18,6 @@ export declare class WebCamera implements SuperCamera {
   renderToCanvas(drawImageCb?: Function): void;
   resetCamera(): void;
   takePicture(): Promise<File>;
-}
-export declare class CapacitorCamera implements SuperCamera {
-  initCamera(): Promise<void>;
-  takePicture(): Promise<Blob>;
-  resetCamera(): void;
 }
 export declare class CameraService {
   private camaraManager;

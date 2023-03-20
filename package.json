@@ -26,7 +26,6 @@
     "generate": "stencil generate"
   },
   "dependencies": {
-    "@capacitor/camera": "^4.1.4",
     "@stencil/core": "^3.0.0"
   },
   "devDependencies": {

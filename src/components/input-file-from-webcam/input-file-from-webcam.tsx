@@ -1,6 +1,5 @@
-import { CameraDirection } from '@capacitor/camera';
 import { Component, Host, h, Method, Listen, Prop, Event, EventEmitter, Element } from '@stencil/core';
-import { camera } from '../../utils/camera';
+import { CameraDirection, camera } from '../../utils/camera';
 
 
 @Component({

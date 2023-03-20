@@ -1,6 +1,5 @@
-import { CameraDirection } from '@capacitor/camera';
 import { Host, h } from '@stencil/core';
-import { camera } from '../../utils/camera';
+import { CameraDirection, camera } from '../../utils/camera';
 export class InputFileFromWebcam {
   constructor() {
     this.width = 460;
@@ -103,7 +102,7 @@ export class InputFileFromWebcam {
           "references": {
             "CameraDirection": {
               "location": "import",
-              "path": "@capacitor/camera"
+              "path": "../../utils/camera"
             }
           }
         },
@@ -175,7 +174,7 @@ export class InputFileFromWebcam {
           "references": {
             "CameraDirection": {
               "location": "import",
-              "path": "@capacitor/camera"
+              "path": "../../utils/camera"
             }
           }
         }
