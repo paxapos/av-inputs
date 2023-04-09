@@ -5,9 +5,18 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
-import { CameraDirection } from "./utils/camera";
-export { CameraDirection } from "./utils/camera";
+import { FaceDetection } from "face-api.js";
+import { CameraDirection } from "./utils/camera.service";
+export { FaceDetection } from "face-api.js";
+export { CameraDirection } from "./utils/camera.service";
 export namespace Components {
+    interface InputFaceApiWebcam {
+        "height"?: number;
+        "photoPicMinValue"?: number;
+        "startDetection": () => Promise<void>;
+        "stopDetection": () => Promise<void>;
+        "width"?: number;
+    }
     interface InputFileFromWebcam {
         /**
           * you can pass a function and override the canvas.drawImage function so you can change the image adding filters or any kind of magin in your image  you just need to crear a function with all canvas.-drawImage arguments  here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
@@ -24,11 +33,21 @@ export namespace Components {
         "width"?: number;
     }
 }
+export interface InputFaceApiWebcamCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLInputFaceApiWebcamElement;
+}
 export interface InputFileFromWebcamCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLInputFileFromWebcamElement;
 }
 declare global {
+    interface HTMLInputFaceApiWebcamElement extends Components.InputFaceApiWebcam, HTMLStencilElement {
+    }
+    var HTMLInputFaceApiWebcamElement: {
+        prototype: HTMLInputFaceApiWebcamElement;
+        new (): HTMLInputFaceApiWebcamElement;
+    };
     interface HTMLInputFileFromWebcamElement extends Components.InputFileFromWebcam, HTMLStencilElement {
     }
     var HTMLInputFileFromWebcamElement: {
@@ -36,10 +55,18 @@ declare global {
         new (): HTMLInputFileFromWebcamElement;
     };
     interface HTMLElementTagNameMap {
+        "input-face-api-webcam": HTMLInputFaceApiWebcamElement;
         "input-file-from-webcam": HTMLInputFileFromWebcamElement;
     }
 }
 declare namespace LocalJSX {
+    interface InputFaceApiWebcam {
+        "height"?: number;
+        "onFaceDetected"?: (event: InputFaceApiWebcamCustomEvent<Blob>) => void;
+        "onFaceMinValueError"?: (event: InputFaceApiWebcamCustomEvent<FaceDetection>) => void;
+        "photoPicMinValue"?: number;
+        "width"?: number;
+    }
     interface InputFileFromWebcam {
         /**
           * you can pass a function and override the canvas.drawImage function so you can change the image adding filters or any kind of magin in your image  you just need to crear a function with all canvas.-drawImage arguments  here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
@@ -55,6 +82,7 @@ declare namespace LocalJSX {
         "width"?: number;
     }
     interface IntrinsicElements {
+        "input-face-api-webcam": InputFaceApiWebcam;
         "input-file-from-webcam": InputFileFromWebcam;
     }
 }
@@ -62,6 +90,7 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
+            "input-face-api-webcam": LocalJSX.InputFaceApiWebcam & JSXBase.HTMLAttributes<HTMLInputFaceApiWebcamElement>;
             "input-file-from-webcam": LocalJSX.InputFileFromWebcam & JSXBase.HTMLAttributes<HTMLInputFileFromWebcamElement>;
         }
     }

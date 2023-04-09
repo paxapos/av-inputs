@@ -9,28 +9,56 @@
     <script nomodule src="/build/input-file-from-webcam.js"></script>
   </head>
   <body>
-    <input-file-from-webcam id="my-input"></input-file-from-webcam>
 
-    <button id="fm_change">Change facing mode</button>
+    <!--
+    <input-file-from-webcam id="my-input" autodetect></input-file-from-webcam>
+
+    <button id="fm_change">Change facing mode</button>  
+      -->
+    <input-face-api-webcam id="faceapi-input" photo-pic-min-value="350"></input-face-api-from-webcam>
+    <button id="fm_change_2">Change facing mode</button>
+
 
     <script>
       const elInputFileFromWebcam = document.getElementById("my-input");
-      console.info("elInputFileFromWebcam", elInputFileFromWebcam);
-      elInputFileFromWebcam.addEventListener("click", (ev) => {
+      if ( elInputFileFromWebcam ) {
 
-        elInputFileFromWebcam.takePic().then( (pic) => console.info("I clicked and get this picture", pic))
-      });
+        console.info("elInputFileFromWebcam", elInputFileFromWebcam);
+        elInputFileFromWebcam.addEventListener("click", (ev) => {
+  
+          elInputFileFromWebcam.takePic().then( (pic) => console.info("I clicked and get this picture", pic))
+        });
+  
+  
+        elInputFileFromWebcam.addEventListener("pictureTaken", (pic) => console.info("here is my pic from callback", pic))
+  
+        elInputFileFromWebcam.addEventListener("facingModeChanged", (fm) => console.info("here is your facing Mode now", fm))
+  
+  
+        document.getElementById("fm_change").addEventListener("click", (e) =>  {
+          elInputFileFromWebcam.toggleCamera();
+          console.info("clickeo para cambiar camara");
+        })
+      }
+
+      const elInputFaceApi = document.getElementById("faceapi-input");
+      if ( elInputFaceApi ) {
+        elInputFaceApi.addEventListener('faceDetected', (e) => {
+          console.info("face detected", e.detail)
+          // e.detail is a blob, need to put this value into an img tag
+          const img = document.createElement("img");
+          img.src = URL.createObjectURL(e.detail);
+          document.body.appendChild(img);
+          
+          elInputFaceApi.stopDetection();
+        })
 
 
-      elInputFileFromWebcam.addEventListener("pictureTaken", (pic) => console.info("here is my pic from callback", pic))
-
-      elInputFileFromWebcam.addEventListener("facingModeChanged", (fm) => console.info("here is your facing Mode now", fm))
+        elInputFaceApi.addEventListener('faceMinValueError', (e) => console.info("face detectd small", e.detail))
 
 
-      document.getElementById("fm_change").addEventListener("click", (e) =>  {
-        elInputFileFromWebcam.toggleCamera();
-        console.info("clickeo para cambiar camara");
-      })
+
+      }
     </script>
 
     <style>

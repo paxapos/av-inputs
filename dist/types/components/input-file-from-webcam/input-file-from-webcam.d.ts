@@ -1,5 +1,5 @@
 import { EventEmitter } from '../../stencil-public-runtime';
-import { CameraDirection } from '../../utils/camera';
+import { CameraDirection } from '../../utils/camera.service';
 export declare class InputFileFromWebcam {
   el: HTMLElement;
   width?: number;

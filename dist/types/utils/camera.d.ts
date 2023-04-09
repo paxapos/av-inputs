@@ -1,7 +1,4 @@
-export declare enum CameraDirection {
-  Rear = "REAR",
-  Front = "FRONT"
-}
+import { CameraDirection } from "./camera.service";
 interface SuperCamera {
   initCamera(parentElement: HTMLElement, direction: CameraDirection, drawImageCb: Function): Promise<void>;
   takePicture(): Promise<Blob>;

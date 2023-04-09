@@ -1,8 +1,6 @@
+import { createVideo, createCanvas, CameraDirection } from "./camera.service";
 
-export enum CameraDirection {
-    Rear = "REAR",
-    Front = "FRONT"
-}
+
 
 interface SuperCamera {
     initCamera(parentElement: HTMLElement, direction: CameraDirection, drawImageCb: Function): Promise<void>,
@@ -27,26 +25,8 @@ export class WebCamera implements SuperCamera {
         
         this.resetCamera();
 
-        const videos = parentElement.getElementsByTagName("video");
-        if ( videos.length == 0 ) {
-            this.elVideo = document.createElement("video")
-            this.elVideo.autoplay = true;
-            this.elVideo.style.display = "none"
-            parentElement.appendChild( this.elVideo )
-        } else {
-            this.elVideo = videos[0]
-        }
-        
-        const canvasss = parentElement.getElementsByTagName("canvas");
-        if ( canvasss.length === 0 ) {
-            this.canvas = document.createElement("canvas")
-            this.canvas.width = parseInt( parentElement.getAttribute("width") );
-            this.canvas.height = parseInt( parentElement.getAttribute("height") );
-            parentElement.appendChild( this.canvas )
-        } else {
-            this.canvas = canvasss[0]
-        }
-
+        this.elVideo = createVideo(parentElement)
+        this.canvas = createCanvas(parentElement)
 
         this.direction = CameraDirection.Front
         
