@@ -24,7 +24,7 @@
     "test": "stencil test --spec --e2e",
     "test.watch": "stencil test --spec --e2e --watchAll",
     "generate": "stencil generate",
-    "publish": "npm version patch && npm run build && npm publish && git push --follow-tags"
+    "publish": "npm version patch && npm publish"
   },
   "dependencies": {
     "@stencil/core": "^3.0.0",

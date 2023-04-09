@@ -15,12 +15,19 @@ export class InputFaceApiWebcam {
     this.isDetecting = true;
   }
   async componentWillLoad() {
+    this.video = createVideo();
+    //this.el.appendChild(this.video)
+    this.canvas = createCanvas(this.el);
+    this.el.appendChild(this.canvas);
+    this.photoCanvas = createCanvas(this.el);
   }
   async componentDidRender() {
-    this.video = createVideo(this.el);
-    this.canvas = createCanvas(this.el);
+    this.canvas.width = parseInt(this.el.getAttribute("width"));
+    this.canvas.height = parseInt(this.el.getAttribute("height"));
+    this.photoCanvas.width = parseInt(this.el.getAttribute("width"));
+    this.photoCanvas.height = parseInt(this.el.getAttribute("height"));
     initWebcamToVideo(this.video);
-    this.faceapiService = new FaceapiService(this.video, this.canvas);
+    this.faceapiService = new FaceapiService();
     this.webcamRender();
   }
   async disconnectedCallback() {
@@ -40,19 +47,19 @@ export class InputFaceApiWebcam {
     else {
       h = w;
     }
+    console.info("result", result);
     //centrar la imagen
     const x = result.box.x - (w - result.box.width) / 2;
     const y = result.box.y - (h - result.box.height) / 2;
-    if (w > this.photoPicMinValue) {
-      // zom video into canvas
-      this.canvas.getContext('2d').drawImage(this.video, x, y, w, h, 0, 0, this.canvas.width, this.canvas.height);
-      // this faceDetected emit blob from this.canvas
-      this.canvas.toBlob((blob) => {
-        this.faceDetected.emit(blob);
-      }, 'image/jpeg', 1);
-      return true;
-    }
-    return false;
+    // eliminar la imagen del canvas
+    this.photoCanvas.getContext('2d').clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height);
+    // zom video into canvas
+    this.photoCanvas.getContext('2d').drawImage(this.canvas, x, y, w, h, 0, 0, this.canvas.width, this.canvas.height);
+    // this faceDetected emit blob from this.canvas
+    this.photoCanvas.toBlob((blob) => {
+      this.faceDetected.emit(blob);
+    }, 'image/jpeg', 1);
+    return true;
   }
   drawCanvasNoFace() {
     this.canvas.getContext('2d').drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
@@ -62,17 +69,14 @@ export class InputFaceApiWebcam {
       this.webcamRender();
     });
     if (this.isDetecting) {
-      const result = await this.faceapiService.detectFace();
-      this.canvas.getContext('2d').clearRect(0, 0, this.canvas.width, this.canvas.height);
+      const result = await this.faceapiService.detectFace(this.canvas);
       if (result) {
         if (!this.__processReturn(result)) {
           this.faceMinValueError.emit(result);
           this.drawCanvasNoFace();
         }
       }
-      else {
-        this.drawCanvasNoFace();
-      }
+      this.drawCanvasNoFace();
     }
   }
   ;

@@ -25,8 +25,15 @@ export class WebCamera implements SuperCamera {
         
         this.resetCamera();
 
-        this.elVideo = createVideo(parentElement)
-        this.canvas = createCanvas(parentElement)
+        if ( !this.elVideo ) {
+            this.elVideo = createVideo()
+            parentElement.appendChild(this.elVideo)
+        }
+
+        if ( !this.canvas ) {
+            this.canvas = createCanvas(parentElement)
+            parentElement.appendChild(this.canvas)
+        }
 
         this.direction = CameraDirection.Front
         

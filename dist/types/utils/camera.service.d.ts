@@ -6,7 +6,7 @@ export declare enum CameraDirection {
  * Crea un HTMLVideoElement en el parentElement dado, siempre y cuando no exista
  * @param parentElement
  */
-export declare function createVideo(parentElement: HTMLElement): HTMLVideoElement;
+export declare function createVideo(): HTMLVideoElement;
 /**
  * Crea un HTMLCanvasElement en el parentElement dado, siempre y cuando no exista
  * @param parentElement

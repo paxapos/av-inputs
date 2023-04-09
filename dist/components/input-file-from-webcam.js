@@ -6,8 +6,14 @@ class WebCamera {
   }
   async initCamera(parentElement, direction, drawImageCb = null) {
     this.resetCamera();
-    this.elVideo = createVideo(parentElement);
-    this.canvas = createCanvas(parentElement);
+    if (!this.elVideo) {
+      this.elVideo = createVideo();
+      parentElement.appendChild(this.elVideo);
+    }
+    if (!this.canvas) {
+      this.canvas = createCanvas(parentElement);
+      parentElement.appendChild(this.canvas);
+    }
     this.direction = CameraDirection.Front;
     if (navigator.mediaDevices.getUserMedia) {
       console.info("la camara");

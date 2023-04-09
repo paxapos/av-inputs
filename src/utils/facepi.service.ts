@@ -6,13 +6,9 @@ import * as faceapi from 'face-api.js';
  * 
 */
 export class FaceapiService {
-    video: HTMLVideoElement
-    canvas: HTMLCanvasElement
     modelLoaded = false;
 
-    constructor(video: HTMLVideoElement, canvas: HTMLCanvasElement) {
-        this.video = video;
-        this.canvas = canvas;
+    constructor() {
 
         // init models
         const MODEL_URL = getAssetPath('/assets/models');
@@ -21,7 +17,7 @@ export class FaceapiService {
         });
     }
 
-    async detectFace():  Promise<faceapi.FaceDetection> {
+    async detectFace(el:HTMLVideoElement|HTMLCanvasElement):  Promise<faceapi.FaceDetection> {
         if ( this.modelLoaded ) {
             // TinyFaceDetectorOptions
             const inputSize = 192
@@ -29,7 +25,7 @@ export class FaceapiService {
             
             const ops = new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold })
 
-            return await faceapi.detectSingleFace(this.video, ops)
+            return await faceapi.detectSingleFace(el, ops)
         }
     }
 }

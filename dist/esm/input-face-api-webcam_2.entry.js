@@ -1,9 +1,4 @@
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-const index = require('./index-038bef98.js');
-const camera_service = require('./camera.service-da84ba87.js');
+import { g as getAssetPath, r as registerInstance, c as createEvent, h as h$1, H as Host, a as getElement } from './index-43de6b73.js';
 
 /**
  * @license
@@ -1088,7 +1083,7 @@ function getMediaDimensions(input) {
     return new Dimensions(input.width, input.height);
 }
 
-function createCanvas(_a) {
+function createCanvas$1(_a) {
     var width = _a.width, height = _a.height;
     var createCanvasElement = env.getEnv().createCanvasElement;
     var canvas = createCanvasElement();
@@ -1102,7 +1097,7 @@ function createCanvasFromMedia(media, dims) {
         throw new Error('createCanvasFromMedia - media has not finished loading yet');
     }
     var _a = dims || getMediaDimensions(media), width = _a.width, height = _a.height;
-    var canvas = createCanvas({ width: width, height: height });
+    var canvas = createCanvas$1({ width: width, height: height });
     if (media instanceof ImageData) {
         getContext2dOrThrow(canvas).putImageData(media, 0, 0);
     }
@@ -1148,7 +1143,7 @@ function imageToSquare(input, inputSize, centerImage) {
     var scale = inputSize / Math.max(dims.height, dims.width);
     var width = scale * dims.width;
     var height = scale * dims.height;
-    var targetCanvas = createCanvas({ width: inputSize, height: inputSize });
+    var targetCanvas = createCanvas$1({ width: inputSize, height: inputSize });
     var inputCanvas = input instanceof Canvas ? input : createCanvasFromMedia(input);
     var offset = Math.abs(width - height) / 2;
     var dx = centerImage && width < height ? offset : 0;
@@ -1387,7 +1382,7 @@ function extractFaces(input, detections) {
                         .map(function (box) { return box.clipAtImageBorders(canvas.width, canvas.height); });
                     return [2 /*return*/, boxes.map(function (_a) {
                             var x = _a.x, y = _a.y, width = _a.width, height = _a.height;
-                            var faceImg = createCanvas({ width: width, height: height });
+                            var faceImg = createCanvas$1({ width: width, height: height });
                             getContext2dOrThrow(faceImg)
                                 .putImageData(ctx.getImageData(x, y, width, height), 0, 0);
                             return faceImg;
@@ -4607,7 +4602,7 @@ function extractImagePatches(img, boxes, _a) {
                     bitmaps = _b.sent();
                     imagePatchesDatas = [];
                     bitmaps.forEach(function (bmp) {
-                        var patch = createCanvas({ width: width, height: height });
+                        var patch = createCanvas$1({ width: width, height: height });
                         var patchCtx = getContext2dOrThrow(patch);
                         patchCtx.drawImage(bmp, 0, 0, width, height);
                         var data = patchCtx.getImageData(0, 0, width, height).data;
@@ -5603,24 +5598,70 @@ function euclideanDistance(arr1, arr2) {
  *
 */
 class FaceapiService {
-  constructor(video, canvas) {
+  constructor() {
     this.modelLoaded = false;
-    this.video = video;
-    this.canvas = canvas;
     // init models
-    const MODEL_URL = index.getAssetPath('/assets/models');
+    const MODEL_URL = getAssetPath('/assets/models');
     nets.tinyFaceDetector.loadFromUri(MODEL_URL).then(() => {
       this.modelLoaded = true;
     });
   }
-  async detectFace() {
+  async detectFace(el) {
     if (this.modelLoaded) {
       // TinyFaceDetectorOptions
       const inputSize = 192;
       const scoreThreshold = 0.7;
       const ops = new TinyFaceDetectorOptions({ inputSize, scoreThreshold });
-      return await detectSingleFace(this.video, ops);
+      return await detectSingleFace(el, ops);
     }
+  }
+}
+
+var CameraDirection;
+(function (CameraDirection) {
+  CameraDirection["Rear"] = "REAR";
+  CameraDirection["Front"] = "FRONT";
+})(CameraDirection || (CameraDirection = {}));
+/**
+ * Crea un HTMLVideoElement en el parentElement dado, siempre y cuando no exista
+ * @param parentElement
+ */
+function createVideo() {
+  // no existe, lo creo
+  const video = document.createElement("video");
+  video.autoplay = true;
+  video.style.display = "none";
+  return video;
+}
+/**
+ * Crea un HTMLCanvasElement en el parentElement dado, siempre y cuando no exista
+ * @param parentElement
+ */
+function createCanvas(parentElement) {
+  // no existe, lo creo
+  const canvas = document.createElement("canvas");
+  canvas.width = parseInt(parentElement.getAttribute("width"));
+  canvas.height = parseInt(parentElement.getAttribute("height"));
+  return canvas;
+}
+function initWebcamToVideo(video, direction = CameraDirection.Front) {
+  if (navigator.mediaDevices.getUserMedia) {
+    console.info("la camara");
+    const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
+    navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        width: { min: 200 },
+        height: { min: 200 },
+        facingMode: facingMode
+      }
+    })
+      .then((stream) => {
+      video.srcObject = stream;
+    })
+      .catch(function (err0r) {
+      console.log("Something went wrong!", err0r);
+    });
   }
 }
 
@@ -5628,9 +5669,9 @@ const inputFaceApiWebcamCss = ":host{display:block}";
 
 const InputFaceApiWebcam = class {
   constructor(hostRef) {
-    index.registerInstance(this, hostRef);
-    this.faceDetected = index.createEvent(this, "faceDetected", 6);
-    this.faceMinValueError = index.createEvent(this, "faceMinValueError", 6);
+    registerInstance(this, hostRef);
+    this.faceDetected = createEvent(this, "faceDetected", 6);
+    this.faceMinValueError = createEvent(this, "faceMinValueError", 6);
     this.isDetecting = true;
     this.photoPicMinValue = 300;
     this.width = 460;
@@ -5643,12 +5684,19 @@ const InputFaceApiWebcam = class {
     this.isDetecting = true;
   }
   async componentWillLoad() {
+    this.video = createVideo();
+    //this.el.appendChild(this.video)
+    this.canvas = createCanvas(this.el);
+    this.el.appendChild(this.canvas);
+    this.photoCanvas = createCanvas(this.el);
   }
   async componentDidRender() {
-    this.video = camera_service.createVideo(this.el);
-    this.canvas = camera_service.createCanvas(this.el);
-    camera_service.initWebcamToVideo(this.video);
-    this.faceapiService = new FaceapiService(this.video, this.canvas);
+    this.canvas.width = parseInt(this.el.getAttribute("width"));
+    this.canvas.height = parseInt(this.el.getAttribute("height"));
+    this.photoCanvas.width = parseInt(this.el.getAttribute("width"));
+    this.photoCanvas.height = parseInt(this.el.getAttribute("height"));
+    initWebcamToVideo(this.video);
+    this.faceapiService = new FaceapiService();
     this.webcamRender();
   }
   async disconnectedCallback() {
@@ -5668,19 +5716,19 @@ const InputFaceApiWebcam = class {
     else {
       h = w;
     }
+    console.info("result", result);
     //centrar la imagen
     const x = result.box.x - (w - result.box.width) / 2;
     const y = result.box.y - (h - result.box.height) / 2;
-    if (w > this.photoPicMinValue) {
-      // zom video into canvas
-      this.canvas.getContext('2d').drawImage(this.video, x, y, w, h, 0, 0, this.canvas.width, this.canvas.height);
-      // this faceDetected emit blob from this.canvas
-      this.canvas.toBlob((blob) => {
-        this.faceDetected.emit(blob);
-      }, 'image/jpeg', 1);
-      return true;
-    }
-    return false;
+    // eliminar la imagen del canvas
+    this.photoCanvas.getContext('2d').clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height);
+    // zom video into canvas
+    this.photoCanvas.getContext('2d').drawImage(this.canvas, x, y, w, h, 0, 0, this.canvas.width, this.canvas.height);
+    // this faceDetected emit blob from this.canvas
+    this.photoCanvas.toBlob((blob) => {
+      this.faceDetected.emit(blob);
+    }, 'image/jpeg', 1);
+    return true;
   }
   drawCanvasNoFace() {
     this.canvas.getContext('2d').drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
@@ -5690,27 +5738,172 @@ const InputFaceApiWebcam = class {
       this.webcamRender();
     });
     if (this.isDetecting) {
-      const result = await this.faceapiService.detectFace();
-      this.canvas.getContext('2d').clearRect(0, 0, this.canvas.width, this.canvas.height);
+      const result = await this.faceapiService.detectFace(this.canvas);
       if (result) {
         if (!this.__processReturn(result)) {
           this.faceMinValueError.emit(result);
           this.drawCanvasNoFace();
         }
       }
-      else {
-        this.drawCanvasNoFace();
-      }
+      this.drawCanvasNoFace();
     }
   }
   ;
   render() {
-    return (index.h(index.Host, { style: { height: this.height + "px", width: this.width + "px" } }, index.h("slot", { name: 'before' }), index.h("slot", null), index.h("slot", { name: 'after' })));
+    return (h$1(Host, { style: { height: this.height + "px", width: this.width + "px" } }, h$1("slot", { name: 'before' }), h$1("slot", null), h$1("slot", { name: 'after' })));
   }
-  get el() { return index.getElement(this); }
+  get el() { return getElement(this); }
 };
 InputFaceApiWebcam.style = inputFaceApiWebcamCss;
 
-exports.input_face_api_webcam = InputFaceApiWebcam;
+class WebCamera {
+  constructor() {
+  }
+  async initCamera(parentElement, direction, drawImageCb = null) {
+    this.resetCamera();
+    if (!this.elVideo) {
+      this.elVideo = createVideo();
+      parentElement.appendChild(this.elVideo);
+    }
+    if (!this.canvas) {
+      this.canvas = createCanvas(parentElement);
+      parentElement.appendChild(this.canvas);
+    }
+    this.direction = CameraDirection.Front;
+    if (navigator.mediaDevices.getUserMedia) {
+      console.info("la camara");
+      const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
+      navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          width: { min: 200 },
+          height: { min: 200 },
+          facingMode: facingMode
+        }
+      })
+        .then((stream) => {
+        this.stream = stream;
+        console.info("la camara", this.stream);
+        this.elVideo.srcObject = this.stream;
+        this.renderToCanvas(drawImageCb);
+      })
+        .catch(function (err0r) {
+        console.log("Something went wrong!", err0r);
+      });
+    }
+  }
+  renderToCanvas(drawImageCb = null) {
+    let ctx = this.canvas.getContext('2d');
+    let imgWidth = this.elVideo.videoWidth;
+    let imgHeight = this.elVideo.videoHeight;
+    var imgSize = Math.min(imgWidth, imgHeight);
+    // The following two lines yield a central based cropping.
+    // They can both be amended to be 0, if you wish it to be
+    // a left based cropped image.
+    var left = (imgWidth - imgSize) / 2;
+    var top = (imgHeight - imgSize) / 2;
+    if (typeof drawImageCb == 'function') {
+      drawImageCb.call(ctx, this.elVideo, left, top, imgSize, imgSize, 0, 0, this.canvas.width, this.canvas.height);
+    }
+    else {
+      ctx.drawImage(this.elVideo, left, top, imgSize, imgSize, 0, 0, this.canvas.width, this.canvas.height);
+    }
+    requestAnimationFrame(() => this.renderToCanvas());
+  }
+  resetCamera() {
+    var _a, _b;
+    if (this.stream)
+      (_b = (_a = this.stream) === null || _a === void 0 ? void 0 : _a.getVideoTracks()) === null || _b === void 0 ? void 0 : _b.forEach(track => {
+        var _a;
+        track === null || track === void 0 ? void 0 : track.stop();
+        (_a = this.stream) === null || _a === void 0 ? void 0 : _a.removeTrack(track);
+      });
+    if (this.elVideo)
+      this.elVideo.srcObject = null;
+  }
+  async takePicture() {
+    return new Promise((resolve, reject) => {
+      try {
+        this.canvas.toBlob((blob) => {
+          const filename = "pic_" + Math.abs(Math.round(Math.random() * 1000));
+          var file = new File([blob], filename, { type: "image/jpeg" });
+          resolve(file);
+        }, "image/jpeg", 0.8);
+      }
+      catch (error) {
+        reject(error);
+      }
+    });
+  }
+}
+class CameraService {
+  constructor() {
+    this.camaraManager = new WebCamera();
+  }
+  async initCamera(parentElement, cameraDirection, drawImageCb = null) {
+    this.camaraManager.initCamera(parentElement, cameraDirection, drawImageCb);
+  }
+  async takePicture() {
+    return await this.camaraManager.takePicture();
+  }
+  async resetCamera() {
+    return await this.camaraManager.resetCamera();
+  }
+}
+const camera = new CameraService();
 
-//# sourceMappingURL=input-face-api-webcam.cjs.entry.js.map
+const inputFileFromWebcamCss = ":host{display:inline-block;width:100px;filter:drop-shadow(2px 4px 6px black);border:#5a5252 1px solid;border-style:groove}video{display:none}canvas{width:100%;height:100%}";
+
+const InputFileFromWebcam = class {
+  constructor(hostRef) {
+    registerInstance(this, hostRef);
+    this.pictureTaken = createEvent(this, "pictureTaken", 6);
+    this.facingModeChanged = createEvent(this, "facingModeChanged", 6);
+    this.width = 460;
+    this.height = 460;
+    this.facingMode = CameraDirection.Front;
+    this.drawImageCb = null;
+  }
+  async takePic() {
+    // show a prompt
+    const pic = await camera.takePicture();
+    this.pictureTaken.emit(pic);
+    return pic;
+  }
+  async resetCamera() {
+    // show a prompt
+    camera.resetCamera();
+  }
+  async toggleCamera() {
+    this.__toogleFacingMode();
+  }
+  onClickHandler() {
+    this.__toogleFacingMode();
+  }
+  /**
+   * Toogle webcam, for example in mobile show front or back camera
+   * you can block this behaviour by setting the facingMode Property
+   */
+  __toogleFacingMode() {
+    // only change if no facinMode property was set
+    this.facingMode = (this.facingMode != CameraDirection.Front) ? CameraDirection.Front : CameraDirection.Rear;
+    this.facingModeChanged.emit(this.facingMode);
+  }
+  componentWillMount() {
+  }
+  async componentDidRender() {
+    camera.initCamera(this.el, CameraDirection.Front, this.drawImageCb);
+  }
+  async disconnectedCallback() {
+    camera.resetCamera();
+  }
+  render() {
+    return (h$1(Host, { style: { height: this.height + "px", width: this.width + "px" } }, h$1("slot", { name: 'before' }), h$1("slot", null), h$1("slot", { name: 'after' })));
+  }
+  get el() { return getElement(this); }
+};
+InputFileFromWebcam.style = inputFileFromWebcamCss;
+
+export { InputFaceApiWebcam as input_face_api_webcam, InputFileFromWebcam as input_file_from_webcam };
+
+//# sourceMappingURL=input-face-api-webcam_2.entry.js.map
