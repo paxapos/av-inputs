@@ -1,0 +1,13 @@
+{
+  "entries": [
+    "./components/input-face-api-webcam/input-face-api-webcam.js",
+    "./components/input-file-from-webcam/input-file-from-webcam.js"
+  ],
+  "compiler": {
+    "name": "@stencil/core",
+    "version": "3.1.0",
+    "typescriptVersion": "4.9.5"
+  },
+  "collections": [],
+  "bundles": []
+}
