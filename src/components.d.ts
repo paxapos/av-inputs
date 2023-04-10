@@ -5,9 +5,7 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
-import { FaceDetection } from "face-api.js";
 import { CameraDirection } from "./utils/camera.service";
-export { FaceDetection } from "face-api.js";
 export { CameraDirection } from "./utils/camera.service";
 export namespace Components {
     interface InputFaceApiWebcam {
@@ -63,7 +61,7 @@ declare namespace LocalJSX {
     interface InputFaceApiWebcam {
         "height"?: number;
         "onFaceDetected"?: (event: InputFaceApiWebcamCustomEvent<Blob>) => void;
-        "onFaceMinValueError"?: (event: InputFaceApiWebcamCustomEvent<FaceDetection>) => void;
+        "onFaceStopDetection"?: (event: InputFaceApiWebcamCustomEvent<void>) => void;
         "photoPicMinValue"?: number;
         "width"?: number;
     }

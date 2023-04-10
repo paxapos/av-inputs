@@ -1,7 +1,6 @@
 import { Component, Host, h, Element, Prop, Event,EventEmitter, Method, State } from '@stencil/core';
 import { FaceapiService } from '../../utils/facepi.service';
 import { createCanvas, createVideo, initWebcamToVideo } from '../../utils/camera.service';
-import { FaceDetection } from 'face-api.js';
 
 @Component({
   tag: 'input-face-api-webcam',
@@ -9,6 +8,7 @@ import { FaceDetection } from 'face-api.js';
   shadow: true,
 })
 export class InputFaceApiWebcam {
+  faceFound: Blob = null;
 
   // canvas to store photo
   photoCanvas: HTMLCanvasElement
@@ -51,12 +51,13 @@ export class InputFaceApiWebcam {
     bubbles: true,
   }) faceDetected: EventEmitter<Blob>;
 
+
   @Event({
-    eventName: 'faceMinValueError',
+    eventName: 'faceStopDetection',
     composed: true,
     cancelable: false,
     bubbles: true,
-  }) faceMinValueError: EventEmitter<FaceDetection>;
+  }) faceStopDetection: EventEmitter<void>;
 
 
   async componentWillLoad() {
@@ -96,64 +97,76 @@ export class InputFaceApiWebcam {
    * @param result 
    * @returns true si proceso y detecto imagen
    */
-  __processReturn(result): boolean {
+  getPicZoom(result): Promise<Blob> {
+    return new Promise((resolve, reject) => {
 
-    let h = result.box.height *1.5
-    let w = result.box.width *1.5
-
-    // hacer caudrada la imagen
-    if ( h > w ) {
-        w = h
-    } else {
-        h = w
-    }
-
-    console.info("result", result);
-    
-    //centrar la imagen
-    const x = result.box.x - (w - result.box.width) / 2
-    const y = result.box.y - (h - result.box.height) / 2
-
-    // eliminar la imagen del canvas
-    this.photoCanvas.getContext('2d').clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height)
-    
-    // zom video into canvas
-    this.photoCanvas.getContext('2d').drawImage(this.canvas, x, y, w, h, 0, 0, this.canvas.width, this.canvas.height)
-
-
+      let h = result.box.height *1.5
+      let w = result.box.width *1.5
+  
+      // hacer caudrada la imagen
+      if ( h > w ) {
+          w = h
+      } else {
+          h = w
+      }
       
-    // this faceDetected emit blob from this.canvas
-    this.photoCanvas.toBlob((blob) => {
-      this.faceDetected.emit(blob)
-    }, 'image/jpeg', 1)
+      //centrar la imagen
+      const x = result.box.x - (w - result.box.width) / 2
+      const y = result.box.y - (h - result.box.height) / 2
+  
+      // eliminar la imagen del canvas
+      this.photoCanvas.getContext('2d').clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height)
+      
+      // zom video into canvas
+      this.photoCanvas.getContext('2d').drawImage(this.canvas, x, y, w, h, 0, 0, this.canvas.width, this.canvas.height)
+  
+  
+      try {
+        
+        // this faceDetected emit blob from this.canvas
+        this.photoCanvas.toBlob((blob) => {
+          this.faceDetected.emit(blob)
+          resolve(blob)
+        }, 'image/jpeg', 1)
+    
+      } catch (error) {
+        reject(error)
+      }
 
-    return true;
+      reject()
+    })
 
   }
 
-  drawCanvasNoFace() {
-    this.canvas.getContext('2d').drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height)
+  handleStopDetection() {
+    if ( this.faceFound ) {
+      this.faceStopDetection.emit()
+    }
+    this.faceFound = null
   }
-
+ 
   async webcamRender () {
     
     requestAnimationFrame(() => {
       this.webcamRender() 
     });
     
+    this.canvas.getContext('2d').drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height)
+
     if ( this.isDetecting ) {
       
       const result = await this.faceapiService.detectFace( this.canvas )
      
       if (result ) {
-        if ( !this.__processReturn(result) ) {
-          this.faceMinValueError.emit(result)
-          this.drawCanvasNoFace();
+        try {
+          this.faceFound = await this.getPicZoom(result)
+        } catch (e) {
+          console.error(e)
+          this.handleStopDetection()
         }
+      } else {
+        this.handleStopDetection()
       }
-
-      this.drawCanvasNoFace()
-      
     }
 };
 

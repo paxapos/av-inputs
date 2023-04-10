@@ -1,7 +1,7 @@
 import { EventEmitter } from '../../stencil-public-runtime';
 import { FaceapiService } from '../../utils/facepi.service';
-import { FaceDetection } from 'face-api.js';
 export declare class InputFaceApiWebcam {
+  faceFound: Blob;
   photoCanvas: HTMLCanvasElement;
   video: HTMLVideoElement;
   canvas: HTMLCanvasElement;
@@ -14,7 +14,7 @@ export declare class InputFaceApiWebcam {
   stopDetection(): Promise<void>;
   startDetection(): Promise<void>;
   faceDetected: EventEmitter<Blob>;
-  faceMinValueError: EventEmitter<FaceDetection>;
+  faceStopDetection: EventEmitter<void>;
   componentWillLoad(): Promise<void>;
   componentDidRender(): Promise<void>;
   disconnectedCallback(): Promise<void>;
@@ -23,8 +23,8 @@ export declare class InputFaceApiWebcam {
    * @param result
    * @returns true si proceso y detecto imagen
    */
-  __processReturn(result: any): boolean;
-  drawCanvasNoFace(): void;
+  getPicZoom(result: any): Promise<Blob>;
+  handleStopDetection(): void;
   webcamRender(): Promise<void>;
   render(): any;
 }

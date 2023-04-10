@@ -3,6 +3,7 @@ import { FaceapiService } from '../../utils/facepi.service';
 import { createCanvas, createVideo, initWebcamToVideo } from '../../utils/camera.service';
 export class InputFaceApiWebcam {
   constructor() {
+    this.faceFound = null;
     this.isDetecting = true;
     this.photoPicMinValue = 300;
     this.width = 460;
@@ -37,46 +38,62 @@ export class InputFaceApiWebcam {
    * @param result
    * @returns true si proceso y detecto imagen
    */
-  __processReturn(result) {
-    let h = result.box.height * 1.5;
-    let w = result.box.width * 1.5;
-    // hacer caudrada la imagen
-    if (h > w) {
-      w = h;
-    }
-    else {
-      h = w;
-    }
-    console.info("result", result);
-    //centrar la imagen
-    const x = result.box.x - (w - result.box.width) / 2;
-    const y = result.box.y - (h - result.box.height) / 2;
-    // eliminar la imagen del canvas
-    this.photoCanvas.getContext('2d').clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height);
-    // zom video into canvas
-    this.photoCanvas.getContext('2d').drawImage(this.canvas, x, y, w, h, 0, 0, this.canvas.width, this.canvas.height);
-    // this faceDetected emit blob from this.canvas
-    this.photoCanvas.toBlob((blob) => {
-      this.faceDetected.emit(blob);
-    }, 'image/jpeg', 1);
-    return true;
+  getPicZoom(result) {
+    return new Promise((resolve, reject) => {
+      let h = result.box.height * 1.5;
+      let w = result.box.width * 1.5;
+      // hacer caudrada la imagen
+      if (h > w) {
+        w = h;
+      }
+      else {
+        h = w;
+      }
+      //centrar la imagen
+      const x = result.box.x - (w - result.box.width) / 2;
+      const y = result.box.y - (h - result.box.height) / 2;
+      // eliminar la imagen del canvas
+      this.photoCanvas.getContext('2d').clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height);
+      // zom video into canvas
+      this.photoCanvas.getContext('2d').drawImage(this.canvas, x, y, w, h, 0, 0, this.canvas.width, this.canvas.height);
+      try {
+        // this faceDetected emit blob from this.canvas
+        this.photoCanvas.toBlob((blob) => {
+          this.faceDetected.emit(blob);
+          resolve(blob);
+        }, 'image/jpeg', 1);
+      }
+      catch (error) {
+        reject(error);
+      }
+      reject();
+    });
   }
-  drawCanvasNoFace() {
-    this.canvas.getContext('2d').drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+  handleStopDetection() {
+    if (this.faceFound) {
+      this.faceStopDetection.emit();
+    }
+    this.faceFound = null;
   }
   async webcamRender() {
     requestAnimationFrame(() => {
       this.webcamRender();
     });
+    this.canvas.getContext('2d').drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
     if (this.isDetecting) {
       const result = await this.faceapiService.detectFace(this.canvas);
       if (result) {
-        if (!this.__processReturn(result)) {
-          this.faceMinValueError.emit(result);
-          this.drawCanvasNoFace();
+        try {
+          this.faceFound = await this.getPicZoom(result);
+        }
+        catch (e) {
+          console.error(e);
+          this.handleStopDetection();
         }
       }
-      this.drawCanvasNoFace();
+      else {
+        this.handleStopDetection();
+      }
     }
   }
   ;
@@ -179,8 +196,8 @@ export class InputFaceApiWebcam {
           }
         }
       }, {
-        "method": "faceMinValueError",
-        "name": "faceMinValueError",
+        "method": "faceStopDetection",
+        "name": "faceStopDetection",
         "bubbles": true,
         "cancelable": false,
         "composed": true,
@@ -189,14 +206,9 @@ export class InputFaceApiWebcam {
           "text": ""
         },
         "complexType": {
-          "original": "FaceDetection",
-          "resolved": "FaceDetection",
-          "references": {
-            "FaceDetection": {
-              "location": "import",
-              "path": "face-api.js"
-            }
-          }
+          "original": "void",
+          "resolved": "void",
+          "references": {}
         }
       }];
   }

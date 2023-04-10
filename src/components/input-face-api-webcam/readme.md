@@ -16,10 +16,10 @@
 
 ## Events
 
-| Event               | Description | Type                         |
-| ------------------- | ----------- | ---------------------------- |
-| `faceDetected`      |             | `CustomEvent<Blob>`          |
-| `faceMinValueError` |             | `CustomEvent<FaceDetection>` |
+| Event               | Description | Type                |
+| ------------------- | ----------- | ------------------- |
+| `faceDetected`      |             | `CustomEvent<Blob>` |
+| `faceStopDetection` |             | `CustomEvent<void>` |
 
 
 ## Methods

@@ -23,8 +23,7 @@
     "start": "stencil build --dev --watch --serve",
     "test": "stencil test --spec --e2e",
     "test.watch": "stencil test --spec --e2e --watchAll",
-    "generate": "stencil generate",
-    "publish": "npm version patch && npm publish"
+    "generate": "stencil generate"
   },
   "dependencies": {
     "@stencil/core": "^3.0.0",

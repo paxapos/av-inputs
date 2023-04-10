@@ -25,18 +25,16 @@ export class InputFaceApiWebcam {
   constructor(c: ChangeDetectorRef, r: ElementRef, protected z: NgZone) {
     c.detach();
     this.el = r.nativeElement;
-    proxyOutputs(this, this.el, ['faceDetected', 'faceMinValueError']);
+    proxyOutputs(this, this.el, ['faceDetected', 'faceStopDetection']);
   }
 }
 
-
-import type { FaceDetection as IInputFaceApiWebcamFaceDetection } from 'input-file-from-webcam/components';
 
 export declare interface InputFaceApiWebcam extends Components.InputFaceApiWebcam {
 
   faceDetected: EventEmitter<CustomEvent<Blob>>;
 
-  faceMinValueError: EventEmitter<CustomEvent<IInputFaceApiWebcamFaceDetection>>;
+  faceStopDetection: EventEmitter<CustomEvent<void>>;
 }
 
 
