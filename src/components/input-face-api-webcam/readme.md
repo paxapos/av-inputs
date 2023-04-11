@@ -7,11 +7,11 @@
 
 ## Properties
 
-| Property           | Attribute             | Description | Type     | Default |
-| ------------------ | --------------------- | ----------- | -------- | ------- |
-| `height`           | `height`              |             | `number` | `460`   |
-| `photoPicMinValue` | `photo-pic-min-value` |             | `number` | `300`   |
-| `width`            | `width`               |             | `number` | `460`   |
+| Property         | Attribute         | Description | Type     | Default |
+| ---------------- | ----------------- | ----------- | -------- | ------- |
+| `detectionTimer` | `detection-timer` |             | `number` | `1000`  |
+| `height`         | `height`          |             | `number` | `460`   |
+| `width`          | `width`           |             | `number` | `460`   |
 
 
 ## Events

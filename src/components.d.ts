@@ -9,8 +9,8 @@ import { CameraDirection } from "./utils/camera.service";
 export { CameraDirection } from "./utils/camera.service";
 export namespace Components {
     interface InputFaceApiWebcam {
+        "detectionTimer"?: number;
         "height"?: number;
-        "photoPicMinValue"?: number;
         "startDetection": () => Promise<void>;
         "stopDetection": () => Promise<void>;
         "width"?: number;
@@ -59,10 +59,10 @@ declare global {
 }
 declare namespace LocalJSX {
     interface InputFaceApiWebcam {
+        "detectionTimer"?: number;
         "height"?: number;
         "onFaceDetected"?: (event: InputFaceApiWebcamCustomEvent<Blob>) => void;
         "onFaceStopDetection"?: (event: InputFaceApiWebcamCustomEvent<void>) => void;
-        "photoPicMinValue"?: number;
         "width"?: number;
     }
     interface InputFileFromWebcam {

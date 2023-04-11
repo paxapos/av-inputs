@@ -14,7 +14,6 @@ export class WebCamera {
     }
     this.direction = CameraDirection.Front;
     if (navigator.mediaDevices.getUserMedia) {
-      console.info("la camara");
       const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
       navigator.mediaDevices.getUserMedia({
         audio: false,
@@ -26,7 +25,6 @@ export class WebCamera {
       })
         .then((stream) => {
         this.stream = stream;
-        console.info("la camara", this.stream);
         this.elVideo.srcObject = this.stream;
         this.renderToCanvas(drawImageCb);
       })

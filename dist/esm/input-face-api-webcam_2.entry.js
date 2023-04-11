@@ -5646,7 +5646,6 @@ function createCanvas(parentElement) {
 }
 function initWebcamToVideo(video, direction = CameraDirection.Front) {
   if (navigator.mediaDevices.getUserMedia) {
-    console.info("la camara");
     const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
     navigator.mediaDevices.getUserMedia({
       audio: false,
@@ -5665,7 +5664,7 @@ function initWebcamToVideo(video, direction = CameraDirection.Front) {
   }
 }
 
-const inputFaceApiWebcamCss = ":host{display:block}";
+const inputFaceApiWebcamCss = ":host{display:inline-block;width:100px;filter:drop-shadow(2px 4px 6px black);border:#5a5252 1px solid;border-style:groove}video{display:none}canvas{width:100%;height:100%}";
 
 const InputFaceApiWebcam = class {
   constructor(hostRef) {
@@ -5673,10 +5672,14 @@ const InputFaceApiWebcam = class {
     this.faceDetected = createEvent(this, "faceDetected", 6);
     this.faceStopDetection = createEvent(this, "faceStopDetection", 6);
     this.faceFound = null;
+    // timer to detect face bassed on detectionTimer
+    this.pictureTimer = null;
+    // last result
+    this.result = null;
     this.isDetecting = true;
-    this.photoPicMinValue = 300;
     this.width = 460;
     this.height = 460;
+    this.detectionTimer = 1000;
   }
   async stopDetection() {
     this.isDetecting = false;
@@ -5688,16 +5691,17 @@ const InputFaceApiWebcam = class {
     this.video = createVideo();
     //this.el.appendChild(this.video)
     this.canvas = createCanvas(this.el);
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
     this.el.appendChild(this.canvas);
     this.photoCanvas = createCanvas(this.el);
+    this.photoCanvas.width = this.width;
+    this.photoCanvas.height = this.height;
+    //this.el.appendChild(this.photoCanvas)
+    this.faceapiService = new FaceapiService();
   }
   async componentDidRender() {
-    this.canvas.width = parseInt(this.el.getAttribute("width"));
-    this.canvas.height = parseInt(this.el.getAttribute("height"));
-    this.photoCanvas.width = parseInt(this.el.getAttribute("width"));
-    this.photoCanvas.height = parseInt(this.el.getAttribute("height"));
     initWebcamToVideo(this.video);
-    this.faceapiService = new FaceapiService();
     this.webcamRender();
   }
   async disconnectedCallback() {
@@ -5708,6 +5712,12 @@ const InputFaceApiWebcam = class {
    * @returns true si proceso y detecto imagen
    */
   getPicZoom(result) {
+    if (this.pictureTimer) {
+      return null;
+    }
+    this.pictureTimer = setTimeout(() => {
+      this.pictureTimer = null;
+    }, this.detectionTimer);
     return new Promise((resolve, reject) => {
       let h = result.box.height * 1.5;
       let w = result.box.width * 1.5;
@@ -5719,12 +5729,27 @@ const InputFaceApiWebcam = class {
         h = w;
       }
       //centrar la imagen
-      const x = result.box.x - (w - result.box.width) / 2;
-      const y = result.box.y - (h - result.box.height) / 2;
+      // center in x
+      let x = result.box.x - (w - result.box.width) / 2;
+      const xlimit = result.box.x + w;
+      if (xlimit >= this.canvas.width) {
+        // out of right
+        x = xlimit - result.box.x;
+      }
+      let y;
+      const ylimit = result.box.y + h;
+      if (ylimit > this.canvas.height) {
+        // out of bottom
+        y = ylimit - result.box.y;
+      }
+      else {
+        // center in y
+        y = result.box.y - (h - result.box.height) / 2;
+      }
       // eliminar la imagen del canvas
       this.photoCanvas.getContext('2d').clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height);
       // zom video into canvas
-      this.photoCanvas.getContext('2d').drawImage(this.canvas, x, y, w, h, 0, 0, this.canvas.width, this.canvas.height);
+      this.photoCanvas.getContext('2d').drawImage(this.canvas, x, y, w, h, 0, 0, this.photoCanvas.width, this.photoCanvas.height);
       try {
         // this faceDetected emit blob from this.canvas
         this.photoCanvas.toBlob((blob) => {
@@ -5735,35 +5760,81 @@ const InputFaceApiWebcam = class {
       catch (error) {
         reject(error);
       }
-      reject();
     });
   }
   handleStopDetection() {
     if (this.faceFound) {
+      console.info("STOOPPPP detectiopnm");
       this.faceStopDetection.emit();
     }
     this.faceFound = null;
   }
   async webcamRender() {
-    requestAnimationFrame(() => {
-      this.webcamRender();
-    });
-    this.canvas.getContext('2d').drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+    // this.canvas.getContext('2d').drawImage(this.video, 0, 0, this.width, this.height)
     if (this.isDetecting) {
+      let imgWidth = this.video.videoWidth;
+      let imgHeight = this.video.videoHeight;
+      var imgSize = Math.min(imgWidth, imgHeight);
+      // The following two lines yield a central based cropping.
+      // They can both be amended to be 0, if you wish it to be
+      // a left based cropped image.
+      var left = (imgWidth - imgSize) / 2;
+      var top = (imgHeight - imgSize) / 2;
+      const context = this.canvas.getContext('2d');
       const result = await this.faceapiService.detectFace(this.canvas);
+      context.drawImage(this.video, left, top, imgSize, imgSize, 0, 0, this.canvas.width, this.canvas.height);
       if (result) {
         try {
-          this.faceFound = await this.getPicZoom(result);
+          let x = result.box.x;
+          let y = result.box.y;
+          let w = result.box.width;
+          let h = result.box.height;
+          if (this.result) {
+            if (result.box.x < this.result.box.x) {
+              x = result.box.x - 1;
+            }
+            else {
+              x = result.box.x + 1;
+            }
+            if (result.box.y < this.result.box.y) {
+              y = result.box.y - 1;
+            }
+            else {
+              y = result.box.y + 1;
+            }
+            if (result.box.width < this.result.box.width) {
+              w = result.box.width - 1;
+            }
+            else {
+              w = result.box.width + 1;
+            }
+            if (result.box.height < this.result.box.height) {
+              h = result.box.height - 1;
+            }
+            else {
+              h = result.box.height + 1;
+            }
+          }
+          // draw border arround face
+          context.strokeStyle = '#4efd54';
+          context.lineWidth = 2;
+          context.strokeRect(x, y, w, h);
+          this.getPicZoom(result);
         }
         catch (e) {
-          console.error(e);
           this.handleStopDetection();
         }
       }
       else {
         this.handleStopDetection();
       }
+      this.result = result;
     }
+    requestAnimationFrame(() => {
+      //   setTimeout(() => {
+      this.webcamRender();
+      //   }, 1000) ;
+    });
   }
   ;
   render() {
@@ -5788,7 +5859,6 @@ class WebCamera {
     }
     this.direction = CameraDirection.Front;
     if (navigator.mediaDevices.getUserMedia) {
-      console.info("la camara");
       const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
       navigator.mediaDevices.getUserMedia({
         audio: false,
@@ -5800,7 +5870,6 @@ class WebCamera {
       })
         .then((stream) => {
         this.stream = stream;
-        console.info("la camara", this.stream);
         this.elVideo.srcObject = this.stream;
         this.renderToCanvas(drawImageCb);
       })

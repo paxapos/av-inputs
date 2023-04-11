@@ -27,7 +27,6 @@ function createCanvas(parentElement) {
 }
 function initWebcamToVideo(video, direction = CameraDirection.Front) {
   if (navigator.mediaDevices.getUserMedia) {
-    console.info("la camara");
     const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
     navigator.mediaDevices.getUserMedia({
       audio: false,

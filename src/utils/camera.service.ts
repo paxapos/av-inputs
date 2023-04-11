@@ -29,14 +29,12 @@ export  function createCanvas( parentElement: HTMLElement ): HTMLCanvasElement {
     canvas.width = parseInt( parentElement.getAttribute("width") );
     canvas.height = parseInt( parentElement.getAttribute("height") );
     return canvas
-
 }
 
 
 export function initWebcamToVideo(video, direction: CameraDirection = CameraDirection.Front) {
         
     if (navigator.mediaDevices.getUserMedia) {
-        console.info("la camara")
         const facingMode = (direction == CameraDirection.Front) ? "user": "environment"
 
         navigator.mediaDevices.getUserMedia({

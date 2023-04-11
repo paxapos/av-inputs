@@ -16,20 +16,25 @@
       <!-- escribir codigo HTML usando un ejemploi de como escribiur un <div> que se muestre en la pagina web como string-->
       input-file-from-webcam id="faceapi-input" /input-file-from-webcam
     </code>
+
+    <button id="fm_change">Change facing mode</button>  
       <br>
 
     <input-file-from-webcam id="my-input"></input-file-from-webcam>
 
 
 
-    <h1>Webcam face detection</h1>
-    <input-face-api-webcam id="faceapi-input" photo-pic-min-value="350"></input-face-api-from-webcam>
+    <hr>
 
-    <button id="fm_change">Change facing mode</button>  
+    <h1>Webcam face detection</h1>
     <p>Una vez que detecta la cara, saca una foto y mete la imagen en el parent node y detiene la deteccion</p>
 
+    <input-face-api-webcam id="faceapi-input"></input-face-api-webcam>
 
 
+
+    <div id="img-container"></div>
+    <H2>WARNING, GAY detected!</H2>
 
 
     <script>
@@ -60,15 +65,16 @@
 
         elInputFaceApi.addEventListener('faceDetected', (e) => {
 
-        //  console.info("face detected", e.detail)
+          console.info("face detected", e.detail)
 
           if ( !faceDetected ) {
             // e.detail is a blob, need to put this value into an img tag
             const img = document.createElement("img");
             img.src = URL.createObjectURL(e.detail);
-            document.body.appendChild(img);
+
+            document.getElementById( "img-container" ).appendChild(img);
             
-            elInputFaceApi.stopDetection();
+            //elInputFaceApi.stopDetection();
             faceDetected = true;
 
           }
