@@ -9,7 +9,6 @@ import { FaceDetection } from 'face-api.js';
   shadow: true,
 })
 export class InputFaceApiWebcam {
-  faceFound: Blob = null;
 
   // canvas to store photo
   photoCanvas: HTMLCanvasElement
@@ -109,22 +108,13 @@ export class InputFaceApiWebcam {
    * @param result 
    * @returns true si proceso y detecto imagen
    */
-  getPicZoom(): Promise<Blob> {
-
-    if ( this.pictureTimer ) {
-      return null
-    }
-
-    this.pictureTimer = setTimeout(() => {
-      this.pictureTimer = null
-    }, this.detectionTimer)
+  emitBlob(): Promise<Blob> {
 
     return new Promise((resolve, reject) => {
-  
       try {
-        
         // this faceDetected emit blob from this.canvas
         this.canvas.toBlob((blob) => {
+          console.info("faceDetected tirandop blob")
           this.faceDetected.emit(blob)
           resolve(blob)
         }, 'image/jpeg', 1)
@@ -137,60 +127,37 @@ export class InputFaceApiWebcam {
 
   }
 
-
-
-  zoomTimer: any = null
-  tcoords = {
-    z: 1,
-    x: 0,
-    y: 0
-  }
-
-  handleStopDetection() {
-    if ( this.faceFound ) {
-      console.info("STOOPPPP detectiopnm")
-      this.faceStopDetection.emit()
-    }
-    this.faceFound = null
-  }
  
   async webcamRender () {
-    if (this.pictureTimer ) {
-      setTimeout(() => {
-        requestAnimationFrame(() => {
-          this.webcamRender() 
-        })
-      }, 100);
-    } else {
-      requestAnimationFrame(() => {
-        this.webcamRender() 
-      })
-    }
-    
+    requestAnimationFrame(() => {
+      this.webcamRender() 
+    })
+
+
     if ( this.isDetecting ) {
 
       const result = await this.faceapiService.detectFace( this.video )
 
       let ctx = this.canvas.getContext('2d');
-
       this.drawWebcamnToCanvas(ctx);
       
-      if (result ) {
-        try {
-          // center face in canvas
-         this.getPicZoom()
+      if ( result ) {
 
+        try {
+          // saca una foto del canvas y genera el BLOB para emitir
+          await this.emitBlob()
         } catch (e) {
           console.error(e)
-          this.handleStopDetection()
         }
       } else {
-          ctx.setTransform(1, 0, 0, 1, 0, 0);
-          this.handleStopDetection()
+
+        this.faceStopDetection.emit()
       }
       this.result = result
 
     }
+
+    
     
 };
 
