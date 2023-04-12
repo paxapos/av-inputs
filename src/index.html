@@ -63,21 +63,22 @@
       let faceDetected = false;
       if ( elInputFaceApi ) {
 
+         // e.detail is a blob, need to put this value into an img tag
+         const img = document.createElement("img");
+         document.getElementById( "img-container" ).appendChild(img);
+
+         
         elInputFaceApi.addEventListener('faceDetected', (e) => {
 
           console.info("face detected", e.detail)
 
-          if ( !faceDetected ) {
-            // e.detail is a blob, need to put this value into an img tag
-            const img = document.createElement("img");
+           
             img.src = URL.createObjectURL(e.detail);
 
-            document.getElementById( "img-container" ).appendChild(img);
             
             //elInputFaceApi.stopDetection();
             faceDetected = true;
 
-          }
         })
 
 

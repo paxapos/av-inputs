@@ -5644,24 +5644,59 @@ function createCanvas(parentElement) {
   canvas.height = parseInt(parentElement.getAttribute("height"));
   return canvas;
 }
-function initWebcamToVideo(video, direction = CameraDirection.Front) {
-  if (navigator.mediaDevices.getUserMedia) {
-    const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
-    navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        width: { min: 200 },
-        height: { min: 200 },
-        facingMode: facingMode
-      }
-    })
-      .then((stream) => {
-      video.srcObject = stream;
-    })
-      .catch(function (err0r) {
-      console.log("Something went wrong!", err0r);
-    });
+function renderToCanvas(canvas, video, drawImageCb) {
+  let ctx = canvas.getContext('2d');
+  let imgWidth = video.videoWidth;
+  let imgHeight = video.videoHeight;
+  var imgSize = Math.min(imgWidth, imgHeight);
+  // The following two lines yield a central based cropping.
+  // They can both be amended to be 0, if you wish it to be
+  // a left based cropped image.
+  var left = (imgWidth - imgSize) / 2;
+  var top = (imgHeight - imgSize) / 2;
+  if (drawImageCb) {
+    drawImageCb.call(this, ctx, video, left, top, imgSize, imgSize, 0, 0, canvas.width, canvas.height);
   }
+  else {
+    ctx.drawImage(video, left, top, imgSize, imgSize, 0, 0, canvas.width, canvas.height);
+  }
+  return requestAnimationFrame(() => renderToCanvas(canvas, video, drawImageCb));
+}
+async function takePicture(canvas, compression = 0.85) {
+  return new Promise((resolve, reject) => {
+    try {
+      canvas.toBlob((blob) => {
+        const filename = "pic_" + Math.abs(Math.round(Math.random() * 1000));
+        var file = new File([blob], filename, { type: "image/jpeg" });
+        resolve(file);
+      }, "image/jpeg", compression);
+    }
+    catch (error) {
+      reject(error);
+    }
+  });
+}
+function initWebcamToVideo(video, direction = CameraDirection.Front) {
+  return new Promise((resolve, reject) => {
+    if (navigator.mediaDevices.getUserMedia) {
+      const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
+      navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          width: { min: 200 },
+          height: { min: 200 },
+          facingMode: facingMode
+        }
+      })
+        .then((stream) => {
+        video.srcObject = stream;
+        resolve(stream);
+      })
+        .catch(function (err0r) {
+        reject(err0r);
+      });
+    }
+  });
 }
 
 const inputFaceApiWebcamCss = ":host{display:inline-block;width:100px;filter:drop-shadow(2px 4px 6px black);border:#5a5252 1px solid;border-style:groove}video{display:none}canvas{width:100%;height:100%}";
@@ -5676,6 +5711,13 @@ const InputFaceApiWebcam = class {
     this.pictureTimer = null;
     // last result
     this.result = null;
+    this.noDetectedCounter = 0;
+    this.zoomTimer = null;
+    this.tcoords = {
+      z: 1,
+      x: 0,
+      y: 0
+    };
     this.isDetecting = true;
     this.width = 460;
     this.height = 460;
@@ -5711,7 +5753,7 @@ const InputFaceApiWebcam = class {
    * @param result
    * @returns true si proceso y detecto imagen
    */
-  getPicZoom(result) {
+  getPicZoom() {
     if (this.pictureTimer) {
       return null;
     }
@@ -5719,40 +5761,9 @@ const InputFaceApiWebcam = class {
       this.pictureTimer = null;
     }, this.detectionTimer);
     return new Promise((resolve, reject) => {
-      let h = result.box.height * 1.5;
-      let w = result.box.width * 1.5;
-      // hacer caudrada la imagen
-      if (h > w) {
-        w = h;
-      }
-      else {
-        h = w;
-      }
-      //centrar la imagen
-      // center in x
-      let x = result.box.x - (w - result.box.width) / 2;
-      const xlimit = result.box.x + w;
-      if (xlimit >= this.canvas.width) {
-        // out of right
-        x = xlimit - result.box.x;
-      }
-      let y;
-      const ylimit = result.box.y + h;
-      if (ylimit > this.canvas.height) {
-        // out of bottom
-        y = ylimit - result.box.y;
-      }
-      else {
-        // center in y
-        y = result.box.y - (h - result.box.height) / 2;
-      }
-      // eliminar la imagen del canvas
-      this.photoCanvas.getContext('2d').clearRect(0, 0, this.photoCanvas.width, this.photoCanvas.height);
-      // zom video into canvas
-      this.photoCanvas.getContext('2d').drawImage(this.canvas, x, y, w, h, 0, 0, this.photoCanvas.width, this.photoCanvas.height);
       try {
         // this faceDetected emit blob from this.canvas
-        this.photoCanvas.toBlob((blob) => {
+        this.canvas.toBlob((blob) => {
           this.faceDetected.emit(blob);
           resolve(blob);
         }, 'image/jpeg', 1);
@@ -5770,73 +5781,53 @@ const InputFaceApiWebcam = class {
     this.faceFound = null;
   }
   async webcamRender() {
-    // this.canvas.getContext('2d').drawImage(this.video, 0, 0, this.width, this.height)
+    if (this.pictureTimer) {
+      setTimeout(() => {
+        requestAnimationFrame(() => {
+          this.webcamRender();
+        });
+      }, 100);
+    }
+    else {
+      requestAnimationFrame(() => {
+        this.webcamRender();
+      });
+    }
     if (this.isDetecting) {
-      let imgWidth = this.video.videoWidth;
-      let imgHeight = this.video.videoHeight;
-      var imgSize = Math.min(imgWidth, imgHeight);
-      // The following two lines yield a central based cropping.
-      // They can both be amended to be 0, if you wish it to be
-      // a left based cropped image.
-      var left = (imgWidth - imgSize) / 2;
-      var top = (imgHeight - imgSize) / 2;
-      const context = this.canvas.getContext('2d');
-      const result = await this.faceapiService.detectFace(this.canvas);
-      context.drawImage(this.video, left, top, imgSize, imgSize, 0, 0, this.canvas.width, this.canvas.height);
+      const result = await this.faceapiService.detectFace(this.video);
+      let ctx = this.canvas.getContext('2d');
+      this.drawWebcamnToCanvas(ctx);
       if (result) {
         try {
-          let x = result.box.x;
-          let y = result.box.y;
-          let w = result.box.width;
-          let h = result.box.height;
-          if (this.result) {
-            if (result.box.x < this.result.box.x) {
-              x = result.box.x - 1;
-            }
-            else {
-              x = result.box.x + 1;
-            }
-            if (result.box.y < this.result.box.y) {
-              y = result.box.y - 1;
-            }
-            else {
-              y = result.box.y + 1;
-            }
-            if (result.box.width < this.result.box.width) {
-              w = result.box.width - 1;
-            }
-            else {
-              w = result.box.width + 1;
-            }
-            if (result.box.height < this.result.box.height) {
-              h = result.box.height - 1;
-            }
-            else {
-              h = result.box.height + 1;
-            }
-          }
-          // draw border arround face
-          context.strokeStyle = '#4efd54';
-          context.lineWidth = 2;
-          context.strokeRect(x, y, w, h);
-          this.getPicZoom(result);
+          // center face in canvas
+          this.getPicZoom();
         }
         catch (e) {
+          console.error(e);
           this.handleStopDetection();
         }
       }
       else {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         this.handleStopDetection();
       }
       this.result = result;
     }
-    requestAnimationFrame(() => {
-      //   setTimeout(() => {
-      this.webcamRender();
-      //   }, 1000) ;
-    });
   }
   ;
+  drawWebcamnToCanvas(ctx) {
+    let imgWidth = this.video.videoWidth;
+    let imgHeight = this.video.videoHeight;
+    var imgSize = Math.min(imgWidth, imgHeight);
+    // The following two lines yield a central based cropping.
+    // They can both be amended to be 0, if you wish it to be
+    // a left based cropped image.
+    var left = (imgWidth - imgSize) / 2;
+    var top = (imgHeight - imgSize) / 2;
+    // ctx clear all
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.drawImage(this.video, left, top, imgSize, imgSize, 0, 0, this.canvas.width, this.canvas.height);
+  }
   render() {
     return (h$1(Host, { style: { height: this.height + "px", width: this.width + "px" } }, h$1("slot", { name: 'before' }), h$1("slot", null), h$1("slot", { name: 'after' })));
   }
@@ -5845,56 +5836,18 @@ const InputFaceApiWebcam = class {
 InputFaceApiWebcam.style = inputFaceApiWebcamCss;
 
 class WebCamera {
-  constructor() {
-  }
   async initCamera(parentElement, direction, drawImageCb = null) {
     this.resetCamera();
     if (!this.elVideo) {
       this.elVideo = createVideo();
-      parentElement.appendChild(this.elVideo);
     }
     if (!this.canvas) {
       this.canvas = createCanvas(parentElement);
       parentElement.appendChild(this.canvas);
     }
-    this.direction = CameraDirection.Front;
-    if (navigator.mediaDevices.getUserMedia) {
-      const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
-      navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          width: { min: 200 },
-          height: { min: 200 },
-          facingMode: facingMode
-        }
-      })
-        .then((stream) => {
-        this.stream = stream;
-        this.elVideo.srcObject = this.stream;
-        this.renderToCanvas(drawImageCb);
-      })
-        .catch(function (err0r) {
-        console.log("Something went wrong!", err0r);
-      });
-    }
-  }
-  renderToCanvas(drawImageCb = null) {
-    let ctx = this.canvas.getContext('2d');
-    let imgWidth = this.elVideo.videoWidth;
-    let imgHeight = this.elVideo.videoHeight;
-    var imgSize = Math.min(imgWidth, imgHeight);
-    // The following two lines yield a central based cropping.
-    // They can both be amended to be 0, if you wish it to be
-    // a left based cropped image.
-    var left = (imgWidth - imgSize) / 2;
-    var top = (imgHeight - imgSize) / 2;
-    if (typeof drawImageCb == 'function') {
-      drawImageCb.call(ctx, this.elVideo, left, top, imgSize, imgSize, 0, 0, this.canvas.width, this.canvas.height);
-    }
-    else {
-      ctx.drawImage(this.elVideo, left, top, imgSize, imgSize, 0, 0, this.canvas.width, this.canvas.height);
-    }
-    requestAnimationFrame(() => this.renderToCanvas());
+    initWebcamToVideo(this.elVideo, direction);
+    renderToCanvas(this.canvas, this.elVideo, drawImageCb);
+    return this.canvas;
   }
   resetCamera() {
     var _a, _b;
@@ -5908,35 +5861,10 @@ class WebCamera {
       this.elVideo.srcObject = null;
   }
   async takePicture() {
-    return new Promise((resolve, reject) => {
-      try {
-        this.canvas.toBlob((blob) => {
-          const filename = "pic_" + Math.abs(Math.round(Math.random() * 1000));
-          var file = new File([blob], filename, { type: "image/jpeg" });
-          resolve(file);
-        }, "image/jpeg", 0.8);
-      }
-      catch (error) {
-        reject(error);
-      }
-    });
+    return await takePicture(this.canvas);
   }
 }
-class CameraService {
-  constructor() {
-    this.camaraManager = new WebCamera();
-  }
-  async initCamera(parentElement, cameraDirection, drawImageCb = null) {
-    this.camaraManager.initCamera(parentElement, cameraDirection, drawImageCb);
-  }
-  async takePicture() {
-    return await this.camaraManager.takePicture();
-  }
-  async resetCamera() {
-    return await this.camaraManager.resetCamera();
-  }
-}
-const camera = new CameraService();
+const camera = new WebCamera();
 
 const inputFileFromWebcamCss = ":host{display:inline-block;width:100px;filter:drop-shadow(2px 4px 6px black);border:#5a5252 1px solid;border-style:groove}video{display:none}canvas{width:100%;height:100%}";
 

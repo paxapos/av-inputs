@@ -9,6 +9,7 @@ export declare class InputFaceApiWebcam {
   faceapiService: FaceapiService;
   pictureTimer: any;
   result: FaceDetection;
+  noDetectedCounter: number;
   el: HTMLElement;
   isDetecting: boolean;
   width?: number;
@@ -26,8 +27,15 @@ export declare class InputFaceApiWebcam {
    * @param result
    * @returns true si proceso y detecto imagen
    */
-  getPicZoom(result: any): Promise<Blob>;
+  getPicZoom(): Promise<Blob>;
+  zoomTimer: any;
+  tcoords: {
+    z: number;
+    x: number;
+    y: number;
+  };
   handleStopDetection(): void;
   webcamRender(): Promise<void>;
+  drawWebcamnToCanvas(ctx: any): void;
   render(): any;
 }

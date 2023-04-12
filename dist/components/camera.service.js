@@ -25,26 +25,61 @@ function createCanvas(parentElement) {
   canvas.height = parseInt(parentElement.getAttribute("height"));
   return canvas;
 }
-function initWebcamToVideo(video, direction = CameraDirection.Front) {
-  if (navigator.mediaDevices.getUserMedia) {
-    const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
-    navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        width: { min: 200 },
-        height: { min: 200 },
-        facingMode: facingMode
-      }
-    })
-      .then((stream) => {
-      video.srcObject = stream;
-    })
-      .catch(function (err0r) {
-      console.log("Something went wrong!", err0r);
-    });
+function renderToCanvas(canvas, video, drawImageCb) {
+  let ctx = canvas.getContext('2d');
+  let imgWidth = video.videoWidth;
+  let imgHeight = video.videoHeight;
+  var imgSize = Math.min(imgWidth, imgHeight);
+  // The following two lines yield a central based cropping.
+  // They can both be amended to be 0, if you wish it to be
+  // a left based cropped image.
+  var left = (imgWidth - imgSize) / 2;
+  var top = (imgHeight - imgSize) / 2;
+  if (drawImageCb) {
+    drawImageCb.call(this, ctx, video, left, top, imgSize, imgSize, 0, 0, canvas.width, canvas.height);
   }
+  else {
+    ctx.drawImage(video, left, top, imgSize, imgSize, 0, 0, canvas.width, canvas.height);
+  }
+  return requestAnimationFrame(() => renderToCanvas(canvas, video, drawImageCb));
+}
+async function takePicture(canvas, compression = 0.85) {
+  return new Promise((resolve, reject) => {
+    try {
+      canvas.toBlob((blob) => {
+        const filename = "pic_" + Math.abs(Math.round(Math.random() * 1000));
+        var file = new File([blob], filename, { type: "image/jpeg" });
+        resolve(file);
+      }, "image/jpeg", compression);
+    }
+    catch (error) {
+      reject(error);
+    }
+  });
+}
+function initWebcamToVideo(video, direction = CameraDirection.Front) {
+  return new Promise((resolve, reject) => {
+    if (navigator.mediaDevices.getUserMedia) {
+      const facingMode = (direction == CameraDirection.Front) ? "user" : "environment";
+      navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          width: { min: 200 },
+          height: { min: 200 },
+          facingMode: facingMode
+        }
+      })
+        .then((stream) => {
+        video.srcObject = stream;
+        resolve(stream);
+      })
+        .catch(function (err0r) {
+        reject(err0r);
+      });
+    }
+  });
 }
 
-export { CameraDirection as C, createCanvas as a, createVideo as c, initWebcamToVideo as i };
+export { CameraDirection as C, createCanvas as a, createVideo as c, initWebcamToVideo as i, renderToCanvas as r, takePicture as t };
 
 //# sourceMappingURL=camera.service.js.map

@@ -1,27 +1,16 @@
 import { CameraDirection } from "./camera.service";
 interface SuperCamera {
-  initCamera(parentElement: HTMLElement, direction: CameraDirection, drawImageCb: Function): Promise<void>;
+  initCamera(parentElement: HTMLElement, direction: CameraDirection, drawImageCb: Function): Promise<HTMLCanvasElement>;
   takePicture(): Promise<Blob>;
   resetCamera(): void;
 }
 export declare class WebCamera implements SuperCamera {
-  elVideo: HTMLVideoElement;
-  stream: MediaStream;
-  canvas: HTMLCanvasElement;
-  direction: CameraDirection;
-  constructor();
-  fotoActual: any;
-  initCamera(parentElement: HTMLElement, direction: CameraDirection, drawImageCb?: Function): Promise<void>;
-  renderToCanvas(drawImageCb?: Function): void;
+  private elVideo;
+  private stream;
+  private canvas;
+  initCamera(parentElement: HTMLElement, direction: CameraDirection, drawImageCb?: Function): Promise<HTMLCanvasElement>;
   resetCamera(): void;
   takePicture(): Promise<File>;
 }
-export declare class CameraService {
-  private camaraManager;
-  constructor();
-  initCamera(parentElement: HTMLElement, cameraDirection: CameraDirection, drawImageCb?: Function): Promise<void>;
-  takePicture(): Promise<Blob>;
-  resetCamera(): Promise<void>;
-}
-export declare const camera: CameraService;
+export declare const camera: WebCamera;
 export {};
