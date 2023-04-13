@@ -34,14 +34,12 @@
 
 
     <div id="img-container"></div>
-    <H2>WARNING, GAY detected!</H2>
 
 
     <script>
       const elInputFileFromWebcam = document.getElementById("my-input");
       if ( elInputFileFromWebcam ) {
 
-        console.info("elInputFileFromWebcam", elInputFileFromWebcam);
         elInputFileFromWebcam.addEventListener("click", (ev) => {
   
           elInputFileFromWebcam.takePic().then( (pic) => console.info("I clicked and get this picture", pic))
@@ -55,7 +53,6 @@
   
         document.getElementById("fm_change").addEventListener("click", (e) =>  {
           elInputFileFromWebcam.toggleCamera();
-          console.info("clickeo para cambiar camara");
         })
       }
 
@@ -69,13 +66,9 @@
 
          
         elInputFaceApi.addEventListener('faceDetected', (e) => {
-
-          console.info("face detected", e.detail)
-
            
-            img.src = URL.createObjectURL(e.detail);
-
-            
+            img.src = URL.createObjectURL(e.detail.blob);
+            console.info("faceDetected", e.detail.result)
             //elInputFaceApi.stopDetection();
             faceDetected = true;
 

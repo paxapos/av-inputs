@@ -20,7 +20,7 @@ const patchBrowser = () => {
 };
 
 patchBrowser().then(options => {
-  return index.bootstrapLazy([["input-face-api-webcam_2.cjs",[[1,"input-face-api-webcam",{"width":[1538],"height":[1538],"detectionTimer":[1538,"detection-timer"],"isDetecting":[32],"stopDetection":[64],"startDetection":[64]}],[1,"input-file-from-webcam",{"width":[1538],"height":[1538],"facingMode":[1537,"facing-mode"],"drawImageCb":[16],"takePic":[64],"resetCamera":[64],"toggleCamera":[64]},[[0,"click","onClickHandler"]]]]]], options);
+  return index.bootstrapLazy([["input-face-api-webcam_2.cjs",[[1,"input-face-api-webcam",{"width":[1538],"height":[1538],"inputSize":[1538,"input-size"],"scoreThreshold":[1538,"score-threshold"],"detectionTimer":[1538,"detection-timer"],"isDetecting":[32],"stopDetection":[64],"startDetection":[64]}],[1,"input-file-from-webcam",{"width":[1538],"height":[1538],"facingMode":[1537,"facing-mode"],"drawImageCb":[16],"takePic":[64],"resetCamera":[64],"toggleCamera":[64]},[[0,"click","onClickHandler"]]]]]], options);
 });
 
 exports.setNonce = index.setNonce;

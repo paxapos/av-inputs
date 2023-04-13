@@ -3,16 +3,21 @@ import { FaceapiService } from '../../utils/facepi.service';
 import { createCanvas, createVideo, initWebcamToVideo } from '../../utils/camera.service';
 import { FaceDetection } from 'face-api.js';
 
+
+export interface iFaceDetected{
+  blob: Blob
+  result: FaceDetection
+}
+
+const DETECTION_FPS = 10
+
 @Component({
   tag: 'input-face-api-webcam',
   styleUrl: 'input-face-api-webcam.css',
   shadow: true,
 })
 export class InputFaceApiWebcam {
-
-  // canvas to store photo
-  photoCanvas: HTMLCanvasElement
-
+  
   //webcam stream
   video: HTMLVideoElement
 
@@ -23,12 +28,13 @@ export class InputFaceApiWebcam {
   faceapiService: FaceapiService
 
   // timer to detect face bassed on detectionTimer
-  pictureTimer: any = null
+  resultTimer: NodeJS.Timeout
 
   // last result
   result: FaceDetection = null
 
-  noDetectedCounter = 0
+  curCords = {x: 0, y: 0}
+  toCords = {x: 0, y: 0}
 
     
   @Element() el: HTMLElement;
@@ -38,6 +44,11 @@ export class InputFaceApiWebcam {
 
   @Prop({reflect: true, mutable: true}) width?: number = 460
   @Prop({reflect: true, mutable: true}) height?: number = 460
+
+  /** Minimun input size of face */
+  @Prop({reflect: true, mutable: true}) inputSize?: number = 192
+
+  @Prop({reflect: true, mutable: true}) scoreThreshold?: number = 0.7
 
   @Prop({reflect: true, mutable: true}) detectionTimer?: number = 1000
 
@@ -52,13 +63,12 @@ export class InputFaceApiWebcam {
   }
 
 
-
   @Event({
     eventName: 'faceDetected',
     composed: true,
     cancelable: false,
     bubbles: true,
-  }) faceDetected: EventEmitter<Blob>;
+  }) faceDetected: EventEmitter<iFaceDetected>;
 
 
   @Event({
@@ -81,41 +91,33 @@ export class InputFaceApiWebcam {
     this.el.appendChild(this.canvas)
 
 
-    this.photoCanvas = createCanvas(this.el)
-    this.photoCanvas.width = this.width
-    this.photoCanvas.height = this.height
-
-    //this.el.appendChild(this.photoCanvas)
     this.faceapiService = new FaceapiService()
 
 
   }
 
   async componentDidRender() {
-
     initWebcamToVideo(this.video)
    
-
     this.webcamRender();
     
   }
 
-  async disconnectedCallback() {
-  }
+
 
   /**
    * 
    * @param result 
    * @returns true si proceso y detecto imagen
    */
-  emitBlob(): Promise<Blob> {
+  emitBlob(result): Promise<Blob> {
 
     return new Promise((resolve, reject) => {
       try {
         // this faceDetected emit blob from this.canvas
         this.canvas.toBlob((blob) => {
-          console.info("faceDetected tirandop blob")
-          this.faceDetected.emit(blob)
+          const iface = {blob, result}
+          this.faceDetected.emit(iface)
           resolve(blob)
         }, 'image/jpeg', 1)
     
@@ -127,33 +129,49 @@ export class InputFaceApiWebcam {
 
   }
 
+
  
   async webcamRender () {
     requestAnimationFrame(() => {
       this.webcamRender() 
     })
 
+    let ctx = this.canvas.getContext('2d');
+    this.drawWebcamnToCanvas(ctx);
+    
+    // get context of canvas and create paning and zoooming to center
 
-    if ( this.isDetecting ) {
-
-      const result = await this.faceapiService.detectFace( this.video )
-
-      let ctx = this.canvas.getContext('2d');
-      this.drawWebcamnToCanvas(ctx);
+    if ( this.isDetecting && !this.resultTimer) {
       
-      if ( result ) {
+      this.resultTimer = setTimeout(async () => {
 
-        try {
-          // saca una foto del canvas y genera el BLOB para emitir
-          await this.emitBlob()
-        } catch (e) {
-          console.error(e)
+        const result = await this.faceapiService.detectFace( this.canvas, this.inputSize, this.scoreThreshold )
+        
+        if ( result ) {
+          this.toCords = {x: Math.ceil(result.box.x), y: Math.ceil(result.box.y)}
+
+          try {
+            // saca una foto del canvas y genera el BLOB para emitir
+            await this.emitBlob(result)
+          } catch (e) {
+            console.error(e)
+          }
+        } else {
+  
+          this.faceStopDetection.emit()
+
+          ctx.translate(0, 0);
+          ctx.scale(1, 1);
+          this.toCords = {x: 0, y: 0}
+    
         }
-      } else {
+        this.result = result
+        
+        clearTimeout(this.resultTimer)
+        this.resultTimer = null
 
-        this.faceStopDetection.emit()
-      }
-      this.result = result
+      }, Math.abs(1000/DETECTION_FPS))
+
 
     }
 

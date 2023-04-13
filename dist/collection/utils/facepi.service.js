@@ -13,11 +13,9 @@ export class FaceapiService {
       this.modelLoaded = true;
     });
   }
-  async detectFace(el) {
+  async detectFace(el, inputSize = 192, scoreThreshold = 0.7) {
     if (this.modelLoaded) {
       // TinyFaceDetectorOptions
-      const inputSize = 192;
-      const scoreThreshold = 0.7;
       const ops = new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold });
       return await faceapi.detectSingleFace(el, ops);
     }

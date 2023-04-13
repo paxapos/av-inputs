@@ -17,14 +17,10 @@ export class FaceapiService {
         });
     }
 
-    async detectFace(el:HTMLVideoElement|HTMLCanvasElement):  Promise<faceapi.FaceDetection> {
+    async detectFace(el:HTMLVideoElement|HTMLCanvasElement, inputSize = 192, scoreThreshold = 0.7):  Promise<faceapi.FaceDetection> {
         if ( this.modelLoaded ) {
             // TinyFaceDetectorOptions
-            const inputSize = 192
-            const scoreThreshold = 0.7
-            
             const ops = new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold })
-
             return await faceapi.detectSingleFace(el, ops)
         }
     }

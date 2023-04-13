@@ -6,5 +6,5 @@ import * as faceapi from 'face-api.js';
 export declare class FaceapiService {
   modelLoaded: boolean;
   constructor();
-  detectFace(el: HTMLVideoElement | HTMLCanvasElement): Promise<faceapi.FaceDetection>;
+  detectFace(el: HTMLVideoElement | HTMLCanvasElement, inputSize?: number, scoreThreshold?: number): Promise<faceapi.FaceDetection>;
 }

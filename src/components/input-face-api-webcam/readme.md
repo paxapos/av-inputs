@@ -7,19 +7,21 @@
 
 ## Properties
 
-| Property         | Attribute         | Description | Type     | Default |
-| ---------------- | ----------------- | ----------- | -------- | ------- |
-| `detectionTimer` | `detection-timer` |             | `number` | `1000`  |
-| `height`         | `height`          |             | `number` | `460`   |
-| `width`          | `width`           |             | `number` | `460`   |
+| Property         | Attribute         | Description                | Type     | Default |
+| ---------------- | ----------------- | -------------------------- | -------- | ------- |
+| `detectionTimer` | `detection-timer` |                            | `number` | `1000`  |
+| `height`         | `height`          |                            | `number` | `460`   |
+| `inputSize`      | `input-size`      | Minimun input size of face | `number` | `192`   |
+| `scoreThreshold` | `score-threshold` |                            | `number` | `0.7`   |
+| `width`          | `width`           |                            | `number` | `460`   |
 
 
 ## Events
 
-| Event               | Description | Type                |
-| ------------------- | ----------- | ------------------- |
-| `faceDetected`      |             | `CustomEvent<Blob>` |
-| `faceStopDetection` |             | `CustomEvent<void>` |
+| Event               | Description | Type                         |
+| ------------------- | ----------- | ---------------------------- |
+| `faceDetected`      |             | `CustomEvent<iFaceDetected>` |
+| `faceStopDetection` |             | `CustomEvent<void>`          |
 
 
 ## Methods

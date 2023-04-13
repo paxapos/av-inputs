@@ -5607,11 +5607,9 @@ class FaceapiService {
       this.modelLoaded = true;
     });
   }
-  async detectFace(el) {
+  async detectFace(el, inputSize = 192, scoreThreshold = 0.7) {
     if (this.modelLoaded) {
       // TinyFaceDetectorOptions
-      const inputSize = 192;
-      const scoreThreshold = 0.7;
       const ops = new TinyFaceDetectorOptions({ inputSize, scoreThreshold });
       return await detectSingleFace(el, ops);
     }
@@ -5620,6 +5618,7 @@ class FaceapiService {
 
 const inputFaceApiWebcamCss = ":host{display:inline-block;width:100px;filter:drop-shadow(2px 4px 6px black);border:#5a5252 1px solid;border-style:groove}video{display:none}canvas{width:100%;height:100%}";
 
+const DETECTION_FPS = 10;
 const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTMLElement {
   constructor() {
     super();
@@ -5627,14 +5626,15 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTML
     this.__attachShadow();
     this.faceDetected = createEvent(this, "faceDetected", 6);
     this.faceStopDetection = createEvent(this, "faceStopDetection", 6);
-    // timer to detect face bassed on detectionTimer
-    this.pictureTimer = null;
     // last result
     this.result = null;
-    this.noDetectedCounter = 0;
+    this.curCords = { x: 0, y: 0 };
+    this.toCords = { x: 0, y: 0 };
     this.isDetecting = true;
     this.width = 460;
     this.height = 460;
+    this.inputSize = 192;
+    this.scoreThreshold = 0.7;
     this.detectionTimer = 1000;
   }
   async stopDetection() {
@@ -5650,30 +5650,24 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTML
     this.canvas.width = this.width;
     this.canvas.height = this.height;
     this.el.appendChild(this.canvas);
-    this.photoCanvas = createCanvas$1(this.el);
-    this.photoCanvas.width = this.width;
-    this.photoCanvas.height = this.height;
-    //this.el.appendChild(this.photoCanvas)
     this.faceapiService = new FaceapiService();
   }
   async componentDidRender() {
     initWebcamToVideo(this.video);
     this.webcamRender();
   }
-  async disconnectedCallback() {
-  }
   /**
    *
    * @param result
    * @returns true si proceso y detecto imagen
    */
-  emitBlob() {
+  emitBlob(result) {
     return new Promise((resolve, reject) => {
       try {
         // this faceDetected emit blob from this.canvas
         this.canvas.toBlob((blob) => {
-          console.info("faceDetected tirandop blob");
-          this.faceDetected.emit(blob);
+          const iface = { blob, result };
+          this.faceDetected.emit(iface);
           resolve(blob);
         }, 'image/jpeg', 1);
       }
@@ -5686,23 +5680,32 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTML
     requestAnimationFrame(() => {
       this.webcamRender();
     });
-    if (this.isDetecting) {
-      const result = await this.faceapiService.detectFace(this.video);
-      let ctx = this.canvas.getContext('2d');
-      this.drawWebcamnToCanvas(ctx);
-      if (result) {
-        try {
-          // saca una foto del canvas y genera el BLOB para emitir
-          await this.emitBlob();
+    let ctx = this.canvas.getContext('2d');
+    this.drawWebcamnToCanvas(ctx);
+    // get context of canvas and create paning and zoooming to center
+    if (this.isDetecting && !this.resultTimer) {
+      this.resultTimer = setTimeout(async () => {
+        const result = await this.faceapiService.detectFace(this.canvas, this.inputSize, this.scoreThreshold);
+        if (result) {
+          this.toCords = { x: Math.ceil(result.box.x), y: Math.ceil(result.box.y) };
+          try {
+            // saca una foto del canvas y genera el BLOB para emitir
+            await this.emitBlob(result);
+          }
+          catch (e) {
+            console.error(e);
+          }
         }
-        catch (e) {
-          console.error(e);
+        else {
+          this.faceStopDetection.emit();
+          ctx.translate(0, 0);
+          ctx.scale(1, 1);
+          this.toCords = { x: 0, y: 0 };
         }
-      }
-      else {
-        this.faceStopDetection.emit();
-      }
-      this.result = result;
+        this.result = result;
+        clearTimeout(this.resultTimer);
+        this.resultTimer = null;
+      }, Math.abs(1000 / DETECTION_FPS));
     }
   }
   ;
@@ -5727,6 +5730,8 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTML
 }, [1, "input-face-api-webcam", {
     "width": [1538],
     "height": [1538],
+    "inputSize": [1538, "input-size"],
+    "scoreThreshold": [1538, "score-threshold"],
     "detectionTimer": [1538, "detection-timer"],
     "isDetecting": [32],
     "stopDetection": [64],
