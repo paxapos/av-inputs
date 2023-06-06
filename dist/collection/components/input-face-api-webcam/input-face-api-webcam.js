@@ -1,7 +1,6 @@
 import { Host, h } from '@stencil/core';
 import { FaceapiService } from '../../utils/facepi.service';
-import { createCanvas, createVideo, initWebcamToVideo } from '../../utils/camera.service';
-const DETECTION_FPS = 10;
+import { CameraDirection, createCanvas, createVideo, initWebcamToVideo } from '../../utils/camera.service';
 export class InputFaceApiWebcam {
   constructor() {
     // last result
@@ -13,7 +12,8 @@ export class InputFaceApiWebcam {
     this.height = 460;
     this.inputSize = 192;
     this.scoreThreshold = 0.7;
-    this.detectionTimer = 1000;
+    this.detectionTimer = 1500;
+    this.facingMode = CameraDirection.Front;
   }
   async stopDetection() {
     this.isDetecting = false;
@@ -23,7 +23,6 @@ export class InputFaceApiWebcam {
   }
   async componentWillLoad() {
     this.video = createVideo();
-    //this.el.appendChild(this.video)
     this.canvas = createCanvas(this.el);
     this.canvas.width = this.width;
     this.canvas.height = this.height;
@@ -31,7 +30,7 @@ export class InputFaceApiWebcam {
     this.faceapiService = new FaceapiService();
   }
   async componentDidRender() {
-    initWebcamToVideo(this.video);
+    initWebcamToVideo(this.video, this.facingMode);
     this.webcamRender();
   }
   /**
@@ -55,36 +54,37 @@ export class InputFaceApiWebcam {
     });
   }
   async webcamRender() {
-    requestAnimationFrame(() => {
-      this.webcamRender();
-    });
     let ctx = this.canvas.getContext('2d');
     this.drawWebcamnToCanvas(ctx);
     // get context of canvas and create paning and zoooming to center
+    console.info("el TIMER es", this.resultTimer, this.detectionTimer);
     if (this.isDetecting && !this.resultTimer) {
+      const result = await this.faceapiService.detectFace(this.canvas, this.inputSize, this.scoreThreshold);
+      if (result) {
+        this.toCords = { x: Math.ceil(result.box.x), y: Math.ceil(result.box.y) };
+        try {
+          // saca una foto del canvas y genera el BLOB para emitir
+          await this.emitBlob(result);
+        }
+        catch (e) {
+          console.error(e);
+        }
+      }
+      else {
+        this.faceStopDetection.emit();
+        ctx.translate(0, 0);
+        ctx.scale(1, 1);
+        this.toCords = { x: 0, y: 0 };
+      }
+      this.result = result;
       this.resultTimer = setTimeout(async () => {
-        const result = await this.faceapiService.detectFace(this.canvas, this.inputSize, this.scoreThreshold);
-        if (result) {
-          this.toCords = { x: Math.ceil(result.box.x), y: Math.ceil(result.box.y) };
-          try {
-            // saca una foto del canvas y genera el BLOB para emitir
-            await this.emitBlob(result);
-          }
-          catch (e) {
-            console.error(e);
-          }
-        }
-        else {
-          this.faceStopDetection.emit();
-          ctx.translate(0, 0);
-          ctx.scale(1, 1);
-          this.toCords = { x: 0, y: 0 };
-        }
-        this.result = result;
         clearTimeout(this.resultTimer);
         this.resultTimer = null;
-      }, Math.abs(1000 / DETECTION_FPS));
+      }, Math.abs(this.detectionTimer));
     }
+    requestAnimationFrame(() => {
+      this.webcamRender();
+    });
   }
   ;
   drawWebcamnToCanvas(ctx) {
@@ -205,7 +205,30 @@ export class InputFaceApiWebcam {
         },
         "attribute": "detection-timer",
         "reflect": true,
-        "defaultValue": "1000"
+        "defaultValue": "1500"
+      },
+      "facingMode": {
+        "type": "string",
+        "mutable": true,
+        "complexType": {
+          "original": "CameraDirection",
+          "resolved": "CameraDirection.Front | CameraDirection.Rear",
+          "references": {
+            "CameraDirection": {
+              "location": "import",
+              "path": "../../utils/camera.service"
+            }
+          }
+        },
+        "required": false,
+        "optional": true,
+        "docs": {
+          "tags": [],
+          "text": ""
+        },
+        "attribute": "facing-mode",
+        "reflect": true,
+        "defaultValue": "CameraDirection.Front"
       }
     };
   }

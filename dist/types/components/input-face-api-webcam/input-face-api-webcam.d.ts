@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import { EventEmitter } from '../../stencil-public-runtime';
 import { FaceapiService } from '../../utils/facepi.service';
+import { CameraDirection } from '../../utils/camera.service';
 import { FaceDetection } from 'face-api.js';
 export interface iFaceDetected {
   blob: Blob;
@@ -28,6 +29,7 @@ export declare class InputFaceApiWebcam {
   inputSize?: number;
   scoreThreshold?: number;
   detectionTimer?: number;
+  facingMode?: CameraDirection;
   stopDetection(): Promise<void>;
   startDetection(): Promise<void>;
   faceDetected: EventEmitter<iFaceDetected>;

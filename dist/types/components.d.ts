@@ -5,13 +5,14 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "./stencil-public-runtime";
-import { iFaceDetected } from "./components/input-face-api-webcam/input-face-api-webcam";
 import { CameraDirection } from "./utils/camera.service";
-export { iFaceDetected } from "./components/input-face-api-webcam/input-face-api-webcam";
+import { iFaceDetected } from "./components/input-face-api-webcam/input-face-api-webcam";
 export { CameraDirection } from "./utils/camera.service";
+export { iFaceDetected } from "./components/input-face-api-webcam/input-face-api-webcam";
 export namespace Components {
     interface InputFaceApiWebcam {
         "detectionTimer"?: number;
+        "facingMode"?: CameraDirection;
         "height"?: number;
         /**
           * Minimun input size of face
@@ -67,6 +68,7 @@ declare global {
 declare namespace LocalJSX {
     interface InputFaceApiWebcam {
         "detectionTimer"?: number;
+        "facingMode"?: CameraDirection;
         "height"?: number;
         /**
           * Minimun input size of face

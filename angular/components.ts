@@ -10,7 +10,7 @@ import { defineCustomElement as defineInputFaceApiWebcam } from 'input-file-from
 import { defineCustomElement as defineInputFileFromWebcam } from 'input-file-from-webcam/components/input-file-from-webcam.js';
 @ProxyCmp({
   defineCustomElementFn: defineInputFaceApiWebcam,
-  inputs: ['detectionTimer', 'height', 'inputSize', 'scoreThreshold', 'width'],
+  inputs: ['detectionTimer', 'facingMode', 'height', 'inputSize', 'scoreThreshold', 'width'],
   methods: ['stopDetection', 'startDetection']
 })
 @Component({
@@ -18,7 +18,7 @@ import { defineCustomElement as defineInputFileFromWebcam } from 'input-file-fro
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content></ng-content>',
   // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
-  inputs: ['detectionTimer', 'height', 'inputSize', 'scoreThreshold', 'width'],
+  inputs: ['detectionTimer', 'facingMode', 'height', 'inputSize', 'scoreThreshold', 'width'],
 })
 export class InputFaceApiWebcam {
   protected el: HTMLElement;

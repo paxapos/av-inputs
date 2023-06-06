@@ -5,7 +5,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 const index = require('./index-038bef98.js');
 
 /*
- Stencil Client Patch Esm v3.1.0 | MIT Licensed | https://stenciljs.com
+ Stencil Client Patch Esm v3.2.1 | MIT Licensed | https://stenciljs.com
  */
 const patchEsm = () => {
     return index.promiseResolve();
@@ -14,7 +14,7 @@ const patchEsm = () => {
 const defineCustomElements = (win, options) => {
   if (typeof window === 'undefined') return Promise.resolve();
   return patchEsm().then(() => {
-  return index.bootstrapLazy([["input-face-api-webcam_2.cjs",[[1,"input-face-api-webcam",{"width":[1538],"height":[1538],"inputSize":[1538,"input-size"],"scoreThreshold":[1538,"score-threshold"],"detectionTimer":[1538,"detection-timer"],"isDetecting":[32],"stopDetection":[64],"startDetection":[64]}],[1,"input-file-from-webcam",{"width":[1538],"height":[1538],"facingMode":[1537,"facing-mode"],"drawImageCb":[16],"takePic":[64],"resetCamera":[64],"toggleCamera":[64]},[[0,"click","onClickHandler"]]]]]], options);
+  return index.bootstrapLazy([["input-face-api-webcam_2.cjs",[[1,"input-face-api-webcam",{"width":[1538],"height":[1538],"inputSize":[1538,"input-size"],"scoreThreshold":[1538,"score-threshold"],"detectionTimer":[1538,"detection-timer"],"facingMode":[1537,"facing-mode"],"isDetecting":[32],"stopDetection":[64],"startDetection":[64]}],[1,"input-file-from-webcam",{"width":[1538],"height":[1538],"facingMode":[1537,"facing-mode"],"drawImageCb":[16],"takePic":[64],"resetCamera":[64],"toggleCamera":[64]},[[0,"click","onClickHandler"]]]]]], options);
   });
 };
 

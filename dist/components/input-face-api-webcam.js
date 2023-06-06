@@ -1,5 +1,5 @@
 import { getAssetPath, proxyCustomElement, HTMLElement, createEvent, h as h$1, Host } from '@stencil/core/internal/client';
-import { c as createVideo, a as createCanvas$1, i as initWebcamToVideo } from './camera.service.js';
+import { C as CameraDirection, c as createVideo, a as createCanvas$1, i as initWebcamToVideo } from './camera.service.js';
 
 /**
  * @license
@@ -5618,8 +5618,7 @@ class FaceapiService {
 
 const inputFaceApiWebcamCss = ":host{display:inline-block;width:100px;filter:drop-shadow(2px 4px 6px black);border:#5a5252 1px solid;border-style:groove}video{display:none}canvas{width:100%;height:100%}";
 
-const DETECTION_FPS = 10;
-const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTMLElement {
+const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class InputFaceApiWebcam extends HTMLElement {
   constructor() {
     super();
     this.__registerHost();
@@ -5635,7 +5634,8 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTML
     this.height = 460;
     this.inputSize = 192;
     this.scoreThreshold = 0.7;
-    this.detectionTimer = 1000;
+    this.detectionTimer = 1500;
+    this.facingMode = CameraDirection.Front;
   }
   async stopDetection() {
     this.isDetecting = false;
@@ -5645,7 +5645,6 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTML
   }
   async componentWillLoad() {
     this.video = createVideo();
-    //this.el.appendChild(this.video)
     this.canvas = createCanvas$1(this.el);
     this.canvas.width = this.width;
     this.canvas.height = this.height;
@@ -5653,7 +5652,7 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTML
     this.faceapiService = new FaceapiService();
   }
   async componentDidRender() {
-    initWebcamToVideo(this.video);
+    initWebcamToVideo(this.video, this.facingMode);
     this.webcamRender();
   }
   /**
@@ -5677,36 +5676,37 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTML
     });
   }
   async webcamRender() {
-    requestAnimationFrame(() => {
-      this.webcamRender();
-    });
     let ctx = this.canvas.getContext('2d');
     this.drawWebcamnToCanvas(ctx);
     // get context of canvas and create paning and zoooming to center
+    console.info("el TIMER es", this.resultTimer, this.detectionTimer);
     if (this.isDetecting && !this.resultTimer) {
+      const result = await this.faceapiService.detectFace(this.canvas, this.inputSize, this.scoreThreshold);
+      if (result) {
+        this.toCords = { x: Math.ceil(result.box.x), y: Math.ceil(result.box.y) };
+        try {
+          // saca una foto del canvas y genera el BLOB para emitir
+          await this.emitBlob(result);
+        }
+        catch (e) {
+          console.error(e);
+        }
+      }
+      else {
+        this.faceStopDetection.emit();
+        ctx.translate(0, 0);
+        ctx.scale(1, 1);
+        this.toCords = { x: 0, y: 0 };
+      }
+      this.result = result;
       this.resultTimer = setTimeout(async () => {
-        const result = await this.faceapiService.detectFace(this.canvas, this.inputSize, this.scoreThreshold);
-        if (result) {
-          this.toCords = { x: Math.ceil(result.box.x), y: Math.ceil(result.box.y) };
-          try {
-            // saca una foto del canvas y genera el BLOB para emitir
-            await this.emitBlob(result);
-          }
-          catch (e) {
-            console.error(e);
-          }
-        }
-        else {
-          this.faceStopDetection.emit();
-          ctx.translate(0, 0);
-          ctx.scale(1, 1);
-          this.toCords = { x: 0, y: 0 };
-        }
-        this.result = result;
         clearTimeout(this.resultTimer);
         this.resultTimer = null;
-      }, Math.abs(1000 / DETECTION_FPS));
+      }, Math.abs(this.detectionTimer));
     }
+    requestAnimationFrame(() => {
+      this.webcamRender();
+    });
   }
   ;
   drawWebcamnToCanvas(ctx) {
@@ -5733,6 +5733,7 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTML
     "inputSize": [1538, "input-size"],
     "scoreThreshold": [1538, "score-threshold"],
     "detectionTimer": [1538, "detection-timer"],
+    "facingMode": [1537, "facing-mode"],
     "isDetecting": [32],
     "stopDetection": [64],
     "startDetection": [64]

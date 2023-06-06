@@ -34,7 +34,7 @@ const camera = new WebCamera();
 
 const inputFileFromWebcamCss = ":host{display:inline-block;width:100px;filter:drop-shadow(2px 4px 6px black);border:#5a5252 1px solid;border-style:groove}video{display:none}canvas{width:100%;height:100%}";
 
-const InputFileFromWebcam$1 = /*@__PURE__*/ proxyCustomElement(class extends HTMLElement {
+const InputFileFromWebcam$1 = /*@__PURE__*/ proxyCustomElement(class InputFileFromWebcam extends HTMLElement {
   constructor() {
     super();
     this.__registerHost();
