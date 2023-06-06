@@ -138,7 +138,6 @@ export class InputFaceApiWebcam {
     this.drawWebcamnToCanvas(ctx);
     
     // get context of canvas and create paning and zoooming to center
-    console.info("el TIMER es", this.resultTimer, this.detectionTimer)
     if ( this.isDetecting && !this.resultTimer) {
         
       const result = await this.faceapiService.detectFace( this.canvas, this.inputSize, this.scoreThreshold )
