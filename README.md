@@ -3,7 +3,7 @@ stencil.js component that shows the webcam and allow you to take pictures easily
 
 
 ```html
-<script type="module" src='https://cdn.jsdelivr.net/npm/input-file-from-webcam/dist/input-file-from-webcam/input-file-from-webcam.esm.js'></script>
+<script type="module" src='https://cdn.jsdelivr.net/npm/input-file-from-webcam/dist/esm/input-file-from-webcam.js'></script>
 <input-file-from-webcam id="my-input"></input-file-from-webcam>
 ```
 
