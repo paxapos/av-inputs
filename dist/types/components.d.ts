@@ -7,8 +7,10 @@
 import { HTMLStencilElement, JSXBase } from "./stencil-public-runtime";
 import { CameraDirection } from "./utils/camera.service";
 import { iFaceDetected } from "./components/input-face-api-webcam/input-face-api-webcam";
+import { InputScanData } from "./components/input-scan-reader/input-scan-reader";
 export { CameraDirection } from "./utils/camera.service";
 export { iFaceDetected } from "./components/input-face-api-webcam/input-face-api-webcam";
+export { InputScanData } from "./components/input-scan-reader/input-scan-reader";
 export namespace Components {
     interface InputFaceApiWebcam {
         "detectionTimer"?: number;
@@ -38,6 +40,9 @@ export namespace Components {
         "toggleCamera": () => Promise<void>;
         "width"?: number;
     }
+    interface InputScanReader {
+        "showPrompt": () => Promise<void>;
+    }
 }
 export interface InputFaceApiWebcamCustomEvent<T> extends CustomEvent<T> {
     detail: T;
@@ -46,6 +51,10 @@ export interface InputFaceApiWebcamCustomEvent<T> extends CustomEvent<T> {
 export interface InputFileFromWebcamCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLInputFileFromWebcamElement;
+}
+export interface InputScanReaderCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLInputScanReaderElement;
 }
 declare global {
     interface HTMLInputFaceApiWebcamElement extends Components.InputFaceApiWebcam, HTMLStencilElement {
@@ -60,9 +69,16 @@ declare global {
         prototype: HTMLInputFileFromWebcamElement;
         new (): HTMLInputFileFromWebcamElement;
     };
+    interface HTMLInputScanReaderElement extends Components.InputScanReader, HTMLStencilElement {
+    }
+    var HTMLInputScanReaderElement: {
+        prototype: HTMLInputScanReaderElement;
+        new (): HTMLInputScanReaderElement;
+    };
     interface HTMLElementTagNameMap {
         "input-face-api-webcam": HTMLInputFaceApiWebcamElement;
         "input-file-from-webcam": HTMLInputFileFromWebcamElement;
+        "input-scan-reader": HTMLInputScanReaderElement;
     }
 }
 declare namespace LocalJSX {
@@ -93,9 +109,13 @@ declare namespace LocalJSX {
         "onPictureTaken"?: (event: InputFileFromWebcamCustomEvent<Blob>) => void;
         "width"?: number;
     }
+    interface InputScanReader {
+        "onScan"?: (event: InputScanReaderCustomEvent<InputScanData>) => void;
+    }
     interface IntrinsicElements {
         "input-face-api-webcam": InputFaceApiWebcam;
         "input-file-from-webcam": InputFileFromWebcam;
+        "input-scan-reader": InputScanReader;
     }
 }
 export { LocalJSX as JSX };
@@ -104,6 +124,7 @@ declare module "@stencil/core" {
         interface IntrinsicElements {
             "input-face-api-webcam": LocalJSX.InputFaceApiWebcam & JSXBase.HTMLAttributes<HTMLInputFaceApiWebcamElement>;
             "input-file-from-webcam": LocalJSX.InputFileFromWebcam & JSXBase.HTMLAttributes<HTMLInputFileFromWebcamElement>;
+            "input-scan-reader": LocalJSX.InputScanReader & JSXBase.HTMLAttributes<HTMLInputScanReaderElement>;
         }
     }
 }

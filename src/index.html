@@ -10,7 +10,11 @@
   </head>
   <body>
 
+    <h1>Input scanner para lector de QRs</h1>
+    <input-scan-reader id="scanner" />
+
     <h1>Simple webcam viewer</h1>
+
 
     <code>
       <!-- escribir codigo HTML usando un ejemploi de como escribiur un <div> que se muestre en la pagina web como string-->
@@ -79,6 +83,11 @@
 
 
 
+
+        $scanner = document.getElementById("scanner");
+        $scanner.addEventListener("scan", (e) => {
+          console.info("scan", e.detail);
+        })
       }
     </script>
 
