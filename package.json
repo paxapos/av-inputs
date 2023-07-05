@@ -1,6 +1,6 @@
 {
   "name": "input-file-from-webcam",
-  "version": "0.0.62",
+  "version": "0.0.64",
   "description": "Stencil Component Input webcam",
   "main": "dist/index.cjs.js",
   "module": "dist/index.js",

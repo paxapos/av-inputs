@@ -8,6 +8,7 @@ import type { Components } from 'input-file-from-webcam/components';
 
 import { defineCustomElement as defineInputFaceApiWebcam } from 'input-file-from-webcam/components/input-face-api-webcam.js';
 import { defineCustomElement as defineInputFileFromWebcam } from 'input-file-from-webcam/components/input-file-from-webcam.js';
+import { defineCustomElement as defineInputScanReader } from 'input-file-from-webcam/components/input-scan-reader.js';
 @ProxyCmp({
   defineCustomElementFn: defineInputFaceApiWebcam,
   inputs: ['detectionTimer', 'facingMode', 'height', 'inputSize', 'scoreThreshold', 'width'],
@@ -69,6 +70,35 @@ export declare interface InputFileFromWebcam extends Components.InputFileFromWeb
   pictureTaken: EventEmitter<CustomEvent<Blob>>;
 
   facingModeChanged: EventEmitter<CustomEvent<IInputFileFromWebcamCameraDirection>>;
+}
+
+
+@ProxyCmp({
+  defineCustomElementFn: defineInputScanReader,
+  methods: ['showPrompt']
+})
+@Component({
+  selector: 'input-scan-reader',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: '<ng-content></ng-content>',
+  // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
+  inputs: [],
+})
+export class InputScanReader {
+  protected el: HTMLElement;
+  constructor(c: ChangeDetectorRef, r: ElementRef, protected z: NgZone) {
+    c.detach();
+    this.el = r.nativeElement;
+    proxyOutputs(this, this.el, ['scan']);
+  }
+}
+
+
+import type { InputScanData as IInputScanReaderInputScanData } from 'input-file-from-webcam/components';
+
+export declare interface InputScanReader extends Components.InputScanReader {
+
+  scan: EventEmitter<CustomEvent<IInputScanReaderInputScanData>>;
 }
 
 
