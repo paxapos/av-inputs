@@ -26,6 +26,16 @@
 
 ## Methods
 
+### `getFaceLandMarks() => Promise<FaceLandmarkerResult>`
+
+
+
+#### Returns
+
+Type: `Promise<FaceLandmarkerResult>`
+
+
+
 ### `startDetection() => Promise<void>`
 
 

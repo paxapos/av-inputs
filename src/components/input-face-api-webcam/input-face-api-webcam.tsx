@@ -1,7 +1,7 @@
 import { Component, Host, h, Element, Prop, Event,EventEmitter, Method, State, Watch } from '@stencil/core';
 import { DetectionImg, FaceapiService } from '../../utils/facepi.service';
 import { CameraDirection, createCanvas, createVideo, initWebcamToVideo, renderToCanvas } from '../../utils/camera.service';
-import { Detection } from '@mediapipe/tasks-vision';
+import { Detection, FaceLandmarkerResult } from '@mediapipe/tasks-vision';
 import { pxTimer } from 'src/utils/utils';
 
 
@@ -66,6 +66,15 @@ export class InputFaceApiWebcam {
     this.enableDetection = true;
   }
 
+
+  @Method()
+  async getFaceLandMarks(): Promise<FaceLandmarkerResult> {
+    if ( this.detectionResult && this.detectionResult.blobImg ) {
+      return await this.faceapiService.getFaceLandmarksFromBlob( this.detectionResult.blobImg )
+    } else {
+      return null
+    }
+  }
 
   @Event({
     eventName: 'faceDetected',

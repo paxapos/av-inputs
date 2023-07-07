@@ -12,7 +12,7 @@ import { defineCustomElement as defineInputScanReader } from 'input-file-from-we
 @ProxyCmp({
   defineCustomElementFn: defineInputFaceApiWebcam,
   inputs: ['detectionTimer', 'facingMode', 'height', 'scoreThreshold', 'width'],
-  methods: ['stopDetection', 'startDetection']
+  methods: ['stopDetection', 'startDetection', 'getFaceLandMarks']
 })
 @Component({
   selector: 'input-face-api-webcam',

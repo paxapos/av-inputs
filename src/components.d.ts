@@ -7,12 +7,15 @@
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 import { CameraDirection } from "./utils/camera.service";
 import { DetectionImg } from "./utils/facepi.service";
+import { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 export { CameraDirection } from "./utils/camera.service";
 export { DetectionImg } from "./utils/facepi.service";
+export { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 export namespace Components {
     interface InputFaceApiWebcam {
         "detectionTimer"?: number;
         "facingMode"?: CameraDirection;
+        "getFaceLandMarks": () => Promise<FaceLandmarkerResult>;
         "height"?: number;
         "scoreThreshold"?: number;
         "startDetection": () => Promise<void>;

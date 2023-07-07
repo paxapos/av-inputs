@@ -2,7 +2,10 @@
 import {
     FaceDetector,
     FilesetResolver,
-    Detection
+    Detection,
+    FaceLandmarker,
+    FaceLandmarkerResult,
+    ImageSource
   } from "@mediapipe/tasks-vision";
 import { videoToBlob } from "./camera.service";
 
@@ -25,9 +28,30 @@ import { videoToBlob } from "./camera.service";
 export class FaceapiService {
 
     faceDetector: FaceDetector;
+    landmarksDetector: FaceLandmarker;
 
     constructor(minDetectionConfidence = 0.6) {
         this.initializefaceDetector(minDetectionConfidence);
+
+        this.initFaceLandmarkerDetector();
+    }
+
+
+    async initFaceLandmarkerDetector() {
+
+      const filesetResolver = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+      );
+      let runningMode: "IMAGE" | "VIDEO" = "IMAGE";
+      this.landmarksDetector = await FaceLandmarker.createFromOptions(filesetResolver, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+          delegate: "GPU"
+        },
+        outputFaceBlendshapes: true,
+        runningMode,
+        numFaces: 1
+      });
     }
 
     // Initialize the object detector
@@ -46,7 +70,10 @@ export class FaceapiService {
         });
       };
 
-      
+    async getFaceLandmarksFromBlob(blob:Blob):  Promise<FaceLandmarkerResult> {
+      let imag: ImageSource = await createImageBitmap(blob)
+      return this.landmarksDetector.detect(imag)
+    }
 
     async detectFace(el:HTMLVideoElement, timeStamp: DOMHighResTimeStamp):  Promise<DetectionImg> {
 

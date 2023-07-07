@@ -83,17 +83,17 @@
             //elInputFaceApi.stopDetection();
             faceDetected = true;
 
+            elInputFaceApi.getFaceLandMarks().then( (esto) => {
+              console.info("est es", esto)
+            })
         })
 
-
         elInputFaceApi.addEventListener('faceStopDetection', (e) => console.info("faceStopDetection", e.detail))
-
-
-
 
         $scanner = document.getElementById("scanner");
         $scanner.addEventListener("scan", (e) => {
           console.info("scan", e.detail);
+        
         })
       }
     </script>

@@ -30,6 +30,14 @@ export class InputFaceApiWebcam {
   async startDetection() {
     this.enableDetection = true;
   }
+  async getFaceLandMarks() {
+    if (this.detectionResult && this.detectionResult.blobImg) {
+      return await this.faceapiService.getFaceLandmarksFromBlob(this.detectionResult.blobImg);
+    }
+    else {
+      return null;
+    }
+  }
   async componentWillLoad() {
     this.video = createVideo();
     this.canvas = createCanvas(this.el);
@@ -261,6 +269,28 @@ export class InputFaceApiWebcam {
             }
           },
           "return": "Promise<void>"
+        },
+        "docs": {
+          "text": "",
+          "tags": []
+        }
+      },
+      "getFaceLandMarks": {
+        "complexType": {
+          "signature": "() => Promise<FaceLandmarkerResult>",
+          "parameters": [],
+          "references": {
+            "Promise": {
+              "location": "global",
+              "id": "global::Promise"
+            },
+            "FaceLandmarkerResult": {
+              "location": "import",
+              "path": "@mediapipe/tasks-vision",
+              "id": ""
+            }
+          },
+          "return": "Promise<FaceLandmarkerResult>"
         },
         "docs": {
           "text": "",

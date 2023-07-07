@@ -1,7 +1,7 @@
 import { EventEmitter } from '../../stencil-public-runtime';
 import { DetectionImg, FaceapiService } from '../../utils/facepi.service';
 import { CameraDirection } from '../../utils/camera.service';
-import { Detection } from '@mediapipe/tasks-vision';
+import { Detection, FaceLandmarkerResult } from '@mediapipe/tasks-vision';
 export interface iFaceDetected {
   blob: Blob;
   result: Detection;
@@ -22,6 +22,7 @@ export declare class InputFaceApiWebcam {
   facingMode?: CameraDirection;
   stopDetection(): Promise<void>;
   startDetection(): Promise<void>;
+  getFaceLandMarks(): Promise<FaceLandmarkerResult>;
   faceDetected: EventEmitter<DetectionImg>;
   faceStopDetection: EventEmitter<void>;
   componentWillLoad(): Promise<void>;
