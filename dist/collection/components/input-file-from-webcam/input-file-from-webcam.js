@@ -1,6 +1,6 @@
-import { Host, h } from '@stencil/core';
-import { camera } from '../../utils/camera';
-import { CameraDirection } from '../../utils/camera.service';
+import { Host, h } from "@stencil/core";
+import { camera } from "../../utils/camera";
+import { CameraDirection } from "../../utils/camera.service";
 export class InputFileFromWebcam {
   constructor() {
     this.width = 460;
@@ -103,7 +103,8 @@ export class InputFileFromWebcam {
           "references": {
             "CameraDirection": {
               "location": "import",
-              "path": "../../utils/camera.service"
+              "path": "../../utils/camera.service",
+              "id": "src/utils/camera.service.ts::CameraDirection"
             }
           }
         },
@@ -125,7 +126,8 @@ export class InputFileFromWebcam {
           "resolved": "Function",
           "references": {
             "Function": {
-              "location": "global"
+              "location": "global",
+              "id": "global::Function"
             }
           }
         },
@@ -155,7 +157,8 @@ export class InputFileFromWebcam {
           "resolved": "Blob",
           "references": {
             "Blob": {
-              "location": "global"
+              "location": "global",
+              "id": "global::Blob"
             }
           }
         }
@@ -175,7 +178,8 @@ export class InputFileFromWebcam {
           "references": {
             "CameraDirection": {
               "location": "import",
-              "path": "../../utils/camera.service"
+              "path": "../../utils/camera.service",
+              "id": "src/utils/camera.service.ts::CameraDirection"
             }
           }
         }
@@ -189,10 +193,12 @@ export class InputFileFromWebcam {
           "parameters": [],
           "references": {
             "Promise": {
-              "location": "global"
+              "location": "global",
+              "id": "global::Promise"
             },
             "Blob": {
-              "location": "global"
+              "location": "global",
+              "id": "global::Blob"
             }
           },
           "return": "Promise<Blob>"
@@ -208,7 +214,8 @@ export class InputFileFromWebcam {
           "parameters": [],
           "references": {
             "Promise": {
-              "location": "global"
+              "location": "global",
+              "id": "global::Promise"
             }
           },
           "return": "Promise<void>"
@@ -224,7 +231,8 @@ export class InputFileFromWebcam {
           "parameters": [],
           "references": {
             "Promise": {
-              "location": "global"
+              "location": "global",
+              "id": "global::Promise"
             }
           },
           "return": "Promise<void>"

@@ -6,20 +6,14 @@
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 import { CameraDirection } from "./utils/camera.service";
-import { iFaceDetected } from "./components/input-face-api-webcam/input-face-api-webcam";
-import { InputScanData } from "./components/input-scan-reader/input-scan-reader";
+import { DetectionImg } from "./utils/facepi.service";
 export { CameraDirection } from "./utils/camera.service";
-export { iFaceDetected } from "./components/input-face-api-webcam/input-face-api-webcam";
-export { InputScanData } from "./components/input-scan-reader/input-scan-reader";
+export { DetectionImg } from "./utils/facepi.service";
 export namespace Components {
     interface InputFaceApiWebcam {
         "detectionTimer"?: number;
         "facingMode"?: CameraDirection;
         "height"?: number;
-        /**
-          * Minimun input size of face
-         */
-        "inputSize"?: number;
         "scoreThreshold"?: number;
         "startDetection": () => Promise<void>;
         "stopDetection": () => Promise<void>;
@@ -41,7 +35,9 @@ export namespace Components {
         "width"?: number;
     }
     interface InputScanReader {
-        "showPrompt": () => Promise<void>;
+        "getData": () => Promise<InputScanData>;
+        "getText": () => Promise<string>;
+        "modalTimer"?: number;
     }
 }
 export interface InputFaceApiWebcamCustomEvent<T> extends CustomEvent<T> {
@@ -86,11 +82,7 @@ declare namespace LocalJSX {
         "detectionTimer"?: number;
         "facingMode"?: CameraDirection;
         "height"?: number;
-        /**
-          * Minimun input size of face
-         */
-        "inputSize"?: number;
-        "onFaceDetected"?: (event: InputFaceApiWebcamCustomEvent<iFaceDetected>) => void;
+        "onFaceDetected"?: (event: InputFaceApiWebcamCustomEvent<DetectionImg>) => void;
         "onFaceStopDetection"?: (event: InputFaceApiWebcamCustomEvent<void>) => void;
         "scoreThreshold"?: number;
         "width"?: number;
@@ -110,6 +102,7 @@ declare namespace LocalJSX {
         "width"?: number;
     }
     interface InputScanReader {
+        "modalTimer"?: number;
         "onScan"?: (event: InputScanReaderCustomEvent<InputScanData>) => void;
     }
     interface IntrinsicElements {

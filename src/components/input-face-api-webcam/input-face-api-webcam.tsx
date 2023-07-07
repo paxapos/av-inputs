@@ -1,12 +1,13 @@
-import { Component, Host, h, Element, Prop, Event,EventEmitter, Method, State } from '@stencil/core';
-import { FaceapiService } from '../../utils/facepi.service';
-import { CameraDirection, createCanvas, createVideo, initWebcamToVideo } from '../../utils/camera.service';
-import { FaceDetection } from 'face-api.js';
+import { Component, Host, h, Element, Prop, Event,EventEmitter, Method, State, Watch } from '@stencil/core';
+import { DetectionImg, FaceapiService } from '../../utils/facepi.service';
+import { CameraDirection, createCanvas, createVideo, initWebcamToVideo, renderToCanvas } from '../../utils/camera.service';
+import { Detection } from '@mediapipe/tasks-vision';
+import { pxTimer } from 'src/utils/utils';
 
 
 export interface iFaceDetected{
   blob: Blob
-  result: FaceDetection
+  result: Detection
 }
 
 @Component({
@@ -25,28 +26,30 @@ export class InputFaceApiWebcam {
   //faceapi service
   faceapiService: FaceapiService
 
-  // timer to detect face bassed on detectionTimer
-  resultTimer: NodeJS.Timeout
 
-  // last result
-  result: FaceDetection = null
 
-  curCords = {x: 0, y: 0}
-  toCords = {x: 0, y: 0}
-
-    
   @Element() el: HTMLElement;
 
+  @State() enableDetection = true;
   @State() isDetecting = true;
+  @State() detectionResult: DetectionImg
+
+  @Watch('detectionResult')
+  detectionResultChangedHandler(newValue: DetectionImg, oldValue: DetectionImg) {
+    if ( newValue?.blobImg ) {
+      this.faceDetected.emit(newValue)
+    } else {
+      if ( oldValue ) {
+        this.faceStopDetection.emit()
+      }
+    }
+  }
 
 
   @Prop({reflect: true, mutable: true}) width?: number = 460
   @Prop({reflect: true, mutable: true}) height?: number = 460
 
-  /** Minimun input size of face */
-  @Prop({reflect: true, mutable: true}) inputSize?: number = 192
-
-  @Prop({reflect: true, mutable: true}) scoreThreshold?: number = 0.7
+  @Prop({reflect: true, mutable: true}) scoreThreshold?: number = 0.65
 
   @Prop({reflect: true, mutable: true}) detectionTimer?: number = 1500
 
@@ -55,12 +58,12 @@ export class InputFaceApiWebcam {
 
   @Method()
   async stopDetection(): Promise<void> {
-    this.isDetecting = false;
+    this.enableDetection = false;
   }
 
   @Method()
   async startDetection(): Promise<void> {
-    this.isDetecting = true;
+    this.enableDetection = true;
   }
 
 
@@ -69,7 +72,7 @@ export class InputFaceApiWebcam {
     composed: true,
     cancelable: false,
     bubbles: true,
-  }) faceDetected: EventEmitter<iFaceDetected>;
+  }) faceDetected: EventEmitter<DetectionImg>;
 
 
   @Event({
@@ -90,89 +93,39 @@ export class InputFaceApiWebcam {
 
     this.el.appendChild(this.canvas)
 
+    this.faceapiService = new FaceapiService( this.scoreThreshold )
 
-    this.faceapiService = new FaceapiService()
-
-
-  }
-
-  async componentDidRender() {
     initWebcamToVideo(this.video, this.facingMode)
-   
-    this.webcamRender();
-    
-  }
 
-
-
-  /**
-   * 
-   * @param result 
-   * @returns true si proceso y detecto imagen
-   */
-  emitBlob(result): Promise<Blob> {
-
-    return new Promise((resolve, reject) => {
-      try {
-        // this faceDetected emit blob from this.canvas
-        this.canvas.toBlob((blob) => {
-          const iface = {blob, result}
-          this.faceDetected.emit(iface)
-          resolve(blob)
-        }, 'image/jpeg', 1)
-    
-      } catch (error) {
-        reject(error)
-      }
-
-    })
-
-  }
-
-
- 
-  async webcamRender () {
-    
-
-    let ctx = this.canvas.getContext('2d');
-    this.drawWebcamnToCanvas(ctx);
-    
-    // get context of canvas and create paning and zoooming to center
-    if ( this.isDetecting && !this.resultTimer) {
-        
-      const result = await this.faceapiService.detectFace( this.canvas, this.inputSize, this.scoreThreshold )
-      
-      if ( result ) {
-        this.toCords = {x: Math.ceil(result.box.x), y: Math.ceil(result.box.y)}
-
-        try {
-          // saca una foto del canvas y genera el BLOB para emitir
-          await this.emitBlob(result)
-        } catch (e) {
-          console.error(e)
-        }
-      } else {
-
-        this.faceStopDetection.emit()
-
-        ctx.translate(0, 0);
-        ctx.scale(1, 1);
-        this.toCords = {x: 0, y: 0}
-  
-      }
-      this.result = result
-        
-      this.resultTimer = setTimeout(async () => {
-        clearTimeout(this.resultTimer)
-        this.resultTimer = null
-
-      }, Math.abs(this.detectionTimer))
-    }
-
+    renderToCanvas( this.canvas, this.video)
     
     requestAnimationFrame(() => {
       this.webcamRender() 
     })
+  }
+
+
+  lastVideoTime = -1;
+
+  async webcamRender () {
+
+    const startTimeMs = performance.now();
+
+
+    // Detect faces using detectForVideo
+    if (this.video.currentTime !== this.lastVideoTime) {
+      this.lastVideoTime = this.video.currentTime;
+   
+      // get context of canvas and create paning and zoooming to center
+      this.detectionResult = await this.faceapiService.detectFace( this.video, startTimeMs )
+    }
+    
+    await pxTimer(this.detectionTimer)
+
+    requestAnimationFrame(() => {
+      this.webcamRender() 
+    })
+    
 };
 
 

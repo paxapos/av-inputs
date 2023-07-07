@@ -1,3 +1,5 @@
+import { BoundingBox } from "@mediapipe/tasks-vision";
+
 export enum CameraDirection {
     Rear = "REAR",
     Front = "FRONT"
@@ -31,8 +33,54 @@ export  function createCanvas( parentElement: HTMLElement ): HTMLCanvasElement {
     return canvas
 }
 
+export function videoToCanvas(video: HTMLVideoElement,box: BoundingBox): Promise<HTMLCanvasElement> {
+    return new Promise((resolve, reject) => {
+        try {
+            const canvas = document.createElement("canvas")
+            const { originX, originY, width, height } = box
 
-export function renderToCanvas( canvas, video, drawImageCb: Function|null ): number {
+            const upscaledW = width * 1.3
+            const upscaledH = height * 2
+
+
+            const finalW = upscaledW > upscaledH ? upscaledW : upscaledH
+            const finalH = upscaledW > upscaledH ? upscaledW : upscaledH
+
+            canvas.width = finalW;
+            canvas.height = finalH;
+
+            const ctx = canvas.getContext('2d');
+
+            const xMove = ((finalW - width)/2)
+            const yMove = ((finalH - height)/2)
+            ctx.drawImage(video, originX - xMove, originY - yMove, finalW, finalH, 0, 0, canvas.width, canvas.height);
+
+            resolve(canvas);
+        } catch (error) {
+            reject(error);
+        }
+      });
+}
+
+
+export function videoToBlob(video: HTMLVideoElement, box?: BoundingBox, compression: number = 0.85): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+        try {
+            
+            videoToCanvas(video, box).then( canvas => {
+                canvas.toBlob( (blob) => {
+                    resolve(blob);
+                }, "image/jpeg", compression)
+            })
+        } catch (error) {
+            reject(error);
+        }
+      });
+    
+
+}
+
+export function renderToCanvas( canvas, video, drawImageCb?: Function|null ): number {
 
     let ctx = canvas.getContext('2d');
 

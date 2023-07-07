@@ -1,25 +1,34 @@
-import { Host, h } from '@stencil/core';
-import { FaceapiService } from '../../utils/facepi.service';
-import { CameraDirection, createCanvas, createVideo, initWebcamToVideo } from '../../utils/camera.service';
+import { Host, h } from "@stencil/core";
+import { FaceapiService } from "../../utils/facepi.service";
+import { CameraDirection, createCanvas, createVideo, initWebcamToVideo, renderToCanvas } from "../../utils/camera.service";
+import { pxTimer } from "../../utils/utils";
 export class InputFaceApiWebcam {
   constructor() {
-    // last result
-    this.result = null;
-    this.curCords = { x: 0, y: 0 };
-    this.toCords = { x: 0, y: 0 };
+    this.lastVideoTime = -1;
+    this.enableDetection = true;
     this.isDetecting = true;
+    this.detectionResult = undefined;
     this.width = 460;
     this.height = 460;
-    this.inputSize = 192;
-    this.scoreThreshold = 0.7;
+    this.scoreThreshold = 0.65;
     this.detectionTimer = 1500;
     this.facingMode = CameraDirection.Front;
   }
+  detectionResultChangedHandler(newValue, oldValue) {
+    if (newValue === null || newValue === void 0 ? void 0 : newValue.blobImg) {
+      this.faceDetected.emit(newValue);
+    }
+    else {
+      if (oldValue) {
+        this.faceStopDetection.emit();
+      }
+    }
+  }
   async stopDetection() {
-    this.isDetecting = false;
+    this.enableDetection = false;
   }
   async startDetection() {
-    this.isDetecting = true;
+    this.enableDetection = true;
   }
   async componentWillLoad() {
     this.video = createVideo();
@@ -27,60 +36,22 @@ export class InputFaceApiWebcam {
     this.canvas.width = this.width;
     this.canvas.height = this.height;
     this.el.appendChild(this.canvas);
-    this.faceapiService = new FaceapiService();
-  }
-  async componentDidRender() {
+    this.faceapiService = new FaceapiService(this.scoreThreshold);
     initWebcamToVideo(this.video, this.facingMode);
-    this.webcamRender();
-  }
-  /**
-   *
-   * @param result
-   * @returns true si proceso y detecto imagen
-   */
-  emitBlob(result) {
-    return new Promise((resolve, reject) => {
-      try {
-        // this faceDetected emit blob from this.canvas
-        this.canvas.toBlob((blob) => {
-          const iface = { blob, result };
-          this.faceDetected.emit(iface);
-          resolve(blob);
-        }, 'image/jpeg', 1);
-      }
-      catch (error) {
-        reject(error);
-      }
+    renderToCanvas(this.canvas, this.video);
+    requestAnimationFrame(() => {
+      this.webcamRender();
     });
   }
   async webcamRender() {
-    let ctx = this.canvas.getContext('2d');
-    this.drawWebcamnToCanvas(ctx);
-    // get context of canvas and create paning and zoooming to center
-    if (this.isDetecting && !this.resultTimer) {
-      const result = await this.faceapiService.detectFace(this.canvas, this.inputSize, this.scoreThreshold);
-      if (result) {
-        this.toCords = { x: Math.ceil(result.box.x), y: Math.ceil(result.box.y) };
-        try {
-          // saca una foto del canvas y genera el BLOB para emitir
-          await this.emitBlob(result);
-        }
-        catch (e) {
-          console.error(e);
-        }
-      }
-      else {
-        this.faceStopDetection.emit();
-        ctx.translate(0, 0);
-        ctx.scale(1, 1);
-        this.toCords = { x: 0, y: 0 };
-      }
-      this.result = result;
-      this.resultTimer = setTimeout(async () => {
-        clearTimeout(this.resultTimer);
-        this.resultTimer = null;
-      }, Math.abs(this.detectionTimer));
+    const startTimeMs = performance.now();
+    // Detect faces using detectForVideo
+    if (this.video.currentTime !== this.lastVideoTime) {
+      this.lastVideoTime = this.video.currentTime;
+      // get context of canvas and create paning and zoooming to center
+      this.detectionResult = await this.faceapiService.detectFace(this.video, startTimeMs);
     }
+    await pxTimer(this.detectionTimer);
     requestAnimationFrame(() => {
       this.webcamRender();
     });
@@ -152,24 +123,6 @@ export class InputFaceApiWebcam {
         "reflect": true,
         "defaultValue": "460"
       },
-      "inputSize": {
-        "type": "number",
-        "mutable": true,
-        "complexType": {
-          "original": "number",
-          "resolved": "number",
-          "references": {}
-        },
-        "required": false,
-        "optional": true,
-        "docs": {
-          "tags": [],
-          "text": "Minimun input size of face"
-        },
-        "attribute": "input-size",
-        "reflect": true,
-        "defaultValue": "192"
-      },
       "scoreThreshold": {
         "type": "number",
         "mutable": true,
@@ -186,7 +139,7 @@ export class InputFaceApiWebcam {
         },
         "attribute": "score-threshold",
         "reflect": true,
-        "defaultValue": "0.7"
+        "defaultValue": "0.65"
       },
       "detectionTimer": {
         "type": "number",
@@ -215,7 +168,8 @@ export class InputFaceApiWebcam {
           "references": {
             "CameraDirection": {
               "location": "import",
-              "path": "../../utils/camera.service"
+              "path": "../../utils/camera.service",
+              "id": "src/utils/camera.service.ts::CameraDirection"
             }
           }
         },
@@ -233,7 +187,9 @@ export class InputFaceApiWebcam {
   }
   static get states() {
     return {
-      "isDetecting": {}
+      "enableDetection": {},
+      "isDetecting": {},
+      "detectionResult": {}
     };
   }
   static get events() {
@@ -248,12 +204,13 @@ export class InputFaceApiWebcam {
           "text": ""
         },
         "complexType": {
-          "original": "iFaceDetected",
-          "resolved": "iFaceDetected",
+          "original": "DetectionImg",
+          "resolved": "DetectionImg",
           "references": {
-            "iFaceDetected": {
-              "location": "local",
-              "path": "/home/alevilar/Works/input-file-from-webcam/src/components/input-face-api-webcam/input-face-api-webcam.tsx"
+            "DetectionImg": {
+              "location": "import",
+              "path": "../../utils/facepi.service",
+              "id": "src/utils/facepi.service.ts::DetectionImg"
             }
           }
         }
@@ -282,7 +239,8 @@ export class InputFaceApiWebcam {
           "parameters": [],
           "references": {
             "Promise": {
-              "location": "global"
+              "location": "global",
+              "id": "global::Promise"
             }
           },
           "return": "Promise<void>"
@@ -298,7 +256,8 @@ export class InputFaceApiWebcam {
           "parameters": [],
           "references": {
             "Promise": {
-              "location": "global"
+              "location": "global",
+              "id": "global::Promise"
             }
           },
           "return": "Promise<void>"
@@ -311,5 +270,11 @@ export class InputFaceApiWebcam {
     };
   }
   static get elementRef() { return "el"; }
+  static get watchers() {
+    return [{
+        "propName": "detectionResult",
+        "methodName": "detectionResultChangedHandler"
+      }];
+  }
 }
 //# sourceMappingURL=input-face-api-webcam.js.map

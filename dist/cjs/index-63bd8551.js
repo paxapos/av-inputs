@@ -1,3 +1,25 @@
+'use strict';
+
+function _interopNamespace(e) {
+  if (e && e.__esModule) return e;
+  var n = Object.create(null);
+  if (e) {
+    Object.keys(e).forEach(function (k) {
+      if (k !== 'default') {
+        var d = Object.getOwnPropertyDescriptor(e, k);
+        Object.defineProperty(n, k, d.get ? d : {
+          enumerable: true,
+          get: function () {
+            return e[k];
+          }
+        });
+      }
+    });
+  }
+  n['default'] = e;
+  return Object.freeze(n);
+}
+
 const NAMESPACE = 'input-file-from-webcam';
 
 /**
@@ -12,10 +34,6 @@ let scopeId;
 let hostTagName;
 let isSvgMode = false;
 let queuePending = false;
-const getAssetPath = (path) => {
-    const assetUrl = new URL(path, plt.$resourcesUrl$);
-    return assetUrl.origin !== win.location.origin ? assetUrl.href : assetUrl.pathname;
-};
 const createTime = (fnName, tagName = '') => {
     {
         return () => {
@@ -223,9 +241,9 @@ const registerStyle = (scopeId, cssText, allowCS) => {
     }
     styles.set(scopeId, style);
 };
-const addStyle = (styleContainerNode, cmpMeta, mode, hostElm) => {
+const addStyle = (styleContainerNode, cmpMeta, mode) => {
     var _a;
-    let scopeId = getScopeId(cmpMeta);
+    const scopeId = getScopeId(cmpMeta);
     const style = styles.get(scopeId);
     // if an element is NOT connected then getRootNode() will return the wrong root node
     // so the fallback is to always use the document for the root node in those cases
@@ -240,11 +258,8 @@ const addStyle = (styleContainerNode, cmpMeta, mode, hostElm) => {
             }
             if (!appliedStyles.has(scopeId)) {
                 {
-                    // TODO(STENCIL-659): Remove code implementing the CSS variable shim
-                    {
-                        styleElm = doc.createElement('style');
-                        styleElm.innerHTML = style;
-                    }
+                    styleElm = doc.createElement('style');
+                    styleElm.innerHTML = style;
                     // Apply CSP nonce to the style tag if it exists
                     const nonce = (_a = plt.$nonce$) !== null && _a !== void 0 ? _a : queryNonceMetaTagContent(doc);
                     if (nonce != null) {
@@ -269,7 +284,6 @@ const attachStyles = (hostRef) => {
     const flags = cmpMeta.$flags$;
     const endAttachStyles = createTime('attachStyles', cmpMeta.$tagName$);
     const scopeId = addStyle(elm.shadowRoot ? elm.shadowRoot : elm.getRootNode(), cmpMeta);
-    // TODO(STENCIL-662): Remove code related to deprecated shadowDomShim field
     if (flags & 10 /* CMP_FLAGS.needsScopedEncapsulation */) {
         // only required when we're NOT using native shadow dom (slot)
         // or this browser doesn't support native shadow dom
@@ -295,7 +309,7 @@ const getScopeId = (cmp, mode) => 'sc-' + (cmp.$tagName$);
 const setAccessor = (elm, memberName, oldValue, newValue, isSvg, flags) => {
     if (oldValue !== newValue) {
         let isProp = isMemberInElement(elm, memberName);
-        memberName.toLowerCase();
+        let ln = memberName.toLowerCase();
         if (memberName === 'style') {
             // update style attribute, css properties and values
             {
@@ -319,6 +333,45 @@ const setAccessor = (elm, memberName, oldValue, newValue, isSvg, flags) => {
                         elm.style[prop] = newValue[prop];
                     }
                 }
+            }
+        }
+        else if ((!isProp ) &&
+            memberName[0] === 'o' &&
+            memberName[1] === 'n') {
+            // Event Handlers
+            // so if the member name starts with "on" and the 3rd characters is
+            // a capital letter, and it's not already a member on the element,
+            // then we're assuming it's an event listener
+            if (memberName[2] === '-') {
+                // on- prefixed events
+                // allows to be explicit about the dom event to listen without any magic
+                // under the hood:
+                // <my-cmp on-click> // listens for "click"
+                // <my-cmp on-Click> // listens for "Click"
+                // <my-cmp on-ionChange> // listens for "ionChange"
+                // <my-cmp on-EVENTS> // listens for "EVENTS"
+                memberName = memberName.slice(3);
+            }
+            else if (isMemberInElement(win, ln)) {
+                // standard event
+                // the JSX attribute could have been "onMouseOver" and the
+                // member name "onmouseover" is on the window's prototype
+                // so let's add the listener "mouseover", which is all lowercased
+                memberName = ln.slice(2);
+            }
+            else {
+                // custom event
+                // the JSX attribute could have been "onMyCustomEvent"
+                // so let's trim off the "on" prefix and lowercase the first character
+                // and add the listener "myCustomEvent"
+                // except for the first character, we keep the event name case
+                memberName = ln[2] + memberName.slice(3);
+            }
+            if (oldValue) {
+                plt.rel(elm, memberName, oldValue, false);
+            }
+            if (newValue) {
+                plt.ael(elm, memberName, newValue, false);
             }
         }
         else {
@@ -463,15 +516,16 @@ const addVnodes = (parentElm, before, parentVNode, vnodes, startIdx, endIdx) => 
  * @param vnodes a list of virtual DOM nodes to remove
  * @param startIdx the index at which to start removing nodes (inclusive)
  * @param endIdx the index at which to stop removing nodes (inclusive)
- * @param vnode a VNode
- * @param elm an element
  */
-const removeVnodes = (vnodes, startIdx, endIdx, vnode, elm) => {
-    for (; startIdx <= endIdx; ++startIdx) {
-        if ((vnode = vnodes[startIdx])) {
-            elm = vnode.$elm$;
-            // remove the vnode's element from the dom
-            elm.remove();
+const removeVnodes = (vnodes, startIdx, endIdx) => {
+    for (let index = startIdx; index <= endIdx; ++index) {
+        const vnode = vnodes[index];
+        if (vnode) {
+            const elm = vnode.$elm$;
+            if (elm) {
+                // remove the vnode's element from the dom
+                elm.remove();
+            }
         }
     }
 };
@@ -763,27 +817,83 @@ const scheduleUpdate = (hostRef, isInitialLoad) => {
     const dispatch = () => dispatchHooks(hostRef, isInitialLoad);
     return writeTask(dispatch) ;
 };
+/**
+ * Dispatch initial-render and update lifecycle hooks, enqueuing calls to
+ * component lifecycle methods like `componentWillLoad` as well as
+ * {@link updateComponent}, which will kick off the virtual DOM re-render.
+ *
+ * @param hostRef a reference to a host DOM node
+ * @param isInitialLoad whether we're on the initial load or not
+ * @returns an empty Promise which is used to enqueue a series of operations for
+ * the component
+ */
 const dispatchHooks = (hostRef, isInitialLoad) => {
     const endSchedule = createTime('scheduleUpdate', hostRef.$cmpMeta$.$tagName$);
     const instance = hostRef.$lazyInstance$ ;
-    let promise;
+    // We're going to use this variable together with `enqueue` to implement a
+    // little promise-based queue. We start out with it `undefined`. When we add
+    // the first function to the queue we'll set this variable to be that
+    // function's return value. When we attempt to add subsequent values to the
+    // queue we'll check that value and, if it was a `Promise`, we'll then chain
+    // the new function off of that `Promise` using `.then()`. This will give our
+    // queue two nice properties:
+    //
+    // 1. If all functions added to the queue are synchronous they'll be called
+    //    synchronously right away.
+    // 2. If all functions added to the queue are asynchronous they'll all be
+    //    called in order after `dispatchHooks` exits.
+    let maybePromise;
     if (isInitialLoad) {
         {
             hostRef.$flags$ |= 256 /* HOST_FLAGS.isListenReady */;
             if (hostRef.$queuedListeners$) {
                 hostRef.$queuedListeners$.map(([methodName, event]) => safeCall(instance, methodName, event));
-                hostRef.$queuedListeners$ = null;
+                hostRef.$queuedListeners$ = undefined;
             }
         }
         {
-            promise = safeCall(instance, 'componentWillLoad');
+            // If `componentWillLoad` returns a `Promise` then we want to wait on
+            // whatever's going on in that `Promise` before we launch into
+            // rendering the component, doing other lifecycle stuff, etc. So
+            // in that case we assign the returned promise to the variable we
+            // declared above to hold a possible 'queueing' Promise
+            maybePromise = safeCall(instance, 'componentWillLoad');
         }
     }
     endSchedule();
-    return then(promise, () => updateComponent(hostRef, instance, isInitialLoad));
+    return enqueue(maybePromise, () => updateComponent(hostRef, instance, isInitialLoad));
 };
+/**
+ * This function uses a Promise to implement a simple first-in, first-out queue
+ * of functions to be called.
+ *
+ * The queue is ordered on the basis of the first argument. If it's
+ * `undefined`, then nothing is on the queue yet, so the provided function can
+ * be called synchronously (although note that this function may return a
+ * `Promise`). The idea is that then the return value of that enqueueing
+ * operation is kept around, so that if it was a `Promise` then subsequent
+ * functions can be enqueued by calling this function again with that `Promise`
+ * as the first argument.
+ *
+ * @param maybePromise either a `Promise` which should resolve before the next function is called or an 'empty' sentinel
+ * @param fn a function to enqueue
+ * @returns either a `Promise` or the return value of the provided function
+ */
+const enqueue = (maybePromise, fn) => isPromisey(maybePromise) ? maybePromise.then(fn) : fn();
+/**
+ * Check that a value is a `Promise`. To check, we first see if the value is an
+ * instance of the `Promise` global. In a few circumstances, in particular if
+ * the global has been overwritten, this is could be misleading, so we also do
+ * a little 'duck typing' check to see if the `.then` property of the value is
+ * defined and a function.
+ *
+ * @param maybePromise it might be a promise!
+ * @returns whether it is or not
+ */
+const isPromisey = (maybePromise) => maybePromise instanceof Promise ||
+    (maybePromise && maybePromise.then && typeof maybePromise.then === 'function');
 const updateComponent = async (hostRef, instance, isInitialLoad) => {
-    // updateComponent
+    var _a;
     const elm = hostRef.$hostElement$;
     const endUpdate = createTime('update', hostRef.$cmpMeta$.$tagName$);
     const rc = elm['s-rc'];
@@ -805,7 +915,7 @@ const updateComponent = async (hostRef, instance, isInitialLoad) => {
     endRender();
     endUpdate();
     {
-        const childrenPromises = elm['s-p'];
+        const childrenPromises = (_a = elm['s-p']) !== null && _a !== void 0 ? _a : [];
         const postUpdate = () => postUpdateComponent(hostRef);
         if (childrenPromises.length === 0) {
             postUpdate();
@@ -906,15 +1016,13 @@ const safeCall = (instance, method, arg) => {
     }
     return undefined;
 };
-const then = (promise, thenFn) => {
-    return promise && promise.then ? promise.then(thenFn) : thenFn();
-};
 const addHydratedFlag = (elm) => elm.classList.add('hydrated')
     ;
 const getValue = (ref, propName) => getHostRef(ref).$instanceValues$.get(propName);
 const setValue = (ref, propName, newVal, cmpMeta) => {
     // check our new property value against our internal value
     const hostRef = getHostRef(ref);
+    const elm = hostRef.$hostElement$ ;
     const oldVal = hostRef.$instanceValues$.get(propName);
     const flags = hostRef.$flags$;
     const instance = hostRef.$lazyInstance$ ;
@@ -927,6 +1035,22 @@ const setValue = (ref, propName, newVal, cmpMeta) => {
         // set our new value!
         hostRef.$instanceValues$.set(propName, newVal);
         if (instance) {
+            // get an array of method names of watch functions to call
+            if (cmpMeta.$watchers$ && flags & 128 /* HOST_FLAGS.isWatchReady */) {
+                const watchMethods = cmpMeta.$watchers$[propName];
+                if (watchMethods) {
+                    // this instance is watching for when this property changed
+                    watchMethods.map((watchMethodName) => {
+                        try {
+                            // fire off each of the watch methods that are watching this property
+                            instance[watchMethodName](newVal, oldVal, propName);
+                        }
+                        catch (e) {
+                            consoleError(e, elm);
+                        }
+                    });
+                }
+            }
             if ((flags & (2 /* HOST_FLAGS.hasRendered */ | 16 /* HOST_FLAGS.isQueuedForUpdate */)) === 2 /* HOST_FLAGS.hasRendered */) {
                 // looks like this value actually changed, so we've got work to do!
                 // but only if we've already rendered, otherwise just chill out
@@ -949,6 +1073,9 @@ const setValue = (ref, propName, newVal, cmpMeta) => {
  */
 const proxyComponent = (Cstr, cmpMeta, flags) => {
     if (cmpMeta.$members$) {
+        if (Cstr.watchers) {
+            cmpMeta.$watchers$ = Cstr.watchers;
+        }
         // It's better to have a const than two Object.entries()
         const members = Object.entries(cmpMeta.$members$);
         const prototype = Cstr.prototype;
@@ -1052,9 +1179,9 @@ const proxyComponent = (Cstr, cmpMeta, flags) => {
 const initializeComponent = async (elm, hostRef, cmpMeta, hmrVersionId, Cstr) => {
     // initializeComponent
     if ((hostRef.$flags$ & 32 /* HOST_FLAGS.hasInitializedComponent */) === 0) {
+        // Let the runtime know that the component has been initialized
+        hostRef.$flags$ |= 32 /* HOST_FLAGS.hasInitializedComponent */;
         {
-            // we haven't initialized this element yet
-            hostRef.$flags$ |= 32 /* HOST_FLAGS.hasInitializedComponent */;
             // lazy loaded components
             // request the component's implementation to be
             // wired up with the host element
@@ -1066,6 +1193,12 @@ const initializeComponent = async (elm, hostRef, cmpMeta, hmrVersionId, Cstr) =>
                 endLoad();
             }
             if (!Cstr.isProxied) {
+                // we've never proxied this Constructor before
+                // let's add the getters/setters to its prototype before
+                // the first time we create an instance of the implementation
+                {
+                    cmpMeta.$watchers$ = Cstr.watchers;
+                }
                 proxyComponent(Cstr, cmpMeta, 2 /* PROXY_FLAGS.proxyState */);
                 Cstr.isProxied = true;
             }
@@ -1088,6 +1221,9 @@ const initializeComponent = async (elm, hostRef, cmpMeta, hmrVersionId, Cstr) =>
             }
             {
                 hostRef.$flags$ &= ~8 /* HOST_FLAGS.isConstructingInstance */;
+            }
+            {
+                hostRef.$flags$ |= 128 /* HOST_FLAGS.isWatchReady */;
             }
             endNewInstance();
         }
@@ -1210,6 +1346,9 @@ const bootstrapLazy = (lazyBundles, options = {}) => {
             }
             {
                 cmpMeta.$attrsToReflect$ = [];
+            }
+            {
+                cmpMeta.$watchers$ = {};
             }
             const tagName = cmpMeta.$tagName$;
             const HostElement = class extends HTMLElement {
@@ -1355,12 +1494,12 @@ const loadModule = (cmpMeta, hostRef, hmrVersionId) => {
         return module[exportName];
     }
     /*!__STENCIL_STATIC_IMPORT_SWITCH__*/
-    return import(
+    return Promise.resolve().then(function () { return /*#__PURE__*/_interopNamespace(require(
     /* @vite-ignore */
     /* webpackInclude: /\.entry\.js$/ */
     /* webpackExclude: /\.system\.entry\.js$/ */
     /* webpackMode: "lazy" */
-    `./${bundleId}.entry.js${''}`).then((importedModule) => {
+    `./${bundleId}.entry.js${''}`)); }).then((importedModule) => {
         {
             cmpModules.set(bundleId, importedModule);
         }
@@ -1432,6 +1571,13 @@ const flush = () => {
 const nextTick = /*@__PURE__*/ (cb) => promiseResolve().then(cb);
 const writeTask = /*@__PURE__*/ queueTask(queueDomWrites, true);
 
-export { Host as H, getElement as a, bootstrapLazy as b, createEvent as c, getAssetPath as g, h, promiseResolve as p, registerInstance as r, setNonce as s };
+exports.Host = Host;
+exports.bootstrapLazy = bootstrapLazy;
+exports.createEvent = createEvent;
+exports.getElement = getElement;
+exports.h = h;
+exports.promiseResolve = promiseResolve;
+exports.registerInstance = registerInstance;
+exports.setNonce = setNonce;
 
-//# sourceMappingURL=index-e2963afb.js.map
+//# sourceMappingURL=index-63bd8551.js.map

@@ -25,6 +25,42 @@ function createCanvas(parentElement) {
   canvas.height = parseInt(parentElement.getAttribute("height"));
   return canvas;
 }
+function videoToCanvas(video, box) {
+  return new Promise((resolve, reject) => {
+    try {
+      const canvas = document.createElement("canvas");
+      const { originX, originY, width, height } = box;
+      const upscaledW = width * 1.3;
+      const upscaledH = height * 2;
+      const finalW = upscaledW > upscaledH ? upscaledW : upscaledH;
+      const finalH = upscaledW > upscaledH ? upscaledW : upscaledH;
+      canvas.width = finalW;
+      canvas.height = finalH;
+      const ctx = canvas.getContext('2d');
+      const xMove = ((finalW - width) / 2);
+      const yMove = ((finalH - height) / 2);
+      ctx.drawImage(video, originX - xMove, originY - yMove, finalW, finalH, 0, 0, canvas.width, canvas.height);
+      resolve(canvas);
+    }
+    catch (error) {
+      reject(error);
+    }
+  });
+}
+function videoToBlob(video, box, compression = 0.85) {
+  return new Promise((resolve, reject) => {
+    try {
+      videoToCanvas(video, box).then(canvas => {
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, "image/jpeg", compression);
+      });
+    }
+    catch (error) {
+      reject(error);
+    }
+  });
+}
 function renderToCanvas(canvas, video, drawImageCb) {
   let ctx = canvas.getContext('2d');
   let imgWidth = video.videoWidth;
@@ -80,6 +116,6 @@ function initWebcamToVideo(video, direction = CameraDirection.Front) {
   });
 }
 
-export { CameraDirection as C, createCanvas as a, createVideo as c, initWebcamToVideo as i, renderToCanvas as r, takePicture as t };
+export { CameraDirection as C, createCanvas as a, createVideo as c, initWebcamToVideo as i, renderToCanvas as r, takePicture as t, videoToBlob as v };
 
 //# sourceMappingURL=camera.service.js.map

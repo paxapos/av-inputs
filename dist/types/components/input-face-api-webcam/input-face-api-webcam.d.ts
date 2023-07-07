@@ -1,47 +1,31 @@
-/// <reference types="node" />
 import { EventEmitter } from '../../stencil-public-runtime';
-import { FaceapiService } from '../../utils/facepi.service';
+import { DetectionImg, FaceapiService } from '../../utils/facepi.service';
 import { CameraDirection } from '../../utils/camera.service';
-import { FaceDetection } from 'face-api.js';
+import { Detection } from '@mediapipe/tasks-vision';
 export interface iFaceDetected {
   blob: Blob;
-  result: FaceDetection;
+  result: Detection;
 }
 export declare class InputFaceApiWebcam {
   video: HTMLVideoElement;
   canvas: HTMLCanvasElement;
   faceapiService: FaceapiService;
-  resultTimer: NodeJS.Timeout;
-  result: FaceDetection;
-  curCords: {
-    x: number;
-    y: number;
-  };
-  toCords: {
-    x: number;
-    y: number;
-  };
   el: HTMLElement;
+  enableDetection: boolean;
   isDetecting: boolean;
+  detectionResult: DetectionImg;
+  detectionResultChangedHandler(newValue: DetectionImg, oldValue: DetectionImg): void;
   width?: number;
   height?: number;
-  /** Minimun input size of face */
-  inputSize?: number;
   scoreThreshold?: number;
   detectionTimer?: number;
   facingMode?: CameraDirection;
   stopDetection(): Promise<void>;
   startDetection(): Promise<void>;
-  faceDetected: EventEmitter<iFaceDetected>;
+  faceDetected: EventEmitter<DetectionImg>;
   faceStopDetection: EventEmitter<void>;
   componentWillLoad(): Promise<void>;
-  componentDidRender(): Promise<void>;
-  /**
-   *
-   * @param result
-   * @returns true si proceso y detecto imagen
-   */
-  emitBlob(result: any): Promise<Blob>;
+  lastVideoTime: number;
   webcamRender(): Promise<void>;
   drawWebcamnToCanvas(ctx: any): void;
   render(): any;

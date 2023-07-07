@@ -10,8 +10,7 @@
   </head>
   <body>
 
-    <h1>Input scanner para lector de QRs</h1>
-    <input-scan-reader id="scanner" />
+
 
     <h1>Simple webcam viewer</h1>
 
@@ -33,11 +32,19 @@
     <h1>Webcam face detection</h1>
     <p>Una vez que detecta la cara, saca una foto y mete la imagen en el parent node y detiene la deteccion</p>
 
-    <input-face-api-webcam id="faceapi-input" detection-timer="1000"></input-face-api-webcam>
+    <input-face-api-webcam id="faceapi-input" detection-timer="500"></input-face-api-webcam>
 
 
 
     <div id="img-container"></div>
+
+
+    <hr />
+
+
+
+    <h1>Input scanner para lector de QRs</h1>
+    <input-scan-reader id="scanner" modal-timer="40" />
 
 
     <script>
@@ -70,9 +77,9 @@
 
          
         elInputFaceApi.addEventListener('faceDetected', (e) => {
+           console.info("faceDetected aaaa", e.detail.blobImg)
            
-            img.src = URL.createObjectURL(e.detail.blob);
-            console.info("faceDetected", e.detail.result)
+            img.src = URL.createObjectURL(e.detail.blobImg);
             //elInputFaceApi.stopDetection();
             faceDetected = true;
 

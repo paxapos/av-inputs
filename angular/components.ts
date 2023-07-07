@@ -11,7 +11,7 @@ import { defineCustomElement as defineInputFileFromWebcam } from 'input-file-fro
 import { defineCustomElement as defineInputScanReader } from 'input-file-from-webcam/components/input-scan-reader.js';
 @ProxyCmp({
   defineCustomElementFn: defineInputFaceApiWebcam,
-  inputs: ['detectionTimer', 'facingMode', 'height', 'inputSize', 'scoreThreshold', 'width'],
+  inputs: ['detectionTimer', 'facingMode', 'height', 'scoreThreshold', 'width'],
   methods: ['stopDetection', 'startDetection']
 })
 @Component({
@@ -19,7 +19,7 @@ import { defineCustomElement as defineInputScanReader } from 'input-file-from-we
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content></ng-content>',
   // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
-  inputs: ['detectionTimer', 'facingMode', 'height', 'inputSize', 'scoreThreshold', 'width'],
+  inputs: ['detectionTimer', 'facingMode', 'height', 'scoreThreshold', 'width'],
 })
 export class InputFaceApiWebcam {
   protected el: HTMLElement;
@@ -31,11 +31,11 @@ export class InputFaceApiWebcam {
 }
 
 
-import type { iFaceDetected as IInputFaceApiWebcamiFaceDetected } from 'input-file-from-webcam/components';
+import type { DetectionImg as IInputFaceApiWebcamDetectionImg } from 'input-file-from-webcam/components';
 
 export declare interface InputFaceApiWebcam extends Components.InputFaceApiWebcam {
 
-  faceDetected: EventEmitter<CustomEvent<IInputFaceApiWebcamiFaceDetected>>;
+  faceDetected: EventEmitter<CustomEvent<IInputFaceApiWebcamDetectionImg>>;
 
   faceStopDetection: EventEmitter<CustomEvent<void>>;
 }
@@ -75,14 +75,15 @@ export declare interface InputFileFromWebcam extends Components.InputFileFromWeb
 
 @ProxyCmp({
   defineCustomElementFn: defineInputScanReader,
-  methods: ['showPrompt']
+  inputs: ['modalTimer'],
+  methods: ['getText', 'getData']
 })
 @Component({
   selector: 'input-scan-reader',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content></ng-content>',
   // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
-  inputs: [],
+  inputs: ['modalTimer'],
 })
 export class InputScanReader {
   protected el: HTMLElement;
@@ -94,11 +95,9 @@ export class InputScanReader {
 }
 
 
-import type { InputScanData as IInputScanReaderInputScanData } from 'input-file-from-webcam/components';
-
 export declare interface InputScanReader extends Components.InputScanReader {
 
-  scan: EventEmitter<CustomEvent<IInputScanReaderInputScanData>>;
+  scan: EventEmitter<CustomEvent<InputScanData>>;
 }
 
 

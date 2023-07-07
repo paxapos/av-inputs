@@ -5,6 +5,13 @@
 <!-- Auto Generated Below -->
 
 
+## Properties
+
+| Property     | Attribute     | Description | Type     | Default |
+| ------------ | ------------- | ----------- | -------- | ------- |
+| `modalTimer` | `modal-timer` |             | `number` | `500`   |
+
+
 ## Events
 
 | Event  | Description | Type                         |
@@ -14,13 +21,23 @@
 
 ## Methods
 
-### `showPrompt() => Promise<void>`
+### `getData() => Promise<InputScanData>`
 
 
 
 #### Returns
 
-Type: `Promise<void>`
+Type: `Promise<InputScanData>`
+
+
+
+### `getText() => Promise<string>`
+
+
+
+#### Returns
+
+Type: `Promise<string>`
 
 
 

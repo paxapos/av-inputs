@@ -1,22 +1,14 @@
-import { Component, Host, h, Event, Method, Element, EventEmitter, State, Listen } from '@stencil/core';
+import { Component, Host, h, Event, Method, Element, EventEmitter, State, Listen, Prop } from '@stencil/core';
 
 
-export interface InputScanData {
-    type: InputScanType,
-    text: string,
-    data:  any
-}
 
 
-const enum InputScanType {
-  URL = 'URL',
-  EMAIL = 'EMAIL',
-  DNIv1 = 'DNIv1',
-  DNIv2 = 'DNIv2',
-  LICENCIA_CONDUCIR = 'LICENCIA_CONDUCIR',
-  DESCONOCIDO = 'DESCONOCIDO'
 
-}
+// DNI EXAMPLES
+// "17572896    "A"1"CABRA"LEONARDO ANTONIO FABIO"ARGENTINA"26-08-1965"M"08-08-2011"00057696015"5    "08-08-2026"31"0"ILRÑ2.01 CÑ110613.02 )No Cap.="UNIDAD ·05 ÇÇ S-NÑ 0040:2008::0005
+// 00691556286"CANO"JONATHAN LEONARDO"M"33951134"C"08-08-1988"17-07-2022"239
+// 00395738312"TASSISTRO"FLORENCIA ANTONELLA"F"41195367"A"20-06-1998"30-08-2015"275
+// 00115714043"PIUMATO"ANDRES JUAN"M"38305357"B"04-05-1994"05-06-2012
 
 
 
@@ -27,52 +19,92 @@ const enum InputScanType {
 })
 export class InputScanReader {
 
-
-
   @Element() el: HTMLElement;
+  
+  @Prop() modalTimer?: number = 500;
+
+  @Listen('scan')
+  handleScan(event: CustomEvent<InputScanData>) {
+    if ( this.modalTimer == 0 ) {
+      return;
+    }
+
+    // crear un elemento tipo DIV del tamaño del parentNode de this.el
+
+    const parent = this.el.parentNode;
+
+    const div = document.createElement('div');
+    div.style.position = 'fixed';
+    div.style.top = '0';
+    div.style.left = '0';
+    div.style.width = '100vw';
+    div.style.height = '100vh';
+    div.style.backgroundColor = 'rgba(254,254,254,0.65)';
+    div.style.zIndex = '1000';
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.justifyContent = 'center';
+    div.style.color = 'black';
+    div.style.fontSize = '3rem';
+    div.style.fontWeight = 'bold';
+    div.style.textAlign = 'center';
+    div.style.padding = '1rem';
+    div.style.boxSizing = 'border-box';
+    div.style.borderRadius = '1rem';
+    div.style.overflow = 'hidden';
+    div.style.textOverflow = 'ellipsis';
+    div.style.whiteSpace = 'nowrap';
+    div.style.cursor = 'pointer';
+    div.textContent = event.detail.text;
+    div.addEventListener('click', () => {
+      div.remove();
+    }
+    )
+    parent.appendChild(div);
+    setTimeout(() => {
+      div.remove();
+    }
+    , this.modalTimer);
 
 
-  runRegex(): InputScanData {
-    let regex,regrun
-      // DNI v1
-      // "30368326    "A"1"VILAR"ALEJANDRO ERNESTO"ARGENTINA"07-06-1983"M"13-02-2011"00038329892"7019 "13-02-2026"616"0"ILRÑ2.01 CÑ110128.02 )No Cap.="UNIDADÑ DG200 Plus ÇÇ SERIE NMEROÑ ¡040:2009::0019"
-      regex = /^\"?(\w{8}) +\"?([a-z])\"?(\w)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])"/gi
-      regrun = regex.exec(this.scannedText)
-      if ( regrun ) {
-        return this.getDataFromDNIv1(regrun, this.scannedText);
-        
-      }
 
-      // DNI v2
-      regex = /^\"?(\d+)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z])\"?(\w{8})\"?([a-z])\"?([0-9-]+)/gi
-      regrun = regex.exec(this.scannedText)
-      if ( regrun ) {
-        return this.getDataFromDNIv2(regrun, this.scannedText);
-      }
-
-
-      // Licencia de conducir
-      regex = /^\"?(\w{8})\"?([a-z])\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])\"?([0-9-]+)/gi
-      regrun = regex.exec(this.scannedText)
-      if ( regrun ) {
-        return this.getDataFromLicenciaDeCOnducir(regrun, this.scannedText);
-      }
-
-
-      // email
-      regex = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi
-      regrun = regex.exec(this.scannedText)
-      if ( regrun ) {
-        return this.getDataFromMail(regrun, this.scannedText);
-      
-      }
-      // url
-      regex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi
-      regrun = regex.exec(this.scannedText)
-      if ( regrun ) {
-        return this.getDataFromURL(regrun, this.scannedText);
-      }
+    
   }
+
+  processText(text: string): InputScanData {
+    const scannedData = this.runRegex( text )
+
+    let data;
+    if ( scannedData ) {
+      data = scannedData;
+    } else {
+      data = {
+        type: InputScanType.DESCONOCIDO,
+        text: this.scannedText,
+        data:  {
+          text: this.scannedText,
+        }
+      }
+    }
+
+    return data;
+  }
+
+  onEnterHandler() {
+    if ( this.scannedText == '' ) {
+      return false;
+    }
+
+    // convierto el texto a InputScanData
+    const scannedData = this.processText(this.scannedText)
+    
+    // reinicializo texto
+    this.scannedText = '';
+
+    // emit the scanned data and reset the scannedText
+    this.scan.emit(scannedData);
+  }
+
 
   @Listen('keydown', { target: 'document' })
   handleKeyDown(event: KeyboardEvent) {
@@ -81,50 +113,78 @@ export class InputScanReader {
       }
 
       if(event.code == 'Enter') {
-        // emit the scanned data and reset the scannedText
-        this.scan.emit(this.scannedData);
-        this.scannedText = '';
-        this.scannedData = null;
-        return;
+        return this.onEnterHandler();
       } 
 
       if ( event.key == 'Shift' || event.key == 'Control' || event.key == 'Alt' || event.key == 'Meta' ) {
         return;
       }
-
       
       // write the string of the event to the scannedText only if it is a letter or a number
       this.scannedText += event.key;
-      this.el.textContent = this.scannedText;
-
-
-      const scannedData = this.runRegex()
-
-      if ( scannedData ) {
-        this.scannedData = scannedData;
-      } else {
-        this.scannedData = {
-          type: InputScanType.DESCONOCIDO,
-          text: this.scannedText,
-          data:  {
-            text: this.scannedText,
-          }
-        }
-      }
-
   }
 
- 
 
   @State() scannedText = '';
-  @State() scannedData: InputScanData;
 
   @Event() scan: EventEmitter<InputScanData>;
 
 
   @Method()
-  async showPrompt() {
-    // show a prompt
+  async getText(): Promise<string> {
+    return this.scannedText
+  }
+
+  @Method()
+  async getData(): Promise<InputScanData> {
+    if ( this.scannedText == '' ) {
+      return null;
+    }
+
+    return this.processText(this.scannedText)
+  }
+
+
+  runRegex( text:string): InputScanData {
+    let regex,regrun
+      // DNI v1
+      // "30368326    "A"1"VILAR"ALEJANDRO ERNESTO"ARGENTINA"07-06-1983"M"13-02-2011"00038329892"7019 "13-02-2026"616"0"ILRÑ2.01 CÑ110128.02 )No Cap.="UNIDADÑ DG200 Plus ÇÇ SERIE NMEROÑ ¡040:2009::0019"
+      regex = /^\"?(\w{8}) +\"?([a-z])\"?(\w)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])"/gi
+      regrun = regex.exec( text )
+      if ( regrun ) {
+        return this.getDataFromDNIv1(regrun,  text );
+        
+      }
+
+      // DNI v2
+      regex = /^\"?(\d+)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z])\"?(\w{8})\"?([a-z])\"?([0-9-]+)/gi
+      regrun = regex.exec( text )
+      if ( regrun ) {
+        return this.getDataFromDNIv2(regrun,  text );
+      }
+
+
+      // Licencia de conducir
+      regex = /^\"?(\w{8})\"?([a-z])\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])\"?([0-9-]+)/gi
+      regrun = regex.exec( text )
+      if ( regrun ) {
+        return this.getDataFromLicenciaDeCOnducir(regrun,  text );
+      }
+
+
+      // email
+      regex = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi
+      regrun = regex.exec( text )
+      if ( regrun ) {
+        return this.getDataFromMail(regrun,  text );
+      
+      }
+      // url
+      regex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi
+      regrun = regex.exec( text )
+      if ( regrun ) {
+        return this.getDataFromURL(regrun,  text );
+      }
   }
 
 
@@ -147,13 +207,14 @@ export class InputScanReader {
   getDataFromDNIv2 (inputScanner: RegExpExecArray, scannedText: string): InputScanData {
        
     return {
-      type: InputScanType.DNIv1,
+      type: InputScanType.DNIv2,
       text: scannedText,
       data:  {
         apellido: inputScanner[2],
         nombre: inputScanner[3],
-       
-        dni: inputScanner[5]
+        dni: inputScanner[5],
+        fecha_nacimiento: inputScanner[7],
+        sexo: inputScanner[4],
       }
     }
   }
@@ -192,11 +253,15 @@ export class InputScanReader {
     }
   }
 
+  handleOnInpujtChangeEvent(ev: Event) {
+    this.scannedText = (ev.target as HTMLInputElement).value;
+  }
+
 
   render() {
     return (
       <Host>
-        <input type="text" value={this.scannedText} />
+        <input type="text" value={this.scannedText} onChange={(ev) => this.handleOnInpujtChangeEvent(ev) }/>
       </Host>
     );
   }
