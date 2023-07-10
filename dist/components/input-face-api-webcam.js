@@ -148,10 +148,12 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class InputFaceApi
   async webcamRender() {
     const startTimeMs = performance.now();
     // Detect faces using detectForVideo
-    if (this.enableDetection && this.video.currentTime !== this.lastVideoTime) {
+    if (this.video.currentTime !== this.lastVideoTime) {
       this.lastVideoTime = this.video.currentTime;
-      // get context of canvas and create paning and zoooming to center
-      this.detectionResult = await this.faceapiService.detectFace(this.video, startTimeMs);
+      if (this.enableDetection) {
+        // get context of canvas and create paning and zoooming to center
+        this.detectionResult = await this.faceapiService.detectFace(this.video, startTimeMs);
+      }
     }
     await pxTimer(this.detectionTimer);
     requestAnimationFrame(() => {
