@@ -68,6 +68,12 @@ export class InputFaceApiWebcam {
 
 
   @Method()
+  async getBlobImageDescriptors(blob: Blob): Promise<FaceLandmarkerResult> {
+    return await this.faceapiService.getFaceLandmarksFromBlob( blob )
+  }
+
+
+  @Method()
   async getFaceLandMarks(): Promise<FaceLandmarkerResult> {
     if ( this.detectionResult && this.detectionResult.blobImg ) {
       return await this.faceapiService.getFaceLandmarksFromBlob( this.detectionResult.blobImg )
@@ -122,7 +128,7 @@ export class InputFaceApiWebcam {
 
 
     // Detect faces using detectForVideo
-    if (this.video.currentTime !== this.lastVideoTime) {
+    if (this.enableDetection && this.video.currentTime !== this.lastVideoTime ) {
       this.lastVideoTime = this.video.currentTime;
    
       // get context of canvas and create paning and zoooming to center
