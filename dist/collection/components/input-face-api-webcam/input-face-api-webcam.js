@@ -30,6 +30,9 @@ export class InputFaceApiWebcam {
   async startDetection() {
     this.enableDetection = true;
   }
+  async getBlobImageDescriptors(blob) {
+    return await this.faceapiService.getFaceLandmarksFromBlob(blob);
+  }
   async getFaceLandMarks() {
     if (this.detectionResult && this.detectionResult.blobImg) {
       return await this.faceapiService.getFaceLandmarksFromBlob(this.detectionResult.blobImg);
@@ -54,7 +57,7 @@ export class InputFaceApiWebcam {
   async webcamRender() {
     const startTimeMs = performance.now();
     // Detect faces using detectForVideo
-    if (this.video.currentTime !== this.lastVideoTime) {
+    if (this.enableDetection && this.video.currentTime !== this.lastVideoTime) {
       this.lastVideoTime = this.video.currentTime;
       // get context of canvas and create paning and zoooming to center
       this.detectionResult = await this.faceapiService.detectFace(this.video, startTimeMs);
@@ -269,6 +272,35 @@ export class InputFaceApiWebcam {
             }
           },
           "return": "Promise<void>"
+        },
+        "docs": {
+          "text": "",
+          "tags": []
+        }
+      },
+      "getBlobImageDescriptors": {
+        "complexType": {
+          "signature": "(blob: Blob) => Promise<FaceLandmarkerResult>",
+          "parameters": [{
+              "tags": [],
+              "text": ""
+            }],
+          "references": {
+            "Promise": {
+              "location": "global",
+              "id": "global::Promise"
+            },
+            "FaceLandmarkerResult": {
+              "location": "import",
+              "path": "@mediapipe/tasks-vision",
+              "id": ""
+            },
+            "Blob": {
+              "location": "global",
+              "id": "global::Blob"
+            }
+          },
+          "return": "Promise<FaceLandmarkerResult>"
         },
         "docs": {
           "text": "",

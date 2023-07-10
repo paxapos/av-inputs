@@ -22,6 +22,7 @@ export declare class InputFaceApiWebcam {
   facingMode?: CameraDirection;
   stopDetection(): Promise<void>;
   startDetection(): Promise<void>;
+  getBlobImageDescriptors(blob: Blob): Promise<FaceLandmarkerResult>;
   getFaceLandMarks(): Promise<FaceLandmarkerResult>;
   faceDetected: EventEmitter<DetectionImg>;
   faceStopDetection: EventEmitter<void>;

@@ -15,6 +15,7 @@ export namespace Components {
     interface InputFaceApiWebcam {
         "detectionTimer"?: number;
         "facingMode"?: CameraDirection;
+        "getBlobImageDescriptors": (blob: Blob) => Promise<FaceLandmarkerResult>;
         "getFaceLandMarks": () => Promise<FaceLandmarkerResult>;
         "height"?: number;
         "scoreThreshold"?: number;

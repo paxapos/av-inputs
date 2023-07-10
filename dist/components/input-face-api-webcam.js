@@ -121,6 +121,9 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class InputFaceApi
   async startDetection() {
     this.enableDetection = true;
   }
+  async getBlobImageDescriptors(blob) {
+    return await this.faceapiService.getFaceLandmarksFromBlob(blob);
+  }
   async getFaceLandMarks() {
     if (this.detectionResult && this.detectionResult.blobImg) {
       return await this.faceapiService.getFaceLandmarksFromBlob(this.detectionResult.blobImg);
@@ -145,7 +148,7 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class InputFaceApi
   async webcamRender() {
     const startTimeMs = performance.now();
     // Detect faces using detectForVideo
-    if (this.video.currentTime !== this.lastVideoTime) {
+    if (this.enableDetection && this.video.currentTime !== this.lastVideoTime) {
       this.lastVideoTime = this.video.currentTime;
       // get context of canvas and create paning and zoooming to center
       this.detectionResult = await this.faceapiService.detectFace(this.video, startTimeMs);
@@ -188,6 +191,7 @@ const InputFaceApiWebcam$1 = /*@__PURE__*/ proxyCustomElement(class InputFaceApi
     "detectionResult": [32],
     "stopDetection": [64],
     "startDetection": [64],
+    "getBlobImageDescriptors": [64],
     "getFaceLandMarks": [64]
   }]);
 function defineCustomElement$1() {

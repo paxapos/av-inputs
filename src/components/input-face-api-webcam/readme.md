@@ -26,6 +26,16 @@
 
 ## Methods
 
+### `getBlobImageDescriptors(blob: Blob) => Promise<FaceLandmarkerResult>`
+
+
+
+#### Returns
+
+Type: `Promise<FaceLandmarkerResult>`
+
+
+
 ### `getFaceLandMarks() => Promise<FaceLandmarkerResult>`
 
 

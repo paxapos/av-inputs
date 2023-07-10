@@ -236,6 +236,9 @@ const InputFaceApiWebcam = class {
   async startDetection() {
     this.enableDetection = true;
   }
+  async getBlobImageDescriptors(blob) {
+    return await this.faceapiService.getFaceLandmarksFromBlob(blob);
+  }
   async getFaceLandMarks() {
     if (this.detectionResult && this.detectionResult.blobImg) {
       return await this.faceapiService.getFaceLandmarksFromBlob(this.detectionResult.blobImg);
@@ -260,7 +263,7 @@ const InputFaceApiWebcam = class {
   async webcamRender() {
     const startTimeMs = performance.now();
     // Detect faces using detectForVideo
-    if (this.video.currentTime !== this.lastVideoTime) {
+    if (this.enableDetection && this.video.currentTime !== this.lastVideoTime) {
       this.lastVideoTime = this.video.currentTime;
       // get context of canvas and create paning and zoooming to center
       this.detectionResult = await this.faceapiService.detectFace(this.video, startTimeMs);
