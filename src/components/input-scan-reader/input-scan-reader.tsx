@@ -1,5 +1,5 @@
 import { Component, Host, h, Event, Method, Element, EventEmitter, State, Listen, Prop } from '@stencil/core';
-
+import { InputScanData, InputScanType } from './input-scan-reader.types';
 
 
 
@@ -18,6 +18,26 @@ import { Component, Host, h, Event, Method, Element, EventEmitter, State, Listen
   shadow: true,
 })
 export class InputScanReader {
+
+  regexToData = [
+    {
+      regex: /^([a-z0-9]+)$/gi, 
+      type: InputScanType.ALFANUMERICO
+    },
+    {
+      regex: /^([0-9]+)$/gi, 
+      type: InputScanType.NUMBER
+    },
+    {
+      regex:  /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi, 
+      type: InputScanType.URL
+    },
+    {
+      regex: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi, 
+      type: InputScanType.EMAIL
+    },
+  ]
+
 
   @Element() el: HTMLElement;
   
@@ -111,8 +131,7 @@ export class InputScanReader {
       if (event.isComposing ) {
         return;
       }
-
-      if(event.code == 'Enter') {
+      if(event.code == 'Enter' || event.code == 'NumpadEnter' || event.code == 'Tab') {
         return this.onEnterHandler();
       } 
 
@@ -120,6 +139,11 @@ export class InputScanReader {
         return;
       }
       
+      if ( event.key == 'Backspace' ) {
+        this.scannedText = this.scannedText.slice(0, -1);
+        return;
+      }
+
       // write the string of the event to the scannedText only if it is a letter or a number
       this.scannedText += event.key;
   }
@@ -153,7 +177,6 @@ export class InputScanReader {
       regrun = regex.exec( text )
       if ( regrun ) {
         return this.getDataFromDNIv1(regrun,  text );
-        
       }
 
       // DNI v2
@@ -171,19 +194,12 @@ export class InputScanReader {
         return this.getDataFromLicenciaDeCOnducir(regrun,  text );
       }
 
-
-      // email
-      regex = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi
-      regrun = regex.exec( text )
-      if ( regrun ) {
-        return this.getDataFromMail(regrun,  text );
-      
-      }
-      // url
-      regex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi
-      regrun = regex.exec( text )
-      if ( regrun ) {
-        return this.getDataFromURL(regrun,  text );
+      for ( let i = 0; i < this.regexToData.length; i++ ) {
+        const regexToDataItem = this.regexToData[i];
+        const regrun = regexToDataItem.regex.exec( text )
+        if ( regrun ) {
+          return this.getDataFromRegex(regexToDataItem.type, regrun, text );
+        }
       }
   }
 
@@ -202,7 +218,7 @@ export class InputScanReader {
       }
     }
   }
-
+  
 
   getDataFromDNIv2 (inputScanner: RegExpExecArray, scannedText: string): InputScanData {
        
@@ -220,37 +236,20 @@ export class InputScanReader {
   }
 
 
-  getDataFromMail (inputScanner: RegExpExecArray, scannedText: string): InputScanData {
-       
+ 
+
+  getDataFromRegex (type: InputScanType, inputScanner: RegExpExecArray, scannedText: string): InputScanData {
     return {
-      type: InputScanType.EMAIL,
+      type: type,
       text: scannedText,
       data:  {
-        email: inputScanner[1],
-      }
-    }
-  }
-
-  getDataFromURL (inputScanner: RegExpExecArray, scannedText: string): InputScanData {
-
-    return {
-      type: InputScanType.URL,
-      text: scannedText,
-      data:  {
-        url: inputScanner[1],
+        alfanumerico: inputScanner[1],
       }
     }
   }
 
   getDataFromLicenciaDeCOnducir (inputScanner: RegExpExecArray, scannedText: string): InputScanData {
-       
-    return {
-      type: InputScanType.DNIv1,
-      text: scannedText,
-      data:  {
-        nosequeva: inputScanner[1],
-      }
-    }
+    return this.getDataFromRegex(InputScanType.LICENCIA_CONDUCIR, inputScanner, scannedText)   
   }
 
   handleOnInpujtChangeEvent(ev: Event) {

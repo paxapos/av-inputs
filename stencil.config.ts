@@ -16,6 +16,11 @@ export const config: Config = {
     },
     {
       type: 'www',
+      copy: [
+        { src: 'input_file_from_webcam.html', dest: 'input_file_from_webcam.html' },
+        { src: 'input_face_api.html', dest: 'input_face_api.html' },
+        { src: 'input_scan_reader.html', dest: 'input_scan_reader.html' },
+      ],
       serviceWorker: null, // disable service workers
     },
     angularOutputTarget({

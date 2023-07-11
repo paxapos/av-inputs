@@ -95,9 +95,11 @@ export class InputScanReader {
 }
 
 
+import type { InputScanData as IInputScanReaderInputScanData } from 'input-file-from-webcam/components';
+
 export declare interface InputScanReader extends Components.InputScanReader {
 
-  scan: EventEmitter<CustomEvent<InputScanData>>;
+  scan: EventEmitter<CustomEvent<IInputScanReaderInputScanData>>;
 }
 
 

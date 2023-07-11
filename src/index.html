@@ -9,99 +9,16 @@
     <script nomodule src="/build/input-file-from-webcam.js"></script>
   </head>
   <body>
+    <h1>Elements for Input Data</h1>
 
-
-
-    <h1>Simple webcam viewer</h1>
-
-
-    <code>
-      <!-- escribir codigo HTML usando un ejemploi de como escribiur un <div> que se muestre en la pagina web como string-->
-      input-file-from-webcam id="faceapi-input" /input-file-from-webcam
-    </code>
-
-    <button id="fm_change">Change facing mode</button>  
-      <br>
-
-    <input-file-from-webcam id="my-input"></input-file-from-webcam>
-
-
-
-    <hr>
-
-    <h1>Webcam face detection</h1>
-    <p>Una vez que detecta la cara, saca una foto y mete la imagen en el parent node y detiene la deteccion</p>
-
-    <input-face-api-webcam id="faceapi-input" detection-timer="500"></input-face-api-webcam>
-
-
-
-    <div id="img-container"></div>
-
-
+    <ul>
+      <li><a href="/input_file_from_webcam.html">Input Webcam Photo</a></li>
+      <li><a href="/input_face_api.html">Input Webcam Face Recognition</a></li>
+      <li><a href="/input_scan_reader.html">Input Scan on ENTER</a></li>
+    </ul>
+   
     <hr />
 
-
-
-    <h1>Input scanner para lector de QRs</h1>
-    <input-scan-reader id="scanner" modal-timer="40" />
-
-
-    <script>
-      const elInputFileFromWebcam = document.getElementById("my-input");
-      if ( elInputFileFromWebcam ) {
-
-        elInputFileFromWebcam.addEventListener("click", (ev) => {
-  
-          elInputFileFromWebcam.takePic().then( (pic) => console.info("I clicked and get this picture", pic))
-        });
-  
-  
-        elInputFileFromWebcam.addEventListener("pictureTaken", (pic) => console.info("here is my pic from callback", pic))
-  
-        elInputFileFromWebcam.addEventListener("facingModeChanged", (fm) => console.info("here is your facing Mode now", fm))
-  
-  
-        document.getElementById("fm_change").addEventListener("click", (e) =>  {
-          elInputFileFromWebcam.toggleCamera();
-        })
-      }
-
-      const elInputFaceApi = document.getElementById("faceapi-input");
-      let faceDetected = false;
-      if ( elInputFaceApi ) {
-
-         // e.detail is a blob, need to put this value into an img tag
-         const img = document.createElement("img");
-         document.getElementById( "img-container" ).appendChild(img);
-
-         
-        elInputFaceApi.addEventListener('faceDetected', (e) => {
-           console.info("faceDetected aaaa", e.detail.blobImg)
-           
-            img.src = URL.createObjectURL(e.detail.blobImg);
-            //elInputFaceApi.stopDetection();
-            faceDetected = true;
-
-            elInputFaceApi.getFaceLandMarks().then( (esto) => {
-              console.info("est es", esto)
-            })
-        })
-
-        elInputFaceApi.addEventListener('faceStopDetection', (e) => console.info("faceStopDetection", e.detail))
-
-        $scanner = document.getElementById("scanner");
-        $scanner.addEventListener("scan", (e) => {
-          console.info("scan", e.detail);
-        
-        })
-      }
-    </script>
-
-    <style>
-      input-file-from-webcam{
-        border: 3px solid silver;
-      }
-    </style>
+    
   </body>
 </html>

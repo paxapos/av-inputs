@@ -8,6 +8,24 @@ const InputScanReader$1 = /*@__PURE__*/ proxyCustomElement(class InputScanReader
     this.__registerHost();
     this.__attachShadow();
     this.scan = createEvent(this, "scan", 7);
+    this.regexToData = [
+      {
+        regex: /^([a-z0-9]+)$/gi,
+        type: "ALFANUMERICO" /* InputScanType.ALFANUMERICO */
+      },
+      {
+        regex: /^([0-9]+)$/gi,
+        type: "NUMBER" /* InputScanType.NUMBER */
+      },
+      {
+        regex: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi,
+        type: "URL" /* InputScanType.URL */
+      },
+      {
+        regex: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi,
+        type: "EMAIL" /* InputScanType.EMAIL */
+      },
+    ];
     this.modalTimer = 500;
     this.scannedText = '';
   }
@@ -80,10 +98,14 @@ const InputScanReader$1 = /*@__PURE__*/ proxyCustomElement(class InputScanReader
     if (event.isComposing) {
       return;
     }
-    if (event.code == 'Enter') {
+    if (event.code == 'Enter' || event.code == 'NumpadEnter' || event.code == 'Tab') {
       return this.onEnterHandler();
     }
     if (event.key == 'Shift' || event.key == 'Control' || event.key == 'Alt' || event.key == 'Meta') {
+      return;
+    }
+    if (event.key == 'Backspace') {
+      this.scannedText = this.scannedText.slice(0, -1);
       return;
     }
     // write the string of the event to the scannedText only if it is a letter or a number
@@ -119,17 +141,12 @@ const InputScanReader$1 = /*@__PURE__*/ proxyCustomElement(class InputScanReader
     if (regrun) {
       return this.getDataFromLicenciaDeCOnducir(regrun, text);
     }
-    // email
-    regex = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi;
-    regrun = regex.exec(text);
-    if (regrun) {
-      return this.getDataFromMail(regrun, text);
-    }
-    // url
-    regex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi;
-    regrun = regex.exec(text);
-    if (regrun) {
-      return this.getDataFromURL(regrun, text);
+    for (let i = 0; i < this.regexToData.length; i++) {
+      const regexToDataItem = this.regexToData[i];
+      const regrun = regexToDataItem.regex.exec(text);
+      if (regrun) {
+        return this.getDataFromRegex(regexToDataItem.type, regrun, text);
+      }
     }
   }
   getDataFromDNIv1(inputScanner, scannedText) {
@@ -158,32 +175,17 @@ const InputScanReader$1 = /*@__PURE__*/ proxyCustomElement(class InputScanReader
       }
     };
   }
-  getDataFromMail(inputScanner, scannedText) {
+  getDataFromRegex(type, inputScanner, scannedText) {
     return {
-      type: "EMAIL" /* InputScanType.EMAIL */,
+      type: type,
       text: scannedText,
       data: {
-        email: inputScanner[1],
-      }
-    };
-  }
-  getDataFromURL(inputScanner, scannedText) {
-    return {
-      type: "URL" /* InputScanType.URL */,
-      text: scannedText,
-      data: {
-        url: inputScanner[1],
+        alfanumerico: inputScanner[1],
       }
     };
   }
   getDataFromLicenciaDeCOnducir(inputScanner, scannedText) {
-    return {
-      type: "DNIv1" /* InputScanType.DNIv1 */,
-      text: scannedText,
-      data: {
-        nosequeva: inputScanner[1],
-      }
-    };
+    return this.getDataFromRegex("LICENCIA_CONDUCIR" /* InputScanType.LICENCIA_CONDUCIR */, inputScanner, scannedText);
   }
   handleOnInpujtChangeEvent(ev) {
     this.scannedText = ev.target.value;

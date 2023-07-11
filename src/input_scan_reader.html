@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+    <title>Stencil Component Starter</title>
+
+    <script type="module" src="/build/input-file-from-webcam.esm.js"></script>
+    <script nomodule src="/build/input-file-from-webcam.js"></script>
+  </head>
+  <body>
+
+
+    <h1>Elements for Input Data</h1>
+
+    <ul>
+      <li><a href="/input_file_from_webcam.html">Input Webcam Photo</a></li>
+      <li><a href="/input_face_api.html">Input Webcam Face Recognition</a></li>
+      <li><a href="/input_scan_reader.html">Input Scan on ENTER</a></li>
+    </ul>
+   
+    <hr />
+
+    <h1>Input scanner para lector de QRs</h1>
+
+    <img src="https://upload.wikimedia.org/wikipedia/commons/1/13/Barcode-scanner.jpg" width="100" />
+    <input-scan-reader id="scanner" modal-timer="40" ></input-scan-reader>
+
+    <p>
+        <h2>Ejemplos de Uso y tipo de dato que llega:</h2>
+
+        <h3>Alfanumerico</h3>
+        <p>EJ: "EAR1298S" </p>
+
+        <h3>Número</h3>
+        <p>EJ: "82734786234"</p>
+
+        <h3>URL</h3>
+        <p>EJ: "https://www.comas.com/asaas"</p>
+
+        <h3>EMAIL</h3>
+        <p>EJ: "papa@gmail.com"</p>
+
+        <h3>DNI Argentino v1 y v2 (acepta 2 formatos)</h3>
+        <p>EJ: "30368326    "A"1"VILAR"ALEJANDRO ERNESTO"ARGENTINA"07-06-1983"M"13-02-2011"00038329892"7019 "13-02-2026"616"0"ILRÑ2.01 CÑ110128.02 )No Cap.="UNIDADÑ DG200 Plus ÇÇ SERIE NMEROÑ ¡040:2009::0019"</p>
+
+    </p>
+    <script>
+     
+        $scanner = document.getElementById("scanner");
+        $scanner.addEventListener("scan", (e) => {
+          console.info("scan", e.detail);
+        
+        })
+    </script>
+
+  
+  </body>
+</html>

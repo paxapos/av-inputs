@@ -1,11 +1,11 @@
-import { Host, h } from "@stencil/core";
-// DNI EXAMPLES
-// "17572896    "A"1"CABRA"LEONARDO ANTONIO FABIO"ARGENTINA"26-08-1965"M"08-08-2011"00057696015"5    "08-08-2026"31"0"ILRÑ2.01 CÑ110613.02 )No Cap.="UNIDAD ·05 ÇÇ S-NÑ 0040:2008::0005
-// 00691556286"CANO"JONATHAN LEONARDO"M"33951134"C"08-08-1988"17-07-2022"239
-// 00395738312"TASSISTRO"FLORENCIA ANTONELLA"F"41195367"A"20-06-1998"30-08-2015"275
-// 00115714043"PIUMATO"ANDRES JUAN"M"38305357"B"04-05-1994"05-06-2012
-export class InputScanReader {
-  constructor() {
+import { r as registerInstance, c as createEvent, h, H as Host, g as getElement } from './index-d2dd3154.js';
+
+const inputScanReaderCss = ":host{display:block}";
+
+const InputScanReader = class {
+  constructor(hostRef) {
+    registerInstance(this, hostRef);
+    this.scan = createEvent(this, "scan", 7);
     this.regexToData = [
       {
         regex: /^([a-z0-9]+)$/gi,
@@ -191,127 +191,10 @@ export class InputScanReader {
   render() {
     return (h(Host, null, h("input", { type: "text", value: this.scannedText, onChange: (ev) => this.handleOnInpujtChangeEvent(ev) })));
   }
-  static get is() { return "input-scan-reader"; }
-  static get encapsulation() { return "shadow"; }
-  static get originalStyleUrls() {
-    return {
-      "$": ["input-scan-reader.css"]
-    };
-  }
-  static get styleUrls() {
-    return {
-      "$": ["input-scan-reader.css"]
-    };
-  }
-  static get properties() {
-    return {
-      "modalTimer": {
-        "type": "number",
-        "mutable": false,
-        "complexType": {
-          "original": "number",
-          "resolved": "number",
-          "references": {}
-        },
-        "required": false,
-        "optional": true,
-        "docs": {
-          "tags": [],
-          "text": ""
-        },
-        "attribute": "modal-timer",
-        "reflect": false,
-        "defaultValue": "500"
-      }
-    };
-  }
-  static get states() {
-    return {
-      "scannedText": {}
-    };
-  }
-  static get events() {
-    return [{
-        "method": "scan",
-        "name": "scan",
-        "bubbles": true,
-        "cancelable": true,
-        "composed": true,
-        "docs": {
-          "tags": [],
-          "text": ""
-        },
-        "complexType": {
-          "original": "InputScanData",
-          "resolved": "InputScanData",
-          "references": {
-            "InputScanData": {
-              "location": "import",
-              "path": "./input-scan-reader.types",
-              "id": "src/components/input-scan-reader/input-scan-reader.types.ts::InputScanData"
-            }
-          }
-        }
-      }];
-  }
-  static get methods() {
-    return {
-      "getText": {
-        "complexType": {
-          "signature": "() => Promise<string>",
-          "parameters": [],
-          "references": {
-            "Promise": {
-              "location": "global",
-              "id": "global::Promise"
-            }
-          },
-          "return": "Promise<string>"
-        },
-        "docs": {
-          "text": "",
-          "tags": []
-        }
-      },
-      "getData": {
-        "complexType": {
-          "signature": "() => Promise<InputScanData>",
-          "parameters": [],
-          "references": {
-            "Promise": {
-              "location": "global",
-              "id": "global::Promise"
-            },
-            "InputScanData": {
-              "location": "import",
-              "path": "./input-scan-reader.types",
-              "id": "src/components/input-scan-reader/input-scan-reader.types.ts::InputScanData"
-            }
-          },
-          "return": "Promise<InputScanData>"
-        },
-        "docs": {
-          "text": "",
-          "tags": []
-        }
-      }
-    };
-  }
-  static get elementRef() { return "el"; }
-  static get listeners() {
-    return [{
-        "name": "scan",
-        "method": "handleScan",
-        "target": undefined,
-        "capture": false,
-        "passive": false
-      }, {
-        "name": "keydown",
-        "method": "handleKeyDown",
-        "target": "document",
-        "capture": false,
-        "passive": false
-      }];
-  }
-}
-//# sourceMappingURL=input-scan-reader.js.map
+  get el() { return getElement(this); }
+};
+InputScanReader.style = inputScanReaderCss;
+
+export { InputScanReader as input_scan_reader };
+
+//# sourceMappingURL=input-scan-reader.entry.js.map

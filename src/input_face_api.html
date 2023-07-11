@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+    <title>Stencil Component Starter</title>
+
+    <script type="module" src="/build/input-file-from-webcam.esm.js"></script>
+    <script nomodule src="/build/input-file-from-webcam.js"></script>
+  </head>
+  <body>
+
+    <h1>Elements for Input Data</h1>
+
+    <ul>
+      <li><a href="/input_file_from_webcam.html">Input Webcam Photo</a></li>
+      <li><a href="/input_face_api.html">Input Webcam Face Recognition</a></li>
+      <li><a href="/input_scan_reader.html">Input Scan on ENTER</a></li>
+    </ul>
+   
+    <hr />
+
+
+
+    <h1>Simple webcam viewer</h1>
+
+
+  
+    
+
+    <h1>Webcam face detection</h1>
+    <p>Una vez que detecta la cara, saca una foto y mete la imagen en el parent node y detiene la deteccion</p>
+
+    <input-face-api-webcam id="faceapi-input" detection-timer="500"></input-face-api-webcam>
+
+
+
+    <div id="img-container"></div>
+
+
+    <hr />
+
+
+
+
+    <script>
+      
+
+      const elInputFaceApi = document.getElementById("faceapi-input");
+      let faceDetected = false;
+      if ( elInputFaceApi ) {
+
+         // e.detail is a blob, need to put this value into an img tag
+         const img = document.createElement("img");
+         document.getElementById( "img-container" ).appendChild(img);
+
+         
+        elInputFaceApi.addEventListener('faceDetected', (e) => {
+           console.info("faceDetected aaaa", e.detail.blobImg)
+           
+            img.src = URL.createObjectURL(e.detail.blobImg);
+            //elInputFaceApi.stopDetection();
+            faceDetected = true;
+
+            elInputFaceApi.getFaceLandMarks().then( (esto) => {
+              console.info("est es", esto)
+            })
+        })
+
+        elInputFaceApi.addEventListener('faceStopDetection', (e) => console.info("faceStopDetection", e.detail))
+      }
+    </script>
+
+  
+  </body>
+</html>

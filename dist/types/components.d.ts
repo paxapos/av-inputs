@@ -8,9 +8,11 @@ import { HTMLStencilElement, JSXBase } from "./stencil-public-runtime";
 import { CameraDirection } from "./utils/camera.service";
 import { DetectionImg } from "./utils/facepi.service";
 import { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
+import { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export { CameraDirection } from "./utils/camera.service";
 export { DetectionImg } from "./utils/facepi.service";
 export { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
+export { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export namespace Components {
     interface InputFaceApiWebcam {
         "detectionTimer"?: number;
