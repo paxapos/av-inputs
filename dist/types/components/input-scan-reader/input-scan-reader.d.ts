@@ -18,8 +18,8 @@ export declare class InputScanReader {
   runRegex(text: string): InputScanData;
   getDataFromDNIv1(inputScanner: RegExpExecArray, scannedText: string): InputScanData;
   getDataFromDNIv2(inputScanner: RegExpExecArray, scannedText: string): InputScanData;
-  getDataFromRegex(type: InputScanType, inputScanner: RegExpExecArray, scannedText: string): InputScanData;
-  getDataFromLicenciaDeCOnducir(inputScanner: RegExpExecArray, scannedText: string): InputScanData;
+  getDataFromRegex(type: InputScanType, scannedText: string): InputScanData;
+  getDataFromLicenciaDeCOnducir(scannedText: string): InputScanData;
   handleOnInpujtChangeEvent(ev: Event): void;
   render(): any;
 }

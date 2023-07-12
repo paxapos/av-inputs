@@ -141,13 +141,13 @@ const InputScanReader = class {
     regex = /^\"?(\w{8})\"?([a-z])\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])\"?([0-9-]+)/gi;
     regrun = regex.exec(text);
     if (regrun) {
-      return this.getDataFromLicenciaDeCOnducir(regrun, text);
+      return this.getDataFromLicenciaDeCOnducir(text);
     }
     for (let i = 0; i < this.regexToData.length; i++) {
       const regexToDataItem = this.regexToData[i];
       const regrun = regexToDataItem.regex.exec(text);
       if (regrun) {
-        return this.getDataFromRegex(regexToDataItem.type, regrun, text);
+        return this.getDataFromRegex(regexToDataItem.type, text);
       }
     }
   }
@@ -177,17 +177,14 @@ const InputScanReader = class {
       }
     };
   }
-  getDataFromRegex(type, inputScanner, scannedText) {
+  getDataFromRegex(type, scannedText) {
     return {
       type: type,
       text: scannedText,
-      data: {
-        alfanumerico: inputScanner[1],
-      }
     };
   }
-  getDataFromLicenciaDeCOnducir(inputScanner, scannedText) {
-    return this.getDataFromRegex("LICENCIA_CONDUCIR" /* InputScanType.LICENCIA_CONDUCIR */, inputScanner, scannedText);
+  getDataFromLicenciaDeCOnducir(scannedText) {
+    return this.getDataFromRegex("LICENCIA_CONDUCIR" /* InputScanType.LICENCIA_CONDUCIR */, scannedText);
   }
   handleOnInpujtChangeEvent(ev) {
     this.scannedText = ev.target.value;
