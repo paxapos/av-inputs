@@ -191,14 +191,14 @@ export class InputScanReader {
       regex = /^\"?(\w{8})\"?([a-z])\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])\"?([0-9-]+)/gi
       regrun = regex.exec( text )
       if ( regrun ) {
-        return this.getDataFromLicenciaDeCOnducir(regrun,  text );
+        return this.getDataFromLicenciaDeCOnducir( text );
       }
 
       for ( let i = 0; i < this.regexToData.length; i++ ) {
         const regexToDataItem = this.regexToData[i];
         const regrun = regexToDataItem.regex.exec( text )
         if ( regrun ) {
-          return this.getDataFromRegex(regexToDataItem.type, regrun, text );
+          return this.getDataFromRegex(regexToDataItem.type, text );
         }
       }
   }
@@ -238,18 +238,15 @@ export class InputScanReader {
 
  
 
-  getDataFromRegex (type: InputScanType, inputScanner: RegExpExecArray, scannedText: string): InputScanData {
+  getDataFromRegex (type: InputScanType, scannedText: string): InputScanData {
     return {
       type: type,
       text: scannedText,
-      data:  {
-        alfanumerico: inputScanner[1],
       }
-    }
   }
 
-  getDataFromLicenciaDeCOnducir (inputScanner: RegExpExecArray, scannedText: string): InputScanData {
-    return this.getDataFromRegex(InputScanType.LICENCIA_CONDUCIR, inputScanner, scannedText)   
+  getDataFromLicenciaDeCOnducir (scannedText: string): InputScanData {
+    return this.getDataFromRegex(InputScanType.LICENCIA_CONDUCIR, scannedText)   
   }
 
   handleOnInpujtChangeEvent(ev: Event) {

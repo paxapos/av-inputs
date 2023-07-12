@@ -10,10 +10,18 @@ export declare const enum InputScanType {
     DESCONOCIDO = 'DESCONOCIDO',
     ALFANUMERICO = 'ALFANUMERICO',
   }
+
+  export interface InputDataPersona {
+      apellido: string,
+      nombre: string,
+      dni: string,
+      fecha_nacimiento: string,
+      sexo: string,
+  }
   
   export interface InputScanData {
     type: InputScanType,
     text: string,
-    data:  any
+    data?:  InputDataPersona
   }
   
