@@ -1,8 +1,9 @@
 import { Config } from '@stencil/core';
 import { angularOutputTarget } from '@stencil/angular-output-target';
+import { JsonDocs } from '@stencil/core/internal';
 
 export const config: Config = {
-  namespace: 'input-file-from-webcam',
+  namespace: 'av-inputs',
   outputTargets: [
     {
       type: 'dist',
@@ -12,7 +13,14 @@ export const config: Config = {
       type: 'dist-custom-elements',
     },
     {
+      type: 'docs-custom',
+      generator: (docs: JsonDocs) => {
+          // Custom logic goes here
+      }
+    },
+    {
       type: 'docs-readme',
+      strict: true
     },
     {
       type: 'www',
@@ -24,7 +32,7 @@ export const config: Config = {
       serviceWorker: null, // disable service workers
     },
     angularOutputTarget({
-      componentCorePackage: 'input-file-from-webcam',
+      componentCorePackage: 'av-inputs',
       directivesProxyFile: 'angular/components.ts',
       //directivesArrayFile: 'dist/angular/index.ts',
       includeImportCustomElements: true

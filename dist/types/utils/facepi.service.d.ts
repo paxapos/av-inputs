@@ -1,4 +1,4 @@
-import { FaceDetector, Detection, FaceLandmarker, FaceLandmarkerResult } from "@mediapipe/tasks-vision";
+import { Detection, FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 export interface DetectionImg {
   detection: Detection;
   currentTarget: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
@@ -9,12 +9,16 @@ export interface DetectionImg {
  *
 */
 export declare class FaceapiService {
-  faceDetector: FaceDetector;
-  landmarksDetector: FaceLandmarker;
+  private readonly minDetectionConfidence;
+  private faceDetector;
+  private landmarksDetector;
   constructor(minDetectionConfidence?: number);
+  initialize(): Promise<this>;
   initFaceLandmarkerDetector(): Promise<void>;
   initializefaceDetector(minDetectionConfidence: any): Promise<void>;
+  checkInitialized(): void;
   getFaceLandmarksFromBlob(blob: Blob): Promise<FaceLandmarkerResult>;
   detectFace(el: HTMLVideoElement, timeStamp: DOMHighResTimeStamp): Promise<DetectionImg>;
   getDetectorImgFromDetection(el: any, detection: Detection): Promise<DetectionImg>;
 }
+export declare const faceapiService: FaceapiService;

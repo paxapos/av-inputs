@@ -2,7 +2,13 @@ import { EventEmitter } from '../../stencil-public-runtime';
 import { CameraDirection } from '../../utils/camera.service';
 export declare class InputFileFromWebcam {
   el: HTMLElement;
+  /**
+   * Width of the video element
+   */
   width?: number;
+  /**
+   * height of the video element
+   */
   height?: number;
   /**
    * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
@@ -17,10 +23,26 @@ export declare class InputFileFromWebcam {
    * here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
    */
   drawImageCb?: Function;
+  /**
+   * Take a picture
+   * @returns a blob with the image
+   */
   takePic(): Promise<Blob>;
+  /**
+   * Reset camera
+   */
   resetCamera(): Promise<void>;
+  /**
+   * Toogle webcam, for example in mobile show front or back camera
+   */
   toggleCamera(): Promise<void>;
+  /**
+   * Event emitted when the user takes a picture
+   */
   pictureTaken: EventEmitter<Blob>;
+  /**
+   * Event emitted when the user takes a picture
+   */
   facingModeChanged: EventEmitter<CameraDirection>;
   onClickHandler(): void;
   /**

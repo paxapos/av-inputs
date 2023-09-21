@@ -5,24 +5,65 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
+import { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 import { CameraDirection } from "./utils/camera.service";
 import { DetectionImg } from "./utils/facepi.service";
 import { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
+export { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 export { CameraDirection } from "./utils/camera.service";
 export { DetectionImg } from "./utils/facepi.service";
 export { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 export { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export namespace Components {
     interface InputFaceApiWebcam {
+        /**
+          * Score threshold to detect a face
+         */
         "detectionTimer"?: number;
+        /**
+          * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
+         */
         "facingMode"?: CameraDirection;
+        /**
+          * Giving a blob image, get the face landmarks
+          * @returns face landmarks
+         */
         "getBlobImageDescriptors": (blob: Blob) => Promise<FaceLandmarkerResult>;
+        /**
+          * Giving current face in video canvas, get the face landmarks
+          * @returns face landmarks
+         */
         "getFaceLandMarks": () => Promise<FaceLandmarkerResult>;
+        /**
+          * height of the video element
+         */
         "height"?: number;
+        /**
+          * Predicts best face match, uses worker to calculate distance between the given blob and the trained model  passed in trainedModel prop
+          * @param blob
+          * @returns
+         */
+        "predictBestMatch": (blob?: Blob) => Promise<any>;
+        /**
+          * Score threshold to detect a face
+         */
         "scoreThreshold"?: number;
+        /**
+          * enable face detection
+         */
         "startDetection": () => Promise<void>;
+        /**
+          * disable face detection
+         */
         "stopDetection": () => Promise<void>;
+        /**
+          * trained models to use for recognition an best match
+         */
+        "trainedModel"?: LabeledDescriptorsArray;
+        /**
+          * Width of the video element
+         */
         "width"?: number;
     }
     interface InputFileFromWebcam {
@@ -34,15 +75,42 @@ export namespace Components {
           * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
          */
         "facingMode"?: CameraDirection;
+        /**
+          * height of the video element
+         */
         "height"?: number;
+        /**
+          * Reset camera
+         */
         "resetCamera": () => Promise<void>;
+        /**
+          * Take a picture
+          * @returns a blob with the image
+         */
         "takePic": () => Promise<Blob>;
+        /**
+          * Toogle webcam, for example in mobile show front or back camera
+         */
         "toggleCamera": () => Promise<void>;
+        /**
+          * Width of the video element
+         */
         "width"?: number;
     }
     interface InputScanReader {
+        /**
+          * Structured scanned text
+          * @returns the text scanned
+         */
         "getData": () => Promise<InputScanData>;
+        /**
+          * get raw scanned text
+          * @returns the text scanned
+         */
         "getText": () => Promise<string>;
+        /**
+          * Show a modal with the scanned text. like a white blink on the screen
+         */
         "modalTimer"?: number;
     }
 }
@@ -85,12 +153,37 @@ declare global {
 }
 declare namespace LocalJSX {
     interface InputFaceApiWebcam {
+        /**
+          * Score threshold to detect a face
+         */
         "detectionTimer"?: number;
+        /**
+          * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
+         */
         "facingMode"?: CameraDirection;
+        /**
+          * height of the video element
+         */
         "height"?: number;
+        /**
+          * Event emitted when a face is detected in video stream
+         */
         "onFaceDetected"?: (event: InputFaceApiWebcamCustomEvent<DetectionImg>) => void;
+        /**
+          * Event emitted when face detection whas stopped
+         */
         "onFaceStopDetection"?: (event: InputFaceApiWebcamCustomEvent<void>) => void;
+        /**
+          * Score threshold to detect a face
+         */
         "scoreThreshold"?: number;
+        /**
+          * trained models to use for recognition an best match
+         */
+        "trainedModel"?: LabeledDescriptorsArray;
+        /**
+          * Width of the video element
+         */
         "width"?: number;
     }
     interface InputFileFromWebcam {
@@ -102,13 +195,31 @@ declare namespace LocalJSX {
           * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
          */
         "facingMode"?: CameraDirection;
+        /**
+          * height of the video element
+         */
         "height"?: number;
+        /**
+          * Event emitted when the user takes a picture
+         */
         "onFacingModeChanged"?: (event: InputFileFromWebcamCustomEvent<CameraDirection>) => void;
+        /**
+          * Event emitted when the user takes a picture
+         */
         "onPictureTaken"?: (event: InputFileFromWebcamCustomEvent<Blob>) => void;
+        /**
+          * Width of the video element
+         */
         "width"?: number;
     }
     interface InputScanReader {
+        /**
+          * Show a modal with the scanned text. like a white blink on the screen
+         */
         "modalTimer"?: number;
+        /**
+          * Fired when the user press enter or tab used with scanners like BARCODES or QR
+         */
         "onScan"?: (event: InputScanReaderCustomEvent<InputScanData>) => void;
     }
     interface IntrinsicElements {

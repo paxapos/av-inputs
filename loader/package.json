@@ -1,5 +1,5 @@
 {
-  "name": "input-file-from-webcam-loader",
+  "name": "av-inputs-loader",
   "private": true,
   "typings": "./index.d.ts",
   "module": "./index.js",

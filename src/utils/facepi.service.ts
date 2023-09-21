@@ -27,14 +27,20 @@ import { videoToBlob } from "./camera.service";
 */
 export class FaceapiService {
 
-    faceDetector: FaceDetector;
-    landmarksDetector: FaceLandmarker;
+    private faceDetector: FaceDetector;
+    private landmarksDetector: FaceLandmarker;
 
-    constructor(minDetectionConfidence = 0.6) {
-        this.initializefaceDetector(minDetectionConfidence);
 
-        this.initFaceLandmarkerDetector();
+    constructor(private readonly minDetectionConfidence = 0.6) {
+     
     }
+
+    async initialize() {
+      this.initializefaceDetector(this.minDetectionConfidence);
+      this.initFaceLandmarkerDetector();
+      return this;
+    }
+
 
 
     async initFaceLandmarkerDetector() {
@@ -70,8 +76,15 @@ export class FaceapiService {
         });
       };
 
+    checkInitialized() {
+      if ( !this.landmarksDetector ) throw new Error("Aun no se cargo el model de face detection")
+    }
+
     async getFaceLandmarksFromBlob(blob:Blob):  Promise<FaceLandmarkerResult> {
+      this.checkInitialized()
+
       let imag: ImageSource = await createImageBitmap(blob)
+      
       return this.landmarksDetector.detect(imag)
     }
 
@@ -120,3 +133,4 @@ export class FaceapiService {
 }
 
 
+export const faceapiService = new FaceapiService()

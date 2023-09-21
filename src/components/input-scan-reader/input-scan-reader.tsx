@@ -41,6 +41,9 @@ export class InputScanReader {
 
   @Element() el: HTMLElement;
   
+  /**
+   * Show a modal with the scanned text. like a white blink on the screen
+   */
   @Prop() modalTimer?: number = 500;
 
   @Listen('scan')
@@ -151,14 +154,27 @@ export class InputScanReader {
 
   @State() scannedText = '';
 
+
+  /**
+   * Fired when the user press enter or tab
+   * used with scanners like BARCODES or QR
+   */
   @Event() scan: EventEmitter<InputScanData>;
 
 
+  /**
+   * get raw scanned text
+   * @returns the text scanned
+   */
   @Method()
   async getText(): Promise<string> {
     return this.scannedText
   }
 
+  /**
+   * Structured scanned text
+   * @returns the text scanned
+   */
   @Method()
   async getData(): Promise<InputScanData> {
     if ( this.scannedText == '' ) {

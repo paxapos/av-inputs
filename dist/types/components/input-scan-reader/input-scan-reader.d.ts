@@ -6,14 +6,29 @@ export declare class InputScanReader {
     type: InputScanType;
   }[];
   el: HTMLElement;
+  /**
+   * Show a modal with the scanned text. like a white blink on the screen
+   */
   modalTimer?: number;
   handleScan(event: CustomEvent<InputScanData>): void;
   processText(text: string): InputScanData;
   onEnterHandler(): boolean;
   handleKeyDown(event: KeyboardEvent): boolean;
   scannedText: string;
+  /**
+   * Fired when the user press enter or tab
+   * used with scanners like BARCODES or QR
+   */
   scan: EventEmitter<InputScanData>;
+  /**
+   * get raw scanned text
+   * @returns the text scanned
+   */
   getText(): Promise<string>;
+  /**
+   * Structured scanned text
+   * @returns the text scanned
+   */
   getData(): Promise<InputScanData>;
   runRegex(text: string): InputScanData;
   getDataFromDNIv1(inputScanner: RegExpExecArray, scannedText: string): InputScanData;

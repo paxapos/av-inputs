@@ -4,22 +4,22 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Even
 
 import { ProxyCmp, proxyOutputs } from './angular-component-lib/utils';
 
-import type { Components } from 'input-file-from-webcam/components';
+import type { Components } from 'av-inputs/components';
 
-import { defineCustomElement as defineInputFaceApiWebcam } from 'input-file-from-webcam/components/input-face-api-webcam.js';
-import { defineCustomElement as defineInputFileFromWebcam } from 'input-file-from-webcam/components/input-file-from-webcam.js';
-import { defineCustomElement as defineInputScanReader } from 'input-file-from-webcam/components/input-scan-reader.js';
+import { defineCustomElement as defineInputFaceApiWebcam } from 'av-inputs/components/input-face-api-webcam.js';
+import { defineCustomElement as defineInputFileFromWebcam } from 'av-inputs/components/input-file-from-webcam.js';
+import { defineCustomElement as defineInputScanReader } from 'av-inputs/components/input-scan-reader.js';
 @ProxyCmp({
   defineCustomElementFn: defineInputFaceApiWebcam,
-  inputs: ['detectionTimer', 'facingMode', 'height', 'scoreThreshold', 'width'],
-  methods: ['stopDetection', 'startDetection', 'getBlobImageDescriptors', 'getFaceLandMarks']
+  inputs: ['detectionTimer', 'facingMode', 'height', 'scoreThreshold', 'trainedModel', 'width'],
+  methods: ['stopDetection', 'startDetection', 'getBlobImageDescriptors', 'getFaceLandMarks', 'predictBestMatch']
 })
 @Component({
   selector: 'input-face-api-webcam',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content></ng-content>',
   // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
-  inputs: ['detectionTimer', 'facingMode', 'height', 'scoreThreshold', 'width'],
+  inputs: ['detectionTimer', 'facingMode', 'height', 'scoreThreshold', 'trainedModel', 'width'],
 })
 export class InputFaceApiWebcam {
   protected el: HTMLElement;
@@ -31,12 +31,16 @@ export class InputFaceApiWebcam {
 }
 
 
-import type { DetectionImg as IInputFaceApiWebcamDetectionImg } from 'input-file-from-webcam/components';
+import type { DetectionImg as IInputFaceApiWebcamDetectionImg } from 'av-inputs/components';
 
 export declare interface InputFaceApiWebcam extends Components.InputFaceApiWebcam {
-
+  /**
+   * Event emitted when a face is detected in video stream
+   */
   faceDetected: EventEmitter<CustomEvent<IInputFaceApiWebcamDetectionImg>>;
-
+  /**
+   * Event emitted when face detection whas stopped
+   */
   faceStopDetection: EventEmitter<CustomEvent<void>>;
 }
 
@@ -63,12 +67,16 @@ export class InputFileFromWebcam {
 }
 
 
-import type { CameraDirection as IInputFileFromWebcamCameraDirection } from 'input-file-from-webcam/components';
+import type { CameraDirection as IInputFileFromWebcamCameraDirection } from 'av-inputs/components';
 
 export declare interface InputFileFromWebcam extends Components.InputFileFromWebcam {
-
+  /**
+   * Event emitted when the user takes a picture
+   */
   pictureTaken: EventEmitter<CustomEvent<Blob>>;
-
+  /**
+   * Event emitted when the user takes a picture
+   */
   facingModeChanged: EventEmitter<CustomEvent<IInputFileFromWebcamCameraDirection>>;
 }
 
@@ -95,10 +103,13 @@ export class InputScanReader {
 }
 
 
-import type { InputScanData as IInputScanReaderInputScanData } from 'input-file-from-webcam/components';
+import type { InputScanData as IInputScanReaderInputScanData } from 'av-inputs/components';
 
 export declare interface InputScanReader extends Components.InputScanReader {
-
+  /**
+   * Fired when the user press enter or tab
+used with scanners like BARCODES or QR
+   */
   scan: EventEmitter<CustomEvent<IInputScanReaderInputScanData>>;
 }
 

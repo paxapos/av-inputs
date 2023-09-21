@@ -7,48 +7,60 @@
 
 ## Properties
 
-| Property         | Attribute         | Description | Type                                            | Default                 |
-| ---------------- | ----------------- | ----------- | ----------------------------------------------- | ----------------------- |
-| `detectionTimer` | `detection-timer` |             | `number`                                        | `1500`                  |
-| `facingMode`     | `facing-mode`     |             | `CameraDirection.Front \| CameraDirection.Rear` | `CameraDirection.Front` |
-| `height`         | `height`          |             | `number`                                        | `460`                   |
-| `scoreThreshold` | `score-threshold` |             | `number`                                        | `0.65`                  |
-| `width`          | `width`           |             | `number`                                        | `460`                   |
+| Property         | Attribute         | Description                                                                                                            | Type                                            | Default                 |
+| ---------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------------- |
+| `detectionTimer` | `detection-timer` | Score threshold to detect a face                                                                                       | `number`                                        | `1500`                  |
+| `facingMode`     | `facing-mode`     | FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value | `CameraDirection.Front \| CameraDirection.Rear` | `CameraDirection.Front` |
+| `height`         | `height`          | height of the video element                                                                                            | `number`                                        | `460`                   |
+| `scoreThreshold` | `score-threshold` | Score threshold to detect a face                                                                                       | `number`                                        | `0.65`                  |
+| `trainedModel`   | --                | trained models to use for recognition an best match                                                                    | `LabeledDescriptors[]`                          | `undefined`             |
+| `width`          | `width`           | Width of the video element                                                                                             | `number`                                        | `460`                   |
 
 
 ## Events
 
-| Event               | Description | Type                        |
-| ------------------- | ----------- | --------------------------- |
-| `faceDetected`      |             | `CustomEvent<DetectionImg>` |
-| `faceStopDetection` |             | `CustomEvent<void>`         |
+| Event               | Description                                           | Type                        |
+| ------------------- | ----------------------------------------------------- | --------------------------- |
+| `faceDetected`      | Event emitted when a face is detected in video stream | `CustomEvent<DetectionImg>` |
+| `faceStopDetection` | Event emitted when face detection whas stopped        | `CustomEvent<void>`         |
 
 
 ## Methods
 
 ### `getBlobImageDescriptors(blob: Blob) => Promise<FaceLandmarkerResult>`
 
-
+Giving a blob image, get the face landmarks
 
 #### Returns
 
 Type: `Promise<FaceLandmarkerResult>`
 
-
+face landmarks
 
 ### `getFaceLandMarks() => Promise<FaceLandmarkerResult>`
 
-
+Giving current face in video canvas, get the face landmarks
 
 #### Returns
 
 Type: `Promise<FaceLandmarkerResult>`
+
+face landmarks
+
+### `predictBestMatch(blob?: Blob) => Promise<any>`
+
+Predicts best face match, uses worker to calculate distance between the given blob and the trained model 
+passed in trainedModel prop
+
+#### Returns
+
+Type: `Promise<any>`
 
 
 
 ### `startDetection() => Promise<void>`
 
-
+enable face detection
 
 #### Returns
 
@@ -58,7 +70,7 @@ Type: `Promise<void>`
 
 ### `stopDetection() => Promise<void>`
 
-
+disable face detection
 
 #### Returns
 

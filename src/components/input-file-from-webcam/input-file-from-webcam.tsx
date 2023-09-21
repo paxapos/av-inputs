@@ -13,8 +13,14 @@ export class InputFileFromWebcam {
 
   @Element() el: HTMLElement;
 
-
+  /**
+   * Width of the video element
+   */
   @Prop({reflect: true, mutable: true}) width?: number = 460
+
+  /**
+   * height of the video element
+   */
   @Prop({reflect: true, mutable: true}) height?: number = 460
 
   /**
@@ -32,6 +38,10 @@ export class InputFileFromWebcam {
    */
   @Prop() drawImageCb?: Function = null
 
+  /**
+   * Take a picture
+   * @returns a blob with the image
+   */
   @Method()
   async takePic(): Promise<Blob> {
     // show a prompt
@@ -40,18 +50,27 @@ export class InputFileFromWebcam {
     return pic
   }
 
+  /**
+   * Reset camera
+   */
   @Method()
   async resetCamera(): Promise<void> {
     // show a prompt
     camera.resetCamera()
   }
 
+  /**
+   * Toogle webcam, for example in mobile show front or back camera
+   */
   @Method()
   async toggleCamera(): Promise<void>{
     this.__toogleFacingMode()
   }
 
 
+  /**
+   * Event emitted when the user takes a picture
+   */
   @Event({
     eventName: 'pictureTaken',
     composed: true,
@@ -59,6 +78,10 @@ export class InputFileFromWebcam {
     bubbles: true,
   }) pictureTaken: EventEmitter<Blob>;
 
+
+  /**
+   * Event emitted when the user takes a picture
+   */
   @Event({
     eventName: 'facingModeChanged',
     composed: true,
