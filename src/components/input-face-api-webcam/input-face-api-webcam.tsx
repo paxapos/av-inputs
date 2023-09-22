@@ -30,7 +30,6 @@ export class InputFaceApiWebcam {
   @Element() el: HTMLElement;
 
   @State() enableDetection = true;
-  @State() isDetecting = true;
   @State() detectionResult: DetectionImg
 
   @Watch('detectionResult')
@@ -43,6 +42,12 @@ export class InputFaceApiWebcam {
       }
     }
   }
+
+  /**
+   * disable face detection
+   */
+  @Prop({reflect: true, mutable: true}) isDetecting = true;
+
 
 
   /**
