@@ -1,0 +1,2 @@
+import{c as t}from"./p-8612ff99.js";import"./p-42af810e.js";import"./p-1f146577.js";const o="distance.worker";const s="stencil.distance.worker";const p=new URL("p-d28042bf.js",import.meta.url).href;const r=new Blob(['importScripts("'+p+'")'],{type:"text/javascript"});const c=URL.createObjectURL(r);const e=t(c,o,s);URL.revokeObjectURL(c);export{e as worker,s as workerMsgId,o as workerName,p as workerPath};
+//# sourceMappingURL=p-29801420.js.map
