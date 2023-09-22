@@ -1,8 +1,7 @@
-name: Ci Publish to npmjs pn master
+name: Ci Publish to npmjs
 on:
-  push:
-    branches:
-      - master
+  release:
+    types: [published]
 jobs:
   build:
     runs-on: ubuntu-latest
