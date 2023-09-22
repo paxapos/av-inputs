@@ -1,4 +1,4 @@
-name: Ci Publish to npmjs
+name: Ci Publish to npmjs pn master
 on:
   push:
     branches:
