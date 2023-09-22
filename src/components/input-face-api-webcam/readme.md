@@ -7,14 +7,15 @@
 
 ## Properties
 
-| Property         | Attribute         | Description                                                                                                            | Type                                            | Default                 |
-| ---------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------------- |
-| `detectionTimer` | `detection-timer` | Score threshold to detect a face                                                                                       | `number`                                        | `1500`                  |
-| `facingMode`     | `facing-mode`     | FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value | `CameraDirection.Front \| CameraDirection.Rear` | `CameraDirection.Front` |
-| `height`         | `height`          | height of the video element                                                                                            | `number`                                        | `460`                   |
-| `scoreThreshold` | `score-threshold` | Score threshold to detect a face                                                                                       | `number`                                        | `0.65`                  |
-| `trainedModel`   | --                | trained models to use for recognition an best match                                                                    | `LabeledDescriptors[]`                          | `undefined`             |
-| `width`          | `width`           | Width of the video element                                                                                             | `number`                                        | `460`                   |
+| Property          | Attribute          | Description                                                                                                            | Type                                            | Default                 |
+| ----------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ----------------------- |
+| `detectionTimer`  | `detection-timer`  | Score threshold to detect a face                                                                                       | `number`                                        | `1500`                  |
+| `enableDetection` | `enable-detection` | disable face detection                                                                                                 | `boolean`                                       | `true`                  |
+| `facingMode`      | `facing-mode`      | FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value | `CameraDirection.Front \| CameraDirection.Rear` | `CameraDirection.Front` |
+| `height`          | `height`           | height of the video element                                                                                            | `number`                                        | `460`                   |
+| `scoreThreshold`  | `score-threshold`  | Score threshold to detect a face                                                                                       | `number`                                        | `0.65`                  |
+| `trainedModel`    | --                 | trained models to use for recognition an best match                                                                    | `LabeledDescriptors[]`                          | `undefined`             |
+| `width`           | `width`            | Width of the video element                                                                                             | `number`                                        | `460`                   |
 
 
 ## Events

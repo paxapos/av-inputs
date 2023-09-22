@@ -22,6 +22,10 @@ export namespace Components {
          */
         "detectionTimer"?: number;
         /**
+          * disable face detection
+         */
+        "enableDetection": boolean;
+        /**
           * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
          */
         "facingMode"?: CameraDirection;
@@ -157,6 +161,10 @@ declare namespace LocalJSX {
           * Score threshold to detect a face
          */
         "detectionTimer"?: number;
+        /**
+          * disable face detection
+         */
+        "enableDetection"?: boolean;
         /**
           * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
          */

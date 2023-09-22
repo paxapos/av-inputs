@@ -11,7 +11,7 @@ import { defineCustomElement as defineInputFileFromWebcam } from 'av-inputs/comp
 import { defineCustomElement as defineInputScanReader } from 'av-inputs/components/input-scan-reader.js';
 @ProxyCmp({
   defineCustomElementFn: defineInputFaceApiWebcam,
-  inputs: ['detectionTimer', 'facingMode', 'height', 'scoreThreshold', 'trainedModel', 'width'],
+  inputs: ['detectionTimer', 'enableDetection', 'facingMode', 'height', 'scoreThreshold', 'trainedModel', 'width'],
   methods: ['stopDetection', 'startDetection', 'getBlobImageDescriptors', 'getFaceLandMarks', 'predictBestMatch']
 })
 @Component({
@@ -19,7 +19,7 @@ import { defineCustomElement as defineInputScanReader } from 'av-inputs/componen
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content></ng-content>',
   // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
-  inputs: ['detectionTimer', 'facingMode', 'height', 'scoreThreshold', 'trainedModel', 'width'],
+  inputs: ['detectionTimer', 'enableDetection', 'facingMode', 'height', 'scoreThreshold', 'trainedModel', 'width'],
 })
 export class InputFaceApiWebcam {
   protected el: HTMLElement;

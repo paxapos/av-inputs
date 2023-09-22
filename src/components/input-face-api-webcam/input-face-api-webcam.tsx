@@ -29,8 +29,9 @@ export class InputFaceApiWebcam {
 
   @Element() el: HTMLElement;
 
-  @State() enableDetection = true;
   @State() detectionResult: DetectionImg
+
+  @State() loaded: boolean = false
 
   @Watch('detectionResult')
   detectionResultChangedHandler(newValue: DetectionImg, oldValue: DetectionImg) {
@@ -46,8 +47,7 @@ export class InputFaceApiWebcam {
   /**
    * disable face detection
    */
-  @Prop({reflect: true, mutable: true}) isDetecting = true;
-
+  @Prop({reflect: true, mutable: true}) enableDetection:boolean = true;
 
 
   /**
@@ -186,6 +186,8 @@ export class InputFaceApiWebcam {
 
     renderToCanvas( this.canvas, this.video)
     
+    this.loaded = true;
+
     requestAnimationFrame(() => {
       this.webcamRender() 
     })
@@ -237,12 +239,16 @@ drawWebcamnToCanvas(ctx) {
 
 
   render() {
-    return (
-      <Host style={{height: this.height+"px", width: this.width+"px"}}>
-        <slot name='before'></slot>
-        
-        <slot></slot>
+    const hostStyle = {
+      height: this.height+"px", 
+      width: this.width+"px",
+      visibility: this.loaded ? "visible" : "hidden",
+    }
 
+    return (
+      <Host style={hostStyle}>
+        <slot name='before'></slot>
+        <slot></slot>
         <slot name='after'></slot>
       </Host>
     );

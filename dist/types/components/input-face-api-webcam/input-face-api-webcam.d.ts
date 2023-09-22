@@ -11,10 +11,13 @@ export declare class InputFaceApiWebcam {
   video: HTMLVideoElement;
   canvas: HTMLCanvasElement;
   el: HTMLElement;
-  enableDetection: boolean;
-  isDetecting: boolean;
   detectionResult: DetectionImg;
+  loaded: boolean;
   detectionResultChangedHandler(newValue: DetectionImg, oldValue: DetectionImg): void;
+  /**
+   * disable face detection
+   */
+  enableDetection: boolean;
   /**
    * trained models to use for recognition an best match
    */
