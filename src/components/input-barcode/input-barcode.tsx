@@ -67,9 +67,14 @@ export class InputBarcode {
    */
   private html5QrCode: Html5Qrcode
 
+  /**
+   * Event Scan
+   */
   @Event() scan: EventEmitter<string>;
 
-
+  /**
+   * get state
+   */
   @Method()
   async getState(): Promise<Html5QrcodeScannerState> {
     return this.html5QrCode.getState()
