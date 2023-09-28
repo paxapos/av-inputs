@@ -126,7 +126,7 @@ export class InputBarcode {
   componentDidLoad(){
     console.info('entrooo',this.supportedFormats)
     const config: Html5QrcodeFullConfig = {
-      verbose: true,
+      verbose: Build.isDev,
       formatsToSupport: this.supportedFormats,
     };
     this.html5QrCode = new Html5Qrcode(this.uuidGeneric, config);
