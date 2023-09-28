@@ -23,14 +23,29 @@ export namespace Components {
           * Cualquiera de estas configuraciones https://scanapp.org/html5-qrcode-docs/docs/apis/interfaces/Html5QrcodeCameraScanConfig
          */
         "cameraConfig": Html5QrcodeCameraScanConfig;
+        /**
+          * id of camera
+         */
         "cameraId": string;
+        /**
+          * Camera user or enviroment
+         */
         "facingMode": 'user'|'enviroment';
         "getCameras": () => Promise<void>;
         "getState": () => Promise<Html5QrcodeScannerState>;
+        /**
+          * Height of the camera
+         */
         "height": string;
         "start": () => Promise<never>;
         "stop": () => Promise<void>;
+        /**
+          * All formats of camera
+         */
         "supportedFormats": Html5QrcodeSupportedFormats[];
+        /**
+          * Width of the camera
+         */
         "width": string;
     }
     interface InputFaceApiWebcam {
@@ -189,11 +204,26 @@ declare namespace LocalJSX {
           * Cualquiera de estas configuraciones https://scanapp.org/html5-qrcode-docs/docs/apis/interfaces/Html5QrcodeCameraScanConfig
          */
         "cameraConfig"?: Html5QrcodeCameraScanConfig;
+        /**
+          * id of camera
+         */
         "cameraId"?: string;
+        /**
+          * Camera user or enviroment
+         */
         "facingMode"?: 'user'|'enviroment';
+        /**
+          * Height of the camera
+         */
         "height"?: string;
         "onScan"?: (event: InputBarcodeCustomEvent<string>) => void;
+        /**
+          * All formats of camera
+         */
         "supportedFormats"?: Html5QrcodeSupportedFormats[];
+        /**
+          * Width of the camera
+         */
         "width"?: string;
     }
     interface InputFaceApiWebcam {

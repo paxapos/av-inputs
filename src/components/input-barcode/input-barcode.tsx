@@ -10,9 +10,21 @@ import { v4 as uuidv4 } from 'uuid';
 })
 export class InputBarcode {
 
+   /**
+   * id of camera
+   */
   @Prop() cameraId: string
+   /**
+   * Width of the camera
+   */
   @Prop() width: string = '400px'
+   /**
+   * Height of the camera
+   */
   @Prop() height: string = '200px'
+   /**
+   * All formats of camera
+   */
   @Prop() supportedFormats: Html5QrcodeSupportedFormats[] = [
     Html5QrcodeSupportedFormats.QR_CODE,
     Html5QrcodeSupportedFormats.AZTEC,
@@ -32,6 +44,9 @@ export class InputBarcode {
     Html5QrcodeSupportedFormats.UPC_E,
     Html5QrcodeSupportedFormats.UPC_EAN_EXTENSION
   ]
+   /**
+   * Camera user or enviroment
+   */
   @Prop() facingMode: 'user'|'enviroment' = 'enviroment'
   /**
    * Cualquiera de estas configuraciones
@@ -42,8 +57,14 @@ export class InputBarcode {
     
   }
 
+   /**
+   * Uuid of the div
+   */
   private uuidGeneric: string = uuidv4()
 
+   /**
+   * Element Html5Qrcode
+   */
   private html5QrCode: Html5Qrcode
 
   @Event() scan: EventEmitter<string>;
@@ -78,6 +99,9 @@ export class InputBarcode {
   }
 
 
+  /**
+   * get Cameras of user
+   */
   @Method()
   async getCameras() {
      // This method will trigger user permissions
