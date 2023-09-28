@@ -5,17 +5,34 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "./stencil-public-runtime";
+import { Html5QrcodeCameraScanConfig, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 import { CameraDirection } from "./utils/camera.service";
 import { DetectionImg } from "./utils/facepi.service";
 import { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
+export { Html5QrcodeCameraScanConfig, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from "html5-qrcode";
 export { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 export { CameraDirection } from "./utils/camera.service";
 export { DetectionImg } from "./utils/facepi.service";
 export { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 export { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export namespace Components {
+    interface InputBarcode {
+        /**
+          * Cualquiera de estas configuraciones https://scanapp.org/html5-qrcode-docs/docs/apis/interfaces/Html5QrcodeCameraScanConfig
+         */
+        "cameraConfig": Html5QrcodeCameraScanConfig;
+        "cameraId": string;
+        "facingMode": 'user'|'enviroment';
+        "getCameras": () => Promise<void>;
+        "getState": () => Promise<Html5QrcodeScannerState>;
+        "height": string;
+        "start": () => Promise<never>;
+        "stop": () => Promise<void>;
+        "supportedFormats": Html5QrcodeSupportedFormats[];
+        "width": string;
+    }
     interface InputFaceApiWebcam {
         /**
           * Score threshold to detect a face
@@ -118,6 +135,10 @@ export namespace Components {
         "modalTimer"?: number;
     }
 }
+export interface InputBarcodeCustomEvent<T> extends CustomEvent<T> {
+    detail: T;
+    target: HTMLInputBarcodeElement;
+}
 export interface InputFaceApiWebcamCustomEvent<T> extends CustomEvent<T> {
     detail: T;
     target: HTMLInputFaceApiWebcamElement;
@@ -131,6 +152,12 @@ export interface InputScanReaderCustomEvent<T> extends CustomEvent<T> {
     target: HTMLInputScanReaderElement;
 }
 declare global {
+    interface HTMLInputBarcodeElement extends Components.InputBarcode, HTMLStencilElement {
+    }
+    var HTMLInputBarcodeElement: {
+        prototype: HTMLInputBarcodeElement;
+        new (): HTMLInputBarcodeElement;
+    };
     interface HTMLInputFaceApiWebcamElement extends Components.InputFaceApiWebcam, HTMLStencilElement {
     }
     var HTMLInputFaceApiWebcamElement: {
@@ -150,12 +177,25 @@ declare global {
         new (): HTMLInputScanReaderElement;
     };
     interface HTMLElementTagNameMap {
+        "input-barcode": HTMLInputBarcodeElement;
         "input-face-api-webcam": HTMLInputFaceApiWebcamElement;
         "input-file-from-webcam": HTMLInputFileFromWebcamElement;
         "input-scan-reader": HTMLInputScanReaderElement;
     }
 }
 declare namespace LocalJSX {
+    interface InputBarcode {
+        /**
+          * Cualquiera de estas configuraciones https://scanapp.org/html5-qrcode-docs/docs/apis/interfaces/Html5QrcodeCameraScanConfig
+         */
+        "cameraConfig"?: Html5QrcodeCameraScanConfig;
+        "cameraId"?: string;
+        "facingMode"?: 'user'|'enviroment';
+        "height"?: string;
+        "onScan"?: (event: InputBarcodeCustomEvent<string>) => void;
+        "supportedFormats"?: Html5QrcodeSupportedFormats[];
+        "width"?: string;
+    }
     interface InputFaceApiWebcam {
         /**
           * Score threshold to detect a face
@@ -231,6 +271,7 @@ declare namespace LocalJSX {
         "onScan"?: (event: InputScanReaderCustomEvent<InputScanData>) => void;
     }
     interface IntrinsicElements {
+        "input-barcode": InputBarcode;
         "input-face-api-webcam": InputFaceApiWebcam;
         "input-file-from-webcam": InputFileFromWebcam;
         "input-scan-reader": InputScanReader;
@@ -240,6 +281,7 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
+            "input-barcode": LocalJSX.InputBarcode & JSXBase.HTMLAttributes<HTMLInputBarcodeElement>;
             "input-face-api-webcam": LocalJSX.InputFaceApiWebcam & JSXBase.HTMLAttributes<HTMLInputFaceApiWebcamElement>;
             "input-file-from-webcam": LocalJSX.InputFileFromWebcam & JSXBase.HTMLAttributes<HTMLInputFileFromWebcamElement>;
             "input-scan-reader": LocalJSX.InputScanReader & JSXBase.HTMLAttributes<HTMLInputScanReaderElement>;

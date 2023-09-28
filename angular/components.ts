@@ -6,9 +6,32 @@ import { ProxyCmp, proxyOutputs } from './angular-component-lib/utils';
 
 import type { Components } from 'av-inputs/components';
 
+import { defineCustomElement as defineInputBarcode } from 'av-inputs/components/input-barcode.js';
 import { defineCustomElement as defineInputFaceApiWebcam } from 'av-inputs/components/input-face-api-webcam.js';
 import { defineCustomElement as defineInputFileFromWebcam } from 'av-inputs/components/input-file-from-webcam.js';
 import { defineCustomElement as defineInputScanReader } from 'av-inputs/components/input-scan-reader.js';
+@ProxyCmp({
+  defineCustomElementFn: defineInputBarcode
+})
+@Component({
+  selector: 'input-barcode',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: '<ng-content></ng-content>',
+  // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
+  inputs: [],
+})
+export class InputBarcode {
+  protected el: HTMLElement;
+  constructor(c: ChangeDetectorRef, r: ElementRef, protected z: NgZone) {
+    c.detach();
+    this.el = r.nativeElement;
+  }
+}
+
+
+export declare interface InputBarcode extends Components.InputBarcode {}
+
+
 @ProxyCmp({
   defineCustomElementFn: defineInputFaceApiWebcam,
   inputs: ['detectionTimer', 'enableDetection', 'facingMode', 'height', 'scoreThreshold', 'trainedModel', 'width'],
