@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+    <script type="module" src="/build/av-inputs.esm.js"></script>
+    <script nomodule src="/build/av-inputs.js"></script>
+    <title>Stencil Component Starter</title>
+  </head>
+  <body>
+    <h1>Elements for Input Data</h1>
+
+    <ul>
+      <li><a href="/input_file_from_webcam.html">Input Webcam Photo</a></li>
+      <li><a href="/input_face_api.html">Input Webcam Face Recognition</a></li>
+      <li><a href="/input_scan_reader.html">Input Scan on ENTER</a></li>
+      <li><a href="/input_barcode.html">Input Scan Bar Code</a></li>
+    </ul>
+   
+    <hr />
+    <h1>Input bar code</h1>
+    <input-barcode 
+      id="barcode"
+      width="1000px"
+      height="1000px"
+      facing-mode="user">
+    </input-barcode>
+    <script>
+       const barcode = document.getElementById('barcode');
+        console.info("el barcode es", barcode);
+       barcode.cameraConfig = {
+        fps: 1,
+        qrbox: { width: 500, height: 250 }
+       }
+        barcode.addEventListener("scan", (ev) => {
+          console.info('barEscaneado',ev.detail)
+        });
+
+    </script>
+  </body>
+</html>
