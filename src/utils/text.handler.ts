@@ -3,26 +3,6 @@ import { InputScanDataPersona, InputScanType } from "src/components/input-scan-r
 
 
 
-const regexToData = [
-    {
-      regex: /^([a-z0-9]+)$/gi, 
-      type: InputScanType.ALFANUMERICO
-    },
-    {
-      regex: /^([0-9]+)$/gi, 
-      type: InputScanType.NUMBER
-    },
-    {
-      regex:  /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi, 
-      type: InputScanType.URL
-    },
-    {
-      regex: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi, 
-      type: InputScanType.EMAIL
-    },
-  ]
-
-
 
 function getDataFromDNIv1 (inputScanner: RegExpExecArray, scannedText: string): InputScanDataPersona {
 
@@ -65,13 +45,38 @@ function runRegex( text:string): InputScanData {
         return getDataFromLicenciaDeCOnducir( text ) as InputScanDataPersona;
       }
 
+
+
+
+      const regexToData = [
+        {
+          regex: /^([0-9]+)$/gi, 
+          type: InputScanType.NUMBER
+        },
+        {
+          regex: /^(?!^\d+$)([a-z0-9]+)$/gi, 
+          type: InputScanType.ALFANUMERICO
+        },
+        {
+          regex:  /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi, 
+          type: InputScanType.URL
+        },
+        {
+          regex: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi, 
+          type: InputScanType.EMAIL
+        },
+      ]
+
       for ( let i = 0; i < regexToData.length; i++ ) {
         const regexToDataItem = regexToData[i];
-        const regrun = regexToDataItem.regex.exec( text )
+        const regrun = regexToDataItem.regex.exec( text.trim() )
+        console.info("analizando regex", text.trim(), i, regrun)
         if ( regrun ) {
           return getDataFromRegex(regexToDataItem.type, text );
         }
       }
+
+      return null;
   }
 
 
@@ -110,9 +115,10 @@ export function processText(text: string): InputScanData {
     const scannedData = runRegex( text )
 
     let data;
-    if ( scannedData ) {
+    if ( scannedData !== null ) {
       data = scannedData;
     } else {
+      console.info("es desconocidoooo", text)
       data = {
         type: InputScanType.DESCONOCIDO,
         text: text,

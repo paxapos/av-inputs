@@ -1,4 +1,4 @@
-import { r as registerInstance, a as createEvent, h, f as Host, i as getElement } from './index-e4228ea4.js';
+import { r as registerInstance, a as createEvent, h, e as Host, g as getElement } from './index-9a369ae4.js';
 import { c as createVideo, a as createCanvas, i as initWebcamToVideo, r as renderToCanvas, t as takePicture, C as CameraDirection } from './camera.service-263a32a0.js';
 
 class WebCamera {

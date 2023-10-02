@@ -1,5 +1,5 @@
 import { Component, Host, h, Event, Method, Element, EventEmitter, State, Listen, Prop } from '@stencil/core';
-import { InputScanData, InputScanType } from './input-scan-reader.types';
+import { InputScanData } from './input-scan-reader.types';
 import { processText } from 'src/utils/text.handler';
 
 
@@ -20,24 +20,7 @@ import { processText } from 'src/utils/text.handler';
 })
 export class InputScanReader {
 
-  regexToData = [
-    {
-      regex: /^([a-z0-9]+)$/gi, 
-      type: InputScanType.ALFANUMERICO
-    },
-    {
-      regex: /^([0-9]+)$/gi, 
-      type: InputScanType.NUMBER
-    },
-    {
-      regex:  /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi, 
-      type: InputScanType.URL
-    },
-    {
-      regex: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi, 
-      type: InputScanType.EMAIL
-    },
-  ]
+  
 
 
   @Element() el: HTMLElement;

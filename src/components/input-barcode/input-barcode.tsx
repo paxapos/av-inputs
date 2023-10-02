@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Host,Event, Prop, h, Method, Build } from '@stencil/core';
+import { Component, EventEmitter, Host,Event, Prop, h, Method } from '@stencil/core';
 import {Html5Qrcode, Html5QrcodeCameraScanConfig, Html5QrcodeFullConfig, Html5QrcodeScannerState, Html5QrcodeSupportedFormats} from "html5-qrcode";
 import { v4 as uuidv4 } from 'uuid';
 import { InputScanData } from '../input-scan-reader/input-scan-reader.types';
@@ -90,18 +90,26 @@ export class InputBarcode {
 
 
 
-  private lastScan:string = ''
+  private lastScan:InputScanData = null
   private scanTimer: NodeJS.Timeout = null;
   /**
    * Para asegurarse de que no lea inmediatamente el mismo DNI escaneado
    * @param decodedText 
    */
-  private handleDecodedText(decodedText){
-    if ( this.lastScan != decodedText ) {
+  handleDecodedText(decodedText: InputScanData){
+    console.info("INICIANDOOOOO")
+    console.info(this.lastScan)
+    console.info(decodedText.text)
+    if ( this.lastScan?.text.toString() != decodedText.text.toString() || this.lastScan === null ) {
+      console.info("LEYOOOOO", decodedText)
+      var today = new Date();
+      var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      console.info('time',time)
+      this.scan.emit(decodedText);
       this.lastScan = decodedText;
       clearTimeout(this.scanTimer);
       this.scanTimer = setTimeout(() => {
-        this.lastScan = '';
+        this.lastScan = null;
       }, 5000);
     }
   }
@@ -113,12 +121,13 @@ export class InputBarcode {
       {facingMode: this.facingMode},
       this.cameraConfig,
       (decodedText) => {
+        console.info("leyo data",decodedText);
         const scannedData = processText(decodedText);
-        this.scan.emit(scannedData);
-        this.handleDecodedText(decodedText)
+        console.info("leyo scannedData",scannedData);
+        this.handleDecodedText(scannedData)
       },
-      (errorMessage) => {
-        throw new Error(`Error al escanear: ${errorMessage}`);
+      () => {
+        //console.error(error)
       })
     .catch((err) => {
       throw new Error(`Error al iniciar scanner: ${err}`);
@@ -144,14 +153,14 @@ export class InputBarcode {
         // .. use this to start scanning.
       }
     }).catch(err => {
-      console.error(err)
+      err
       // handle err
     });
   }
 
   componentDidLoad(){
     const config: Html5QrcodeFullConfig = {
-      verbose: Build.isDev,
+      verbose: false,
       formatsToSupport: this.supportedFormats,
     };
     this.html5QrCode = new Html5Qrcode(this.uuidGeneric, config);

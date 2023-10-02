@@ -50,7 +50,7 @@ export declare class InputBarcode {
    * Para asegurarse de que no lea inmediatamente el mismo DNI escaneado
    * @param decodedText
    */
-  private handleDecodedText;
+  handleDecodedText(decodedText: InputScanData): void;
   start(): Promise<never>;
   /**
    * get Cameras of user

@@ -1,5 +1,5 @@
-import { r as registerInstance, a as createEvent, h, f as Host, i as getElement } from './index-e4228ea4.js';
-import { p as processText } from './text.handler-60a0488b.js';
+import { r as registerInstance, a as createEvent, h, e as Host, g as getElement } from './index-9a369ae4.js';
+import { p as processText } from './text.handler-c1fcd1e2.js';
 
 const inputScanReaderCss = ":host{display:block}";
 
@@ -7,24 +7,6 @@ const InputScanReader = class {
   constructor(hostRef) {
     registerInstance(this, hostRef);
     this.scan = createEvent(this, "scan", 7);
-    this.regexToData = [
-      {
-        regex: /^([a-z0-9]+)$/gi,
-        type: "ALFANUMERICO" /* InputScanType.ALFANUMERICO */
-      },
-      {
-        regex: /^([0-9]+)$/gi,
-        type: "NUMBER" /* InputScanType.NUMBER */
-      },
-      {
-        regex: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi,
-        type: "URL" /* InputScanType.URL */
-      },
-      {
-        regex: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi,
-        type: "EMAIL" /* InputScanType.EMAIL */
-      },
-    ];
     this.modalTimer = 500;
     this.scannedText = '';
   }

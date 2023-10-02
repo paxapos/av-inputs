@@ -1,5 +1,5 @@
-import { r as registerInstance, a as createEvent, e as Build, h, f as Host } from './index-e4228ea4.js';
-import { p as processText } from './text.handler-60a0488b.js';
+import { r as registerInstance, a as createEvent, h, e as Host } from './index-9a369ae4.js';
+import { p as processText } from './text.handler-c1fcd1e2.js';
 
 var Html5QrcodeSupportedFormats;
 (function (Html5QrcodeSupportedFormats) {
@@ -28100,7 +28100,7 @@ const InputBarcode = class {
     * Uuid of the div
     */
     this.uuidGeneric = v4();
-    this.lastScan = '';
+    this.lastScan = null;
     this.scanTimer = null;
     this.cameraId = undefined;
     this.width = '400px';
@@ -28143,21 +28143,31 @@ const InputBarcode = class {
    * @param decodedText
    */
   handleDecodedText(decodedText) {
-    if (this.lastScan != decodedText) {
+    var _a;
+    console.info("INICIANDOOOOO");
+    console.info(this.lastScan);
+    console.info(decodedText.text);
+    if (((_a = this.lastScan) === null || _a === void 0 ? void 0 : _a.text.toString()) != decodedText.text.toString() || this.lastScan === null) {
+      console.info("LEYOOOOO", decodedText);
+      var today = new Date();
+      var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+      console.info('time', time);
+      this.scan.emit(decodedText);
       this.lastScan = decodedText;
       clearTimeout(this.scanTimer);
       this.scanTimer = setTimeout(() => {
-        this.lastScan = '';
+        this.lastScan = null;
       }, 5000);
     }
   }
   async start() {
     return await this.html5QrCode.start({ facingMode: this.facingMode }, this.cameraConfig, (decodedText) => {
+      console.info("leyo data", decodedText);
       const scannedData = processText(decodedText);
-      this.scan.emit(scannedData);
-      this.handleDecodedText(decodedText);
-    }, (errorMessage) => {
-      throw new Error(`Error al escanear: ${errorMessage}`);
+      console.info("leyo scannedData", scannedData);
+      this.handleDecodedText(scannedData);
+    }, () => {
+      //console.error(error)
     })
       .catch((err) => {
       throw new Error(`Error al iniciar scanner: ${err}`);
@@ -28180,13 +28190,13 @@ const InputBarcode = class {
         // .. use this to start scanning.
       }
     }).catch(err => {
-      console.error(err);
+      err;
       // handle err
     });
   }
   componentDidLoad() {
     const config = {
-      verbose: Build.isDev,
+      verbose: false,
       formatsToSupport: this.supportedFormats,
     };
     this.html5QrCode = new Html5Qrcode(this.uuidGeneric, config);

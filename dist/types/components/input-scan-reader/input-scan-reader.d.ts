@@ -1,10 +1,6 @@
 import { EventEmitter } from '../../stencil-public-runtime';
-import { InputScanData, InputScanType } from './input-scan-reader.types';
+import { InputScanData } from './input-scan-reader.types';
 export declare class InputScanReader {
-  regexToData: {
-    regex: RegExp;
-    type: InputScanType;
-  }[];
   el: HTMLElement;
   /**
    * Show a modal with the scanned text. like a white blink on the screen
