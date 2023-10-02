@@ -1,5 +1,6 @@
 import { Component, Host, h, Event, Method, Element, EventEmitter, State, Listen, Prop } from '@stencil/core';
 import { InputScanData, InputScanType } from './input-scan-reader.types';
+import { processText } from 'src/utils/text.handler';
 
 
 
@@ -89,29 +90,8 @@ export class InputScanReader {
     }
     , this.modalTimer);
 
-
-
-    
   }
-
-  processText(text: string): InputScanData {
-    const scannedData = this.runRegex( text )
-
-    let data;
-    if ( scannedData ) {
-      data = scannedData;
-    } else {
-      data = {
-        type: InputScanType.DESCONOCIDO,
-        text: this.scannedText,
-        data:  {
-          text: this.scannedText,
-        }
-      }
-    }
-
-    return data;
-  }
+  
 
   onEnterHandler() {
     if ( this.scannedText == '' ) {
@@ -119,7 +99,7 @@ export class InputScanReader {
     }
 
     // convierto el texto a InputScanData
-    const scannedData = this.processText(this.scannedText)
+    const scannedData = processText(this.scannedText);
     
     // reinicializo texto
     this.scannedText = '';
@@ -181,89 +161,10 @@ export class InputScanReader {
       return null;
     }
 
-    return this.processText(this.scannedText)
+    return processText(this.scannedText)
   }
 
 
-  runRegex( text:string): InputScanData {
-    let regex,regrun
-      // DNI v1
-      // "30368326    "A"1"VILAR"ALEJANDRO ERNESTO"ARGENTINA"07-06-1983"M"13-02-2011"00038329892"7019 "13-02-2026"616"0"ILRÑ2.01 CÑ110128.02 )No Cap.="UNIDADÑ DG200 Plus ÇÇ SERIE NMEROÑ ¡040:2009::0019"
-      regex = /^\"?(\w{8}) +\"?([a-z])\"?(\w)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])"/gi
-      regrun = regex.exec( text )
-      if ( regrun ) {
-        return this.getDataFromDNIv1(regrun,  text );
-      }
-
-      // DNI v2
-      regex = /^\"?(\d+)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z])\"?(\w{8})\"?([a-z])\"?([0-9-]+)/gi
-      regrun = regex.exec( text )
-      if ( regrun ) {
-        return this.getDataFromDNIv2(regrun,  text );
-      }
-
-
-      // Licencia de conducir
-      regex = /^\"?(\w{8})\"?([a-z])\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])\"?([0-9-]+)/gi
-      regrun = regex.exec( text )
-      if ( regrun ) {
-        return this.getDataFromLicenciaDeCOnducir( text );
-      }
-
-      for ( let i = 0; i < this.regexToData.length; i++ ) {
-        const regexToDataItem = this.regexToData[i];
-        const regrun = regexToDataItem.regex.exec( text )
-        if ( regrun ) {
-          return this.getDataFromRegex(regexToDataItem.type, text );
-        }
-      }
-  }
-
-
-  getDataFromDNIv1 (inputScanner: RegExpExecArray, scannedText: string): InputScanData {
-
-    return {
-      type: InputScanType.DNIv1,
-      text: scannedText,
-      data:  {
-        apellido: inputScanner[4],
-        nombre: inputScanner[5],
-        dni: inputScanner[1],
-        fecha_nacimiento: inputScanner[6],
-        sexo: inputScanner[7],
-      }
-    }
-  }
-  
-
-  getDataFromDNIv2 (inputScanner: RegExpExecArray, scannedText: string): InputScanData {
-       
-    return {
-      type: InputScanType.DNIv2,
-      text: scannedText,
-      data:  {
-        apellido: inputScanner[2],
-        nombre: inputScanner[3],
-        dni: inputScanner[5],
-        fecha_nacimiento: inputScanner[7],
-        sexo: inputScanner[4],
-      }
-    }
-  }
-
-
- 
-
-  getDataFromRegex (type: InputScanType, scannedText: string): InputScanData {
-    return {
-      type: type,
-      text: scannedText,
-      }
-  }
-
-  getDataFromLicenciaDeCOnducir (scannedText: string): InputScanData {
-    return this.getDataFromRegex(InputScanType.LICENCIA_CONDUCIR, scannedText)   
-  }
 
   handleOnInpujtChangeEvent(ev: Event) {
     this.scannedText = (ev.target as HTMLInputElement).value;

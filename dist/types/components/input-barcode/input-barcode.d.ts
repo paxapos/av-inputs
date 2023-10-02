@@ -1,5 +1,6 @@
 import { EventEmitter } from '../../stencil-public-runtime';
 import { Html5QrcodeCameraScanConfig, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { InputScanData } from '../input-scan-reader/input-scan-reader.types';
 export declare class InputBarcode {
   /**
   * id of camera
@@ -34,10 +35,26 @@ export declare class InputBarcode {
   * Element Html5Qrcode
   */
   private html5QrCode;
-  scan: EventEmitter<string>;
+  /**
+   * Event Scan
+   */
+  scan: EventEmitter<InputScanData>;
+  /**
+   * get state
+   */
   getState(): Promise<Html5QrcodeScannerState>;
   stop(): Promise<void>;
+  private lastScan;
+  private scanTimer;
+  /**
+   * Para asegurarse de que no lea inmediatamente el mismo DNI escaneado
+   * @param decodedText
+   */
+  private handleDecodedText;
   start(): Promise<never>;
+  /**
+   * get Cameras of user
+   */
   getCameras(): Promise<void>;
   componentDidLoad(): void;
   render(): any;

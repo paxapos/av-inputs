@@ -11,7 +11,6 @@ export declare class InputScanReader {
    */
   modalTimer?: number;
   handleScan(event: CustomEvent<InputScanData>): void;
-  processText(text: string): InputScanData;
   onEnterHandler(): boolean;
   handleKeyDown(event: KeyboardEvent): boolean;
   scannedText: string;
@@ -30,11 +29,6 @@ export declare class InputScanReader {
    * @returns the text scanned
    */
   getData(): Promise<InputScanData>;
-  runRegex(text: string): InputScanData;
-  getDataFromDNIv1(inputScanner: RegExpExecArray, scannedText: string): InputScanData;
-  getDataFromDNIv2(inputScanner: RegExpExecArray, scannedText: string): InputScanData;
-  getDataFromRegex(type: InputScanType, scannedText: string): InputScanData;
-  getDataFromLicenciaDeCOnducir(scannedText: string): InputScanData;
   handleOnInpujtChangeEvent(ev: Event): void;
   render(): any;
 }

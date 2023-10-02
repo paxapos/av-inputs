@@ -6,17 +6,17 @@
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 import { Html5QrcodeCameraScanConfig, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 import { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 import { CameraDirection } from "./utils/camera.service";
 import { DetectionImg } from "./utils/facepi.service";
 import { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
-import { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export { Html5QrcodeCameraScanConfig, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from "html5-qrcode";
+export { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 export { CameraDirection } from "./utils/camera.service";
 export { DetectionImg } from "./utils/facepi.service";
 export { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
-export { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export namespace Components {
     interface InputBarcode {
         /**
@@ -31,7 +31,13 @@ export namespace Components {
           * Camera user or enviroment
          */
         "facingMode": 'user'|'enviroment';
+        /**
+          * get Cameras of user
+         */
         "getCameras": () => Promise<void>;
+        /**
+          * get state
+         */
         "getState": () => Promise<Html5QrcodeScannerState>;
         /**
           * Height of the camera
@@ -216,7 +222,10 @@ declare namespace LocalJSX {
           * Height of the camera
          */
         "height"?: string;
-        "onScan"?: (event: InputBarcodeCustomEvent<string>) => void;
+        /**
+          * Event Scan
+         */
+        "onScan"?: (event: InputBarcodeCustomEvent<InputScanData>) => void;
         /**
           * All formats of camera
          */

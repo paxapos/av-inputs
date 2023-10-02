@@ -18,5 +18,7 @@ export interface InputDataPersona {
 export interface InputScanData {
   type: InputScanType;
   text: string;
-  data?: InputDataPersona;
+}
+export interface InputScanDataPersona extends InputScanData {
+  data: InputDataPersona;
 }

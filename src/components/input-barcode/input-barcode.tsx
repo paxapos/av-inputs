@@ -1,6 +1,8 @@
 import { Component, EventEmitter, Host,Event, Prop, h, Method, Build } from '@stencil/core';
 import {Html5Qrcode, Html5QrcodeCameraScanConfig, Html5QrcodeFullConfig, Html5QrcodeScannerState, Html5QrcodeSupportedFormats} from "html5-qrcode";
 import { v4 as uuidv4 } from 'uuid';
+import { InputScanData } from '../input-scan-reader/input-scan-reader.types';
+import { processText } from 'src/utils/text.handler';
 
 
 @Component({
@@ -70,7 +72,7 @@ export class InputBarcode {
   /**
    * Event Scan
    */
-  @Event() scan: EventEmitter<string>;
+  @Event() scan: EventEmitter<InputScanData>;
 
   /**
    * get state
@@ -87,13 +89,33 @@ export class InputBarcode {
   }
 
 
+
+  private lastScan:string = ''
+  private scanTimer: NodeJS.Timeout = null;
+  /**
+   * Para asegurarse de que no lea inmediatamente el mismo DNI escaneado
+   * @param decodedText 
+   */
+  private handleDecodedText(decodedText){
+    if ( this.lastScan != decodedText ) {
+      this.lastScan = decodedText;
+      clearTimeout(this.scanTimer);
+      this.scanTimer = setTimeout(() => {
+        this.lastScan = '';
+      }, 5000);
+    }
+  }
+
+
   @Method()
   async start() {
     return await this.html5QrCode.start(
       {facingMode: this.facingMode},
       this.cameraConfig,
       (decodedText) => {
-        this.scan.emit(decodedText)
+        const scannedData = processText(decodedText);
+        this.scan.emit(scannedData);
+        this.handleDecodedText(decodedText)
       },
       (errorMessage) => {
         throw new Error(`Error al escanear: ${errorMessage}`);
@@ -111,7 +133,6 @@ export class InputBarcode {
   async getCameras() {
      // This method will trigger user permissions
      Html5Qrcode.getCameras().then(devices => {
-      console.info('paso por aca')
       /**
        * devices would be an array of objects of type:
        * { id: "id", label: "label" }
@@ -129,7 +150,6 @@ export class InputBarcode {
   }
 
   componentDidLoad(){
-    console.info('entrooo',this.supportedFormats)
     const config: Html5QrcodeFullConfig = {
       verbose: Build.isDev,
       formatsToSupport: this.supportedFormats,
@@ -141,7 +161,6 @@ export class InputBarcode {
 
 
   render() {
-    console.info('entrooo 2')
     const hostStyle = {
       'width' : this.width,
       'height' : this.height,
