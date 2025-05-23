@@ -1,5 +1,7 @@
-import { r as registerInstance, a as createEvent, h, d as Host } from './index-D0R_KwCh.js';
-import { p as processText } from './text.handler-Ci_MokX0.js';
+'use strict';
+
+var index = require('./index-zg9izv8n.js');
+var text_handler = require('./text.handler-D7NoJxZS.js');
 
 var Html5QrcodeSupportedFormats;
 (function (Html5QrcodeSupportedFormats) {
@@ -27981,8 +27983,8 @@ const inputBarcodeCss = ":host{display:block}";
 
 const InputBarcode = class {
     constructor(hostRef) {
-        registerInstance(this, hostRef);
-        this.scan = createEvent(this, "scan", 7);
+        index.registerInstance(this, hostRef);
+        this.scan = index.createEvent(this, "scan", 7);
         /**
         * Width of the camera
         */
@@ -28065,7 +28067,7 @@ const InputBarcode = class {
     async start() {
         return await this.html5QrCode.start({ facingMode: this.facingMode }, this.cameraConfig, (decodedText) => {
             console.info("leyo data", decodedText);
-            const scannedData = processText(decodedText);
+            const scannedData = text_handler.processText(decodedText);
             console.info("leyo scannedData", scannedData);
             this.handleDecodedText(scannedData);
         }, () => {
@@ -28111,12 +28113,12 @@ const InputBarcode = class {
             'overflow': 'hidden',
             'display': 'inline-block'
         };
-        return (h(Host, { key: '758bcc9281ace9508a6a2e88105ac2a6daf82a79', style: hostStyle }, h("div", { key: 'fc49ffc3b223786762c51fe9a854466db8c811e2', id: this.uuidGeneric })));
+        return (index.h(index.Host, { key: '758bcc9281ace9508a6a2e88105ac2a6daf82a79', style: hostStyle }, index.h("div", { key: 'fc49ffc3b223786762c51fe9a854466db8c811e2', id: this.uuidGeneric })));
     }
 };
 InputBarcode.style = inputBarcodeCss;
 
-export { InputBarcode as input_barcode };
-//# sourceMappingURL=input-barcode.entry.esm.js.map
+exports.input_barcode = InputBarcode;
+//# sourceMappingURL=input-barcode.entry.cjs.js.map
 
-//# sourceMappingURL=input-barcode.entry.js.map
+//# sourceMappingURL=input-barcode.cjs.entry.js.map

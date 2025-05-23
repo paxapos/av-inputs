@@ -1,0 +1,262 @@
+:host {
+  display: inline-block;
+  position: relative;
+  width: 460px;
+  height: 460px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border: 2px solid #e0e0e0;
+  background: #f5f5f5;
+  transition: all 0.3s ease;
+}
+
+:host(.camera-ready) {
+  border-color: #4CAF50;
+  box-shadow: 0 8px 32px rgba(76, 175, 80, 0.2);
+}
+
+:host(.camera-error) {
+  border-color: #f44336;
+  box-shadow: 0 8px 32px rgba(244, 67, 54, 0.2);
+}
+
+:host(.camera-loading) {
+  border-color: #2196F3;
+  box-shadow: 0 8px 32px rgba(33, 150, 243, 0.2);
+}
+
+:host(.flipped) canvas {
+  transform: scaleX(-1);
+}
+
+video {
+  display: none;
+}
+
+canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+/* Camera states */
+.camera-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.camera-state.loading {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.camera-state.error {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  color: white;
+}
+
+.camera-state.inactive {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #333;
+}
+
+/* Loading spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Icons */
+.error-icon,
+.inactive-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+/* Messages */
+.camera-state p {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.error-message {
+  max-width: 300px;
+}
+
+/* Buttons */
+.retry-button,
+.start-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  color: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.retry-button:hover,
+.start-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.start-button {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.start-button:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Camera controls */
+.camera-controls {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+}
+
+.control-button {
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.control-button:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.control-button:active {
+  transform: scale(0.95);
+}
+
+.capture-button {
+  width: 72px;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-size: 28px;
+}
+
+.capture-button:hover {
+  background: white;
+}
+
+.control-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.control-button:disabled:hover {
+  transform: none;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Flash effect */
+.flash-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  :host {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    max-width: 400px;
+  }
+
+  .camera-controls {
+    bottom: 12px;
+  }
+
+  .control-button {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .capture-button {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+
+  .camera-state p {
+    font-size: 14px;
+  }
+
+  .error-icon,
+  .inactive-icon {
+    font-size: 36px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :host {
+    border-width: 3px;
+  }
+
+  .control-button {
+    border: 2px solid white;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

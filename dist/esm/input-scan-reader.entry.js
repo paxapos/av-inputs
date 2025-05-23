@@ -177,6 +177,6 @@ const InputScanReader = class {
 InputScanReader.style = inputScanReaderCss;
 
 export { InputScanReader as input_scan_reader };
-//# sourceMappingURL=input-scan-reader.entry.esm.js.map
+//# sourceMappingURL=input-scan-reader.entry.js.map
 
 //# sourceMappingURL=input-scan-reader.entry.js.map

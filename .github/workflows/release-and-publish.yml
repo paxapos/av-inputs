@@ -1,0 +1,187 @@
+name: Release and Publish to NPM
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  check-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for relevant changes
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          # Check if there are changes in source code (not just docs, etc.)
+          if git diff --name-only HEAD~1 HEAD | grep -E '^(src/|package\.json|stencil\.config\.ts|tsconfig\.json)'; then
+            echo "should_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+
+  test:
+    needs: check-changes
+    if: needs.check-changes.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build project
+        run: npm run build
+
+  release-and-publish:
+    needs: [check-changes, test]
+    if: needs.check-changes.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Determine version bump type
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "type=${{ github.event.inputs.version_type }}" >> $GITHUB_OUTPUT
+          else
+            # Analyze commit messages for conventional commits
+            if git log --format=%s HEAD~1..HEAD | grep -i "BREAKING CHANGE\|feat!"; then
+              echo "type=major" >> $GITHUB_OUTPUT
+            elif git log --format=%s HEAD~1..HEAD | grep -i "^feat"; then
+              echo "type=minor" >> $GITHUB_OUTPUT
+            else
+              echo "type=patch" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Bump version
+        id: bump
+        run: |
+          OLD_VERSION=$(node -p "require('./package.json').version")
+          npm version ${{ steps.version.outputs.type }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build project
+        run: npm run build
+
+      - name: Update changelog
+        run: |
+          if [ ! -f CHANGELOG.md ]; then
+            echo "# Changelog" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+          fi
+          
+          # Create temporary changelog entry
+          cat > temp_changelog.md << EOF
+          ## [${{ steps.bump.outputs.new_version }}] - $(date +%Y-%m-%d)
+          
+          ### Changes
+          $(git log --format="- %s" v${{ steps.bump.outputs.old_version }}..HEAD 2>/dev/null || git log --format="- %s" HEAD~5..HEAD)
+          
+          EOF
+          
+          # Prepend to existing changelog
+          tail -n +2 CHANGELOG.md >> temp_changelog.md
+          echo "# Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          cat temp_changelog.md >> CHANGELOG.md
+          rm temp_changelog.md
+
+      - name: Commit version bump
+        run: |
+          git add package.json CHANGELOG.md
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.new_version }}"
+          git tag -a "v${{ steps.bump.outputs.new_version }}" -m "Release v${{ steps.bump.outputs.new_version }}"
+
+      - name: Push changes
+        run: |
+          git push origin main
+          git push origin "v${{ steps.bump.outputs.new_version }}"
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.bump.outputs.new_version }}
+          release_name: Release v${{ steps.bump.outputs.new_version }}
+          body: |
+            ## Changes in v${{ steps.bump.outputs.new_version }}
+            
+            ### Commits
+            $(git log --format="- %s" v${{ steps.bump.outputs.old_version }}..HEAD 2>/dev/null || git log --format="- %s" HEAD~5..HEAD)
+            
+            ### NPM Package
+            This release is available on NPM: `npm install @paxapos/av-inputs@${{ steps.bump.outputs.new_version }}`
+          draft: false
+          prerelease: false
+
+      - name: Publish to NPM
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Post-publish verification
+        run: |
+          echo "✅ Successfully published @paxapos/av-inputs@${{ steps.bump.outputs.new_version }} to NPM"
+          echo "🏷️ Created Git tag: v${{ steps.bump.outputs.new_version }}"
+          echo "📦 NPM package: https://www.npmjs.com/package/@paxapos/av-inputs"

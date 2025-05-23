@@ -1,18 +1,20 @@
-import { r as registerInstance, a as createEvent, h, d as Host, g as getElement } from './index-D0R_KwCh.js';
-import { c as createVideo, a as createCanvas, i as initWebcamToVideo, r as renderToCanvas, t as takePicture, C as CameraDirection } from './camera.service-EIF4KpJN.js';
+'use strict';
+
+var index = require('./index-zg9izv8n.js');
+var camera_service = require('./camera.service-BQZZ7IZj.js');
 
 class WebCamera {
     async initCamera(parentElement, direction, drawImageCb = null) {
         this.resetCamera();
         if (!this.elVideo) {
-            this.elVideo = createVideo();
+            this.elVideo = camera_service.createVideo();
         }
         if (!this.canvas) {
-            this.canvas = createCanvas(parentElement);
+            this.canvas = camera_service.createCanvas(parentElement);
             parentElement.appendChild(this.canvas);
         }
-        initWebcamToVideo(this.elVideo, direction);
-        renderToCanvas(this.canvas, this.elVideo, drawImageCb);
+        camera_service.initWebcamToVideo(this.elVideo, direction);
+        camera_service.renderToCanvas(this.canvas, this.elVideo, drawImageCb);
         return this.canvas;
     }
     resetCamera() {
@@ -27,7 +29,7 @@ class WebCamera {
             this.elVideo.srcObject = null;
     }
     async takePicture(quality = 0.85) {
-        return await takePicture(this.canvas, quality);
+        return await camera_service.takePicture(this.canvas, quality);
     }
 }
 const camera = new WebCamera();
@@ -36,12 +38,12 @@ const inputFileFromWebcamCss = ":host{display:inline-block;position:relative;wid
 
 const InputFileFromWebcam = class {
     constructor(hostRef) {
-        registerInstance(this, hostRef);
-        this.pictureTaken = createEvent(this, "pictureTaken", 6);
-        this.facingModeChanged = createEvent(this, "facingModeChanged", 6);
-        this.cameraStarted = createEvent(this, "cameraStarted", 6);
-        this.cameraStopped = createEvent(this, "cameraStopped", 6);
-        this.cameraError = createEvent(this, "cameraError", 6);
+        index.registerInstance(this, hostRef);
+        this.pictureTaken = index.createEvent(this, "pictureTaken", 6);
+        this.facingModeChanged = index.createEvent(this, "facingModeChanged", 6);
+        this.cameraStarted = index.createEvent(this, "cameraStarted", 6);
+        this.cameraStopped = index.createEvent(this, "cameraStopped", 6);
+        this.cameraError = index.createEvent(this, "cameraError", 6);
         this.cameraState = { status: 'inactive' };
         this.isFlipped = false;
         /**
@@ -55,7 +57,7 @@ const InputFileFromWebcam = class {
         /**
          * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
          */
-        this.facingMode = CameraDirection.Front;
+        this.facingMode = camera_service.CameraDirection.Front;
         /**
          * Show camera controls (flip, capture button, etc)
          */
@@ -195,7 +197,7 @@ const InputFileFromWebcam = class {
      * Toggle webcam facing mode
      */
     async __toogleFacingMode() {
-        const newFacingMode = (this.facingMode !== CameraDirection.Front) ? CameraDirection.Front : CameraDirection.Rear;
+        const newFacingMode = (this.facingMode !== camera_service.CameraDirection.Front) ? camera_service.CameraDirection.Front : camera_service.CameraDirection.Rear;
         this.facingMode = newFacingMode;
         this.facingModeChanged.emit(this.facingMode);
     }
@@ -220,7 +222,7 @@ const InputFileFromWebcam = class {
         await this.startCamera();
     }
     componentWillLoad() {
-        this.isFlipped = this.facingMode === CameraDirection.Front;
+        this.isFlipped = this.facingMode === camera_service.CameraDirection.Front;
     }
     async componentDidLoad() {
         if (this.autoStart) {
@@ -234,7 +236,7 @@ const InputFileFromWebcam = class {
      * Render loading state
      */
     renderLoadingState() {
-        return (h("div", { class: "camera-state loading" }, h("div", { class: "spinner" }), h("p", null, "Iniciando c\u00E1mara...")));
+        return (index.h("div", { class: "camera-state loading" }, index.h("div", { class: "spinner" }), index.h("p", null, "Iniciando c\u00E1mara...")));
     }
     /**
      * Render error state
@@ -252,19 +254,19 @@ const InputFileFromWebcam = class {
                 break;
             case 'stream':
                 errorMessage = 'Error al acceder a la cámara. Puede estar siendo usada por otra aplicación.';
-                actionButton = (h("button", { class: "retry-button", onClick: () => this.handleRetryClick() }, "Reintentar"));
+                actionButton = (index.h("button", { class: "retry-button", onClick: () => this.handleRetryClick() }, "Reintentar"));
                 break;
             default:
                 errorMessage = (error === null || error === void 0 ? void 0 : error.message) || 'Error desconocido al inicializar la cámara.';
-                actionButton = (h("button", { class: "retry-button", onClick: () => this.handleRetryClick() }, "Reintentar"));
+                actionButton = (index.h("button", { class: "retry-button", onClick: () => this.handleRetryClick() }, "Reintentar"));
         }
-        return (h("div", { class: "camera-state error" }, h("div", { class: "error-icon" }, "\u26A0\uFE0F"), h("p", { class: "error-message" }, errorMessage), actionButton));
+        return (index.h("div", { class: "camera-state error" }, index.h("div", { class: "error-icon" }, "\u26A0\uFE0F"), index.h("p", { class: "error-message" }, errorMessage), actionButton));
     }
     /**
      * Render inactive state
      */
     renderInactiveState() {
-        return (h("div", { class: "camera-state inactive" }, h("div", { class: "inactive-icon" }, "\uD83D\uDCF9"), h("p", null, "C\u00E1mara inactiva"), h("button", { class: "start-button", onClick: () => this.startCamera() }, "Iniciar C\u00E1mara")));
+        return (index.h("div", { class: "camera-state inactive" }, index.h("div", { class: "inactive-icon" }, "\uD83D\uDCF9"), index.h("p", null, "C\u00E1mara inactiva"), index.h("button", { class: "start-button", onClick: () => this.startCamera() }, "Iniciar C\u00E1mara")));
     }
     /**
      * Render camera controls
@@ -274,7 +276,7 @@ const InputFileFromWebcam = class {
             return null;
         }
         const isCapturing = this.cameraState.status === 'capturing';
-        return (h("div", { class: "camera-controls" }, h("button", { class: "control-button flip-button", onClick: () => this.handleFlipClick(), title: "Cambiar c\u00E1mara", disabled: isCapturing }, this.flipButtonText), h("button", { class: "control-button capture-button", onClick: () => this.handleCaptureClick(), title: "Tomar foto", disabled: isCapturing }, isCapturing ? '⏳' : this.captureButtonText)));
+        return (index.h("div", { class: "camera-controls" }, index.h("button", { class: "control-button flip-button", onClick: () => this.handleFlipClick(), title: "Cambiar c\u00E1mara", disabled: isCapturing }, this.flipButtonText), index.h("button", { class: "control-button capture-button", onClick: () => this.handleCaptureClick(), title: "Tomar foto", disabled: isCapturing }, isCapturing ? '⏳' : this.captureButtonText)));
     }
     render() {
         const hostClasses = {
@@ -283,18 +285,18 @@ const InputFileFromWebcam = class {
             'camera-error': this.cameraState.status === 'error',
             'camera-inactive': this.cameraState.status === 'inactive',
             'camera-capturing': this.cameraState.status === 'capturing',
-            'flipped': this.isFlipped && this.facingMode === CameraDirection.Front
+            'flipped': this.isFlipped && this.facingMode === camera_service.CameraDirection.Front
         };
-        return (h(Host, { key: '811df66d89d2eb12641a6b72c1ba9c06e8c669f1', style: { height: this.height + "px", width: this.width + "px" }, class: hostClasses }, h("slot", { key: '5b74f6057d3f9e05506dad0a96bd998fc2e0b9a1', name: 'before' }), this.cameraState.status === 'loading' && this.renderLoadingState(), this.cameraState.status === 'error' && this.renderErrorState(), this.cameraState.status === 'inactive' && this.renderInactiveState(), h("slot", { key: '4ff12bc7611492b3fd271275c3484181139b5018' }), this.flashEffect && h("div", { key: '90ff5173bbbfb8612b32a9bc433de37467a3dd49', class: "flash-effect" }), this.renderControls(), h("slot", { key: '00c3a5edc5c1744e22c5eddb3ecfecaa972703f1', name: 'after' })));
+        return (index.h(index.Host, { key: '811df66d89d2eb12641a6b72c1ba9c06e8c669f1', style: { height: this.height + "px", width: this.width + "px" }, class: hostClasses }, index.h("slot", { key: '5b74f6057d3f9e05506dad0a96bd998fc2e0b9a1', name: 'before' }), this.cameraState.status === 'loading' && this.renderLoadingState(), this.cameraState.status === 'error' && this.renderErrorState(), this.cameraState.status === 'inactive' && this.renderInactiveState(), index.h("slot", { key: '4ff12bc7611492b3fd271275c3484181139b5018' }), this.flashEffect && index.h("div", { key: '90ff5173bbbfb8612b32a9bc433de37467a3dd49', class: "flash-effect" }), this.renderControls(), index.h("slot", { key: '00c3a5edc5c1744e22c5eddb3ecfecaa972703f1', name: 'after' })));
     }
-    get el() { return getElement(this); }
+    get el() { return index.getElement(this); }
     static get watchers() { return {
         "facingMode": ["onFacingModeChange"]
     }; }
 };
 InputFileFromWebcam.style = inputFileFromWebcamCss;
 
-export { InputFileFromWebcam as input_file_from_webcam };
-//# sourceMappingURL=input-file-from-webcam.entry.esm.js.map
+exports.input_file_from_webcam = InputFileFromWebcam;
+//# sourceMappingURL=input-file-from-webcam.entry.cjs.js.map
 
-//# sourceMappingURL=input-file-from-webcam.entry.js.map
+//# sourceMappingURL=input-file-from-webcam.cjs.entry.js.map

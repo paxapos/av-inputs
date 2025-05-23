@@ -1,5 +1,5 @@
-import { r as registerInstance, a as createEvent, h, d as Host } from './index-D0R_KwCh.js';
-import { p as processText } from './text.handler-Ci_MokX0.js';
+import { proxyCustomElement, HTMLElement, createEvent, h, Host } from '@stencil/core/internal/client';
+import { p as processText } from './text.handler.js';
 
 var Html5QrcodeSupportedFormats;
 (function (Html5QrcodeSupportedFormats) {
@@ -27979,9 +27979,10 @@ function version(uuid) {
 
 const inputBarcodeCss = ":host{display:block}";
 
-const InputBarcode = class {
-    constructor(hostRef) {
-        registerInstance(this, hostRef);
+const InputBarcode$1 = /*@__PURE__*/ proxyCustomElement(class InputBarcode extends HTMLElement {
+    constructor() {
+        super();
+        this.__registerHost();
         this.scan = createEvent(this, "scan", 7);
         /**
         * Width of the camera
@@ -28113,10 +28114,37 @@ const InputBarcode = class {
         };
         return (h(Host, { key: '758bcc9281ace9508a6a2e88105ac2a6daf82a79', style: hostStyle }, h("div", { key: 'fc49ffc3b223786762c51fe9a854466db8c811e2', id: this.uuidGeneric })));
     }
-};
-InputBarcode.style = inputBarcodeCss;
+    static get style() { return inputBarcodeCss; }
+}, [0, "input-barcode", {
+        "cameraId": [1, "camera-id"],
+        "width": [1],
+        "height": [1],
+        "supportedFormats": [16, "supported-formats"],
+        "facingMode": [1, "facing-mode"],
+        "cameraConfig": [16, "camera-config"],
+        "getState": [64],
+        "stop": [64],
+        "start": [64],
+        "getCameras": [64]
+    }]);
+function defineCustomElement$1() {
+    if (typeof customElements === "undefined") {
+        return;
+    }
+    const components = ["input-barcode"];
+    components.forEach(tagName => { switch (tagName) {
+        case "input-barcode":
+            if (!customElements.get(tagName)) {
+                customElements.define(tagName, InputBarcode$1);
+            }
+            break;
+    } });
+}
 
-export { InputBarcode as input_barcode };
-//# sourceMappingURL=input-barcode.entry.esm.js.map
+const InputBarcode = InputBarcode$1;
+const defineCustomElement = defineCustomElement$1;
 
-//# sourceMappingURL=input-barcode.entry.js.map
+export { InputBarcode, defineCustomElement };
+//# sourceMappingURL=input-barcode.js.map
+
+//# sourceMappingURL=input-barcode.js.map

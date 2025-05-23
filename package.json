@@ -14,16 +14,40 @@
     "type": "git",
     "url": "https://github.com/alevilar/av-inputs"
   },
+  "homepage": "https://github.com/alevilar/av-inputs#readme",
+  "bugs": {
+    "url": "https://github.com/alevilar/av-inputs/issues"
+  },
+  "keywords": [
+    "stencil",
+    "web-components",
+    "face-detection",
+    "webcam",
+    "barcode-scanner",
+    "mediapipe",
+    "tensorflow",
+    "computer-vision"
+  ],
+  "author": "alevilar",
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist/",
     "loader/"
   ],
   "scripts": {
     "build": "stencil build --docs",
+    "build:prod": "stencil build --prod --docs",
     "start": "stencil build --dev --watch --serve",
     "test": "stencil test --spec --e2e",
     "test.watch": "stencil test --spec --e2e --watchAll",
-    "generate": "stencil generate"
+    "test:ci": "stencil test --spec --e2e --ci",
+    "generate": "stencil generate",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor", 
+    "version:major": "npm version major",
+    "prepublishOnly": "npm run build:prod && npm test"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "0.10.21",

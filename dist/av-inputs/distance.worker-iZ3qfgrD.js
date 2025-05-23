@@ -1,5 +1,5 @@
-import { c as createWorker } from './input-face-api-webcam-CbOdSQuQ.js';
-import './index-DOsxbypX.js';
+import { c as createWorker } from './input-face-api-webcam-DL1VsBMj.js';
+import './index-D0R_KwCh.js';
 import './camera.service-EIF4KpJN.js';
 
 const workerName = 'distance.worker';
@@ -18,6 +18,6 @@ try {
 }
 
 export { worker, workerMsgId, workerName, workerPath };
-//# sourceMappingURL=distance.worker-Bu3wS6ij.js.map
+//# sourceMappingURL=distance.worker-iZ3qfgrD.js.map
 
-//# sourceMappingURL=distance.worker-Bu3wS6ij.js.map
+//# sourceMappingURL=distance.worker-iZ3qfgrD.js.map

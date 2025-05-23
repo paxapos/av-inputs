@@ -1,0 +1,98 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  --main-color: SlateBlue;
+  --scanned-text-color: crimson;
+  --stopped-color: grey;
+  text-align: center;
+}
+
+.stopped label{
+  color: var(--stopped-color);
+}
+
+.stopped .loader::after,
+.stopped .loader::before {
+  border-color: var(--stopped-color);
+
+}
+
+
+.scanning  label {
+    animation: blinker 2s linear 1s infinite;
+}
+
+.scanning .loader::after,
+.scanning .loader::before {
+  animation: animloader 2s linear infinite;
+}
+
+input {
+  display: none;
+}
+
+.scanned-text {
+  font-size: 1.5rem;
+  color: var(--scanned-text-color);
+  margin: 0;
+  text-wrap: nowrap;
+  height: 1.5rem;
+}
+
+label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  color: var(--main-color);
+  font-weight: bold;
+}
+
+label:hover {
+  background-color: #f1f1f1;
+}
+
+label:active {
+  background-color: #e1e1e1;
+}
+
+.loader {
+  width: 48px;
+  height: 48px;
+  display: inline-block;
+  position: relative;
+}
+.loader::after,
+.loader::before {
+  content: '';
+  box-sizing: border-box;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid;
+  border-color: var(--main-color);
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+.loader::after {
+  animation-delay: 1s;
+}
+
+@keyframes animloader {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0.5;
+  }
+}

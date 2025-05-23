@@ -28117,6 +28117,6 @@ const InputBarcode = class {
 InputBarcode.style = inputBarcodeCss;
 
 export { InputBarcode as input_barcode };
-//# sourceMappingURL=input-barcode.entry.esm.js.map
+//# sourceMappingURL=input-barcode.entry.js.map
 
 //# sourceMappingURL=input-barcode.entry.js.map

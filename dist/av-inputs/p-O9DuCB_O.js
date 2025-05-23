@@ -1,0 +1,2 @@
+import{c as t}from"./p-DCq-5Irf.js";import"./p-CeZZpupa.js";import"./p-EIF4KpJN.js";const p="distance.worker";const o="stencil.distance.worker";const r=new URL("p-BL-2OZ-1.js",import.meta.url).href;let s;try{s=t(r,p,o)}catch(c){const e=new Blob(['importScripts("'+r+'")'],{type:"text/javascript"});const i=URL.createObjectURL(e);s=t(i,p,o);URL.revokeObjectURL(i)}export{s as worker,o as workerMsgId,p as workerName,r as workerPath};
+//# sourceMappingURL=p-O9DuCB_O.js.map

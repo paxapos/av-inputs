@@ -1,0 +1,15 @@
+{
+  "entries": [
+    "components/input-face-api-webcam/input-face-api-webcam.js",
+    "components/input-file-from-webcam/input-file-from-webcam.js",
+    "components/input-barcode/input-barcode.js",
+    "components/input-scan-reader/input-scan-reader.js"
+  ],
+  "compiler": {
+    "name": "@stencil/core",
+    "version": "4.31.0",
+    "typescriptVersion": "5.5.4"
+  },
+  "collections": [],
+  "bundles": []
+}

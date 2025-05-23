@@ -295,6 +295,6 @@ const InputFileFromWebcam = class {
 InputFileFromWebcam.style = inputFileFromWebcamCss;
 
 export { InputFileFromWebcam as input_file_from_webcam };
-//# sourceMappingURL=input-file-from-webcam.entry.esm.js.map
+//# sourceMappingURL=input-file-from-webcam.entry.js.map
 
 //# sourceMappingURL=input-file-from-webcam.entry.js.map
