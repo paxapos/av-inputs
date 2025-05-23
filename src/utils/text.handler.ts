@@ -1,132 +1,128 @@
-import { InputScanData } from "src/components";
-import { InputScanDataPersona, InputScanType } from "src/components/input-scan-reader/input-scan-reader.types";
+import { InputScanData } from 'src/components';
+import { InputScanDataPersona, InputScanType } from 'src/components/input-scan-reader/input-scan-reader.types';
 
 
-
-
-function getDataFromDNIv1 (inputScanner: RegExpExecArray, scannedText: string): InputScanDataPersona {
-
-    return {
-      type: InputScanType.DNIv1,
-      text: scannedText,
-      data:  {
-        apellido: inputScanner[4],
-        nombre: inputScanner[5],
-        dni: inputScanner[1],
-        fecha_nacimiento: inputScanner[6],
-        sexo: inputScanner[7],
-      }
-    }
-  }
-
-
-function runRegex( text:string): InputScanData {
-    let regex,regrun
-      // DNI v1
-      // "30368326    "A"1"VILAR"ALEJANDRO ERNESTO"ARGENTINA"07-06-1983"M"13-02-2011"00038329892"7019 "13-02-2026"616"0"ILRÑ2.01 CÑ110128.02 )No Cap.="UNIDADÑ DG200 Plus ÇÇ SERIE NMEROÑ ¡040:2009::0019"
-      regex = /^\"?(\w{8}) +\"?([a-z])\"?(\w)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])"/gi
-      regrun = regex.exec( text )
-      if ( regrun ) {
-        return getDataFromDNIv1(regrun,  text ) as InputScanDataPersona;
-      }
-
-      // DNI v2
-      regex = /^\"?(\d+)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z])\"?(\w{8})\"?([a-z])\"?([0-9-]+)/gi
-      regrun = regex.exec( text )
-      if ( regrun ) {
-        return getDataFromDNIv2(regrun,  text ) as InputScanDataPersona;
-      }
-
-
-      // Licencia de conducir
-      regex = /^\"?(\w{8})\"?([a-z])\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])\"?([0-9-]+)/gi
-      regrun = regex.exec( text )
-      if ( regrun ) {
-        return getDataFromLicenciaDeCOnducir( text ) as InputScanDataPersona;
-      }
-
-
-
-
-      const regexToData = [
-        {
-          regex: /^([0-9]+)$/gi, 
-          type: InputScanType.NUMBER
-        },
-        {
-          regex: /^(?!^\d+$)([a-z0-9]+)$/gi, 
-          type: InputScanType.ALFANUMERICO
-        },
-        {
-          regex:  /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi, 
-          type: InputScanType.URL
-        },
-        {
-          regex: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi, 
-          type: InputScanType.EMAIL
-        },
-      ]
-
-      for ( let i = 0; i < regexToData.length; i++ ) {
-        const regexToDataItem = regexToData[i];
-        const regrun = regexToDataItem.regex.exec( text.trim() )
-        console.info("analizando regex", text.trim(), i, regrun)
-        if ( regrun ) {
-          return getDataFromRegex(regexToDataItem.type, text );
-        }
-      }
-
-      return null;
-  }
-
-
-function getDataFromRegex (type: InputScanType, scannedText: string): InputScanData {
+function getDataFromDNIv1(type: InputScanType, scannedText: string, regRun: RegExpExecArray): InputScanDataPersona {
   return {
     type: type,
     text: scannedText,
-    }
+    data: {
+      apellido: regRun[4],
+      nombre: regRun[5],
+      dni: regRun[1],
+      fecha_nacimiento: regRun[6],
+      sexo: regRun[7],
+    },
+  };
 }
 
-function getDataFromLicenciaDeCOnducir (scannedText: string): InputScanData {
-  return getDataFromRegex(InputScanType.LICENCIA_CONDUCIR, scannedText)   
-}
+function runRegex(text: string): InputScanData {
+  text = text.trim();
 
+  const regexToData = [
+    // DNI v1 de copilot
+    {
+      regex: /^\"?(\w{8}) +\"?([a-z])\"?(\w)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])\"?([0-9-]+)/gi,
+      type: InputScanType.DNIv1,
+      cbk: getDataFromDNIv1,
+    },
 
+    // DNI V1 que tenia alevilar antes
+    {
+      regex: /^\"?(\w{8}) +\"?([a-z])\"?(\w)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])"/gi,
+      type: InputScanType.DNIv1,
+      cbk: getDataFromDNIv1,
+    },
 
-function getDataFromDNIv2 (inputScanner: RegExpExecArray, scannedText: string): InputScanDataPersona {
-       
-    return {
+    // DNI v2
+    {
+      regex: /^\"?(\d+)\"?([a-z ]+)\"?([a-z ]+)\"?([a-z])\"?(\w{8})\"?([a-z])\"?([0-9-]+)/gi,
       type: InputScanType.DNIv2,
-      text: scannedText,
-      data:  {
-        apellido: inputScanner[2],
-        nombre: inputScanner[3],
-        dni: inputScanner[5],
-        fecha_nacimiento: inputScanner[7],
-        sexo: inputScanner[4],
-      }
+      cbk: getDataFromDNIv2,
+    },
+
+    // licencia conducir
+    {
+      regex: /^\"?(\w{8})\"?([a-z])\"?([a-z ]+)\"?([a-z ]+)\"?([a-z]+)\"?([0-9-]+)\"?([a-z])\"?([0-9-]+)/gi,
+      type: InputScanType.LICENCIA_CONDUCIR,
+      cbk: getDataFromLicenciaDeCOnducir,
+    },
+    {
+      regex: /^([0-9]+)$/gi,
+      type: InputScanType.NUMBER,
+      cbk: getDataFromRegex,
+    },
+    {
+      regex: /^(?!^\d+$)([a-z0-9]+)$/gi,
+      type: InputScanType.ALFANUMERICO,
+      cbk: getDataFromRegex,
+    },
+    {
+      regex: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/gi,
+      type: InputScanType.URL,
+      cbk: getDataFromRegex,
+    },
+    {
+      regex: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/gi,
+      type: InputScanType.EMAIL,
+      cbk: getDataFromRegex,
+    },
+  ];
+
+  for (let i = 0; i < regexToData.length; i++) {
+    const regexToDataItem = regexToData[i];
+    const regrun = regexToDataItem.regex.exec(text);
+    console.info('analizando regex', text.trim(), i, regrun);
+    if (regrun) {
+      return regexToDataItem.cbk(regexToDataItem.type, text, regrun);
     }
   }
 
+  return null;
+}
 
+function getDataFromRegex(type: InputScanType, scannedText: string, regRun: RegExpExecArray): InputScanData {
+  return {
+    type: type,
+    text: scannedText,
+    data: regRun,
+  };
+}
 
+function getDataFromLicenciaDeCOnducir(type: InputScanType, scannedText: string, regRun: RegExpExecArray): InputScanData {
+  return getDataFromRegex(type, scannedText, regRun);
+}
+
+function getDataFromDNIv2(type: InputScanType, scannedText: string, regRun: RegExpExecArray): InputScanDataPersona {
+  return {
+    type: type,
+    text: scannedText,
+    data: {
+      apellido: regRun[2],
+      nombre: regRun[3],
+      dni: regRun[5],
+      fecha_nacimiento: regRun[7],
+      sexo: regRun[4],
+    },
+  };
+}
 
 export function processText(text: string): InputScanData {
-    const scannedData = runRegex( text )
+  const scannedData = runRegex(text);
 
-    let data;
-    if ( scannedData !== null ) {
-      data = scannedData;
-    } else {
-      console.info("es desconocidoooo", text)
-      data = {
-        type: InputScanType.DESCONOCIDO,
+  let data;
+  if (scannedData !== null) {
+    data = scannedData;
+  } else {
+    console.info('es desconocidoooo', text);
+    data = {
+      type: InputScanType.DESCONOCIDO,
+      text: text,
+      data: {
         text: text,
-        data:  {
-          text: text,
-        }
-      }
-    }
-
-    return data;
+      },
+    };
   }
+
+  return data;
+}

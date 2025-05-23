@@ -18,13 +18,13 @@ export declare const enum InputScanType {
       fecha_nacimiento: string,
       sexo: string,
   }
-  
+
   export interface InputScanData {
     type: InputScanType,
     text: string,
+    data: any
   }
-  
+
   export interface InputScanDataPersona extends InputScanData{
     data:  InputDataPersona
   }
-  

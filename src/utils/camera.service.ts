@@ -7,10 +7,10 @@ export enum CameraDirection {
 
 /**
  * Crea un HTMLVideoElement en el parentElement dado, siempre y cuando no exista
- * @param parentElement 
+ * @param parentElement
  */
 export  function createVideo(): HTMLVideoElement {
-        
+
     // no existe, lo creo
     const video = document.createElement("video")
     video.autoplay = true;
@@ -22,10 +22,10 @@ export  function createVideo(): HTMLVideoElement {
 
 /**
  * Crea un HTMLCanvasElement en el parentElement dado, siempre y cuando no exista
- * @param parentElement 
+ * @param parentElement
  */
 export  function createCanvas( parentElement: HTMLElement ): HTMLCanvasElement {
-        
+
     // no existe, lo creo
     const canvas = document.createElement("canvas")
     canvas.width = parseInt( parentElement.getAttribute("width") );
@@ -66,7 +66,7 @@ export function videoToCanvas(video: HTMLVideoElement,box: BoundingBox): Promise
 export function videoToBlob(video: HTMLVideoElement, box?: BoundingBox, compression: number = 0.85): Promise<Blob> {
     return new Promise((resolve, reject) => {
         try {
-            
+
             videoToCanvas(video, box).then( canvas => {
                 canvas.toBlob( (blob) => {
                     resolve(blob);
@@ -76,7 +76,7 @@ export function videoToBlob(video: HTMLVideoElement, box?: BoundingBox, compress
             reject(error);
         }
       });
-    
+
 
 }
 
@@ -122,12 +122,12 @@ export async function takePicture( canvas, compression = 0.85 ): Promise<File> {
 }
 
 
-export function initWebcamToVideo(video, direction: CameraDirection = CameraDirection.Front) {
+export function initWebcamToVideo(video: HTMLVideoElement, direction: CameraDirection = CameraDirection.Front): Promise<MediaStream> {
     return new Promise((resolve, reject) => {
 
         if (navigator.mediaDevices.getUserMedia) {
             const facingMode = (direction == CameraDirection.Front) ? "user": "environment"
-    
+
             navigator.mediaDevices.getUserMedia({
                 audio: false,
                 video: {

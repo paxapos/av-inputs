@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+  <title>Face Detection Demo - Enhanced InputFaceApiWebcam</title>
+  
+  <script type="module" src="/build/av-inputs.esm.js"></script>
+  <script nomodule src="/build/av-inputs.js"></script>
+  
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      color: #4a5568;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+      font-weight: 300;
+    }
+
+    .header p {
+      color: #718096;
+      font-size: 1.1em;
+      margin: 0;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .demo-section {
+      background: #fff;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+
+    .demo-section h3 {
+      color: #2d3748;
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 1.3em;
+      font-weight: 500;
+    }
+
+    .webcam-container {
+      grid-column: 1 / -1;
+      text-align: center;
+    }
+
+    input-face-api-webcam {
+      margin: 20px auto;
+      display: block;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .control-group {
+      background: #f7fafc;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .control-group label {
+      display: block;
+      color: #4a5568;
+      font-weight: 500;
+      margin-bottom: 8px;
+      font-size: 0.9em;
+    }
+
+    .control-group input[type="range"],
+    .control-group select {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .control-group input[type="range"] {
+      height: 6px;
+      border-radius: 3px;
+      background: #e2e8f0;
+      outline: none;
+    }
+
+    .control-group input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #667eea;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .control-group select {
+      padding: 8px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      font-size: 0.9em;
+    }
+
+    .value-display {
+      color: #667eea;
+      font-weight: 600;
+      font-size: 0.9em;
+    }
+
+    .status-panel {
+      background: #1a202c;
+      color: #e2e8f0;
+      padding: 20px;
+      border-radius: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      line-height: 1.6;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .status-panel h4 {
+      margin-top: 0;
+      color: #81e6d9;
+      font-size: 1.1em;
+    }
+
+    .status-item {
+      margin: 8px 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .status-label {
+      color: #a0aec0;
+    }
+
+    .status-value {
+      color: #68d391;
+      font-weight: bold;
+    }
+
+    .event-log {
+      margin-top: 15px;
+      max-height: 150px;
+      overflow-y: auto;
+      border-top: 1px solid #4a5568;
+      padding-top: 15px;
+    }
+
+    .event-item {
+      margin: 5px 0;
+      padding: 5px 10px;
+      background: rgba(129, 230, 217, 0.1);
+      border-radius: 5px;
+      font-size: 0.8em;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9em;
+      transition: all 0.3s ease;
+      margin: 5px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #4fd1c7 0%, #38b2ac 100%);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #fc8181 0%, #e53e3e 100%);
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .feature-card {
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      border: 1px solid #e2e8f0;
+    }
+
+    .feature-card h4 {
+      color: #2d3748;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+
+    .feature-card p {
+      color: #718096;
+      font-size: 0.9em;
+      margin: 0;
+    }
+
+    @media (max-width: 768px) {
+      .demo-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .controls-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎭 Face Detection Demo</h1>
+      <p>Enhanced InputFaceApiWebcam with Modern UI and Performance Monitoring</p>
+    </div>
+
+    <div class="demo-grid">
+      <!-- Main Webcam Component -->
+      <div class="demo-section webcam-container">
+        <h3>📹 Enhanced Face Detection Webcam</h3>
+        <input-face-api-webcam
+          id="faceWebcam"
+          width="460"
+          height="460"
+          score-threshold="0.6"
+          detection-timer="100"
+          auto-capture="true"
+          capture-threshold="0.8"
+          capture-delay="3000"
+          show-controls="true"
+          auto-start="true"
+          show-bounding-boxes="true"
+          start-button-text="🚀 Start Detection"
+          stop-button-text="⏹️ Stop Detection"
+          flip-button-text="🔄 Flip Camera"
+        ></input-face-api-webcam>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="demo-section">
+        <h3>⚙️ Detection Controls</h3>
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="scoreThreshold">Detection Confidence: <span id="scoreValue" class="value-display">0.6</span></label>
+            <input type="range" id="scoreThreshold" min="0.1" max="1.0" step="0.1" value="0.6">
+          </div>
+          
+          <div class="control-group">
+            <label for="detectionTimer">Detection Interval: <span id="timerValue" class="value-display">100ms</span></label>
+            <input type="range" id="detectionTimer" min="50" max="1000" step="50" value="100">
+          </div>
+          
+          <div class="control-group">
+            <label for="captureThreshold">Auto-Capture Threshold: <span id="captureValue" class="value-display">0.8</span></label>
+            <input type="range" id="captureThreshold" min="0.5" max="1.0" step="0.1" value="0.8">
+          </div>
+          
+          <div class="control-group">
+            <label for="captureDelay">Capture Delay: <span id="delayValue" class="value-display">3000ms</span></label>
+            <input type="range" id="captureDelay" min="1000" max="10000" step="1000" value="3000">
+          </div>
+        </div>
+
+        <div class="controls-grid">
+          <button class="btn" onclick="toggleDetection()">🎯 Toggle Detection</button>
+          <button class="btn btn-secondary" onclick="flipCamera()">🔄 Flip Camera</button>
+          <button class="btn btn-danger" onclick="resetSettings()">🔄 Reset Settings</button>
+        </div>
+      </div>
+
+      <!-- Status Panel -->
+      <div class="demo-section">
+        <h3>📊 Performance Monitor</h3>
+        <div class="status-panel">
+          <h4>Real-time Statistics</h4>
+          <div class="status-item">
+            <span class="status-label">Camera Status:</span>
+            <span class="status-value" id="cameraStatus">Initializing...</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Faces Detected:</span>
+            <span class="status-value" id="facesCount">0</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Detection Confidence:</span>
+            <span class="status-value" id="confidence">-</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Auto-Capture Status:</span>
+            <span class="status-value" id="captureStatus">Enabled</span>
+          </div>
+          <div class="status-item">
+            <span class="status-label">Photos Captured:</span>
+            <span class="status-value" id="photosCount">0</span>
+          </div>
+
+          <div class="event-log">
+            <h4>Event Log</h4>
+            <div id="eventLog"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Overview -->
+    <div class="demo-section">
+      <h3>✨ Enhanced Features</h3>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h4>🚀 Auto-Capture</h4>
+          <p>Automatically captures photos when faces are detected with high confidence</p>
+        </div>
+        <div class="feature-card">
+          <h4>🎯 Smart Detection</h4>
+          <p>Optimized MediaPipe integration with configurable thresholds</p>
+        </div>
+        <div class="feature-card">
+          <h4>📱 Modern UI</h4>
+          <p>Glass-morphism design with responsive controls and indicators</p>
+        </div>
+        <div class="feature-card">
+          <h4>⚡ Performance</h4>
+          <p>Queue-based detection system with performance monitoring</p>
+        </div>
+        <div class="feature-card">
+          <h4>🔄 Dynamic Config</h4>
+          <p>Real-time parameter adjustment without restarting</p>
+        </div>
+        <div class="feature-card">
+          <h4>🛡️ Error Handling</h4>
+          <p>Robust error management with user-friendly messages</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let faceWebcam;
+    let photosCount = 0;
+    let eventsCount = 0;
+
+    // Initialize component reference
+    document.addEventListener('DOMContentLoaded', function() {
+      faceWebcam = document.getElementById('faceWebcam');
+      setupEventListeners();
+      setupControlListeners();
+      logEvent('🚀 Demo initialized');
+    });
+
+    // Setup event listeners for the webcam component
+    function setupEventListeners() {
+      if (!faceWebcam) return;
+
+      // Face detection events
+      faceWebcam.addEventListener('faceDetected', (event) => {
+        const detail = event.detail;
+        document.getElementById('facesCount').textContent = '1';
+        document.getElementById('confidence').textContent = 
+          detail.confidence ? (detail.confidence * 100).toFixed(1) + '%' : '-';
+        logEvent(`😊 Face detected (confidence: ${(detail.confidence * 100).toFixed(1)}%)`);
+      });
+
+      faceWebcam.addEventListener('faceStopDetection', () => {
+        document.getElementById('facesCount').textContent = '0';
+        document.getElementById('confidence').textContent = '-';
+        logEvent('😔 Face detection stopped');
+      });
+
+      // Detection lifecycle events
+      faceWebcam.addEventListener('detectionStarted', () => {
+        document.getElementById('cameraStatus').textContent = 'Detecting';
+        logEvent('🎯 Detection started');
+      });
+
+      faceWebcam.addEventListener('detectionStopped', () => {
+        document.getElementById('cameraStatus').textContent = 'Ready';
+        logEvent('⏹️ Detection stopped');
+      });
+
+      // Camera events
+      faceWebcam.addEventListener('cameraStarted', () => {
+        document.getElementById('cameraStatus').textContent = 'Camera Ready';
+        logEvent('📹 Camera started successfully');
+      });
+
+      faceWebcam.addEventListener('cameraError', (event) => {
+        document.getElementById('cameraStatus').textContent = 'Error';
+        logEvent(`❌ Camera error: ${event.detail.message}`);
+      });
+
+      faceWebcam.addEventListener('facingModeChanged', (event) => {
+        logEvent(`🔄 Camera flipped to: ${event.detail}`);
+      });
+
+      // Auto-capture events
+      faceWebcam.addEventListener('photoCapture', (event) => {
+        photosCount++;
+        document.getElementById('photosCount').textContent = photosCount;
+        logEvent(`📸 Photo captured (#${photosCount})`);
+      });
+    }
+
+    // Setup control listeners
+    function setupControlListeners() {
+      // Score threshold control
+      const scoreThreshold = document.getElementById('scoreThreshold');
+      const scoreValue = document.getElementById('scoreValue');
+      scoreThreshold.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value);
+        scoreValue.textContent = value.toFixed(1);
+        if (faceWebcam) {
+          faceWebcam.scoreThreshold = value;
+          logEvent(`⚙️ Detection threshold: ${value.toFixed(1)}`);
+        }
+      });
+
+      // Detection timer control
+      const detectionTimer = document.getElementById('detectionTimer');
+      const timerValue = document.getElementById('timerValue');
+      detectionTimer.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        timerValue.textContent = value + 'ms';
+        if (faceWebcam) {
+          faceWebcam.detectionTimer = value;
+          logEvent(`⏱️ Detection interval: ${value}ms`);
+        }
+      });
+
+      // Capture threshold control
+      const captureThreshold = document.getElementById('captureThreshold');
+      const captureValue = document.getElementById('captureValue');
+      captureThreshold.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value);
+        captureValue.textContent = value.toFixed(1);
+        if (faceWebcam) {
+          faceWebcam.captureThreshold = value;
+          logEvent(`📸 Capture threshold: ${value.toFixed(1)}`);
+        }
+      });
+
+      // Capture delay control
+      const captureDelay = document.getElementById('captureDelay');
+      const delayValue = document.getElementById('delayValue');
+      captureDelay.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        delayValue.textContent = value + 'ms';
+        if (faceWebcam) {
+          faceWebcam.captureDelay = value;
+          logEvent(`⏰ Capture delay: ${value}ms`);
+        }
+      });
+    }
+
+    // Control functions
+    async function toggleDetection() {
+      if (!faceWebcam) return;
+      
+      try {
+        if (faceWebcam.enableDetection) {
+          await faceWebcam.stopDetection();
+          logEvent('⏹️ Detection manually stopped');
+        } else {
+          await faceWebcam.startDetection();
+          logEvent('🚀 Detection manually started');
+        }
+      } catch (error) {
+        logEvent(`❌ Error toggling detection: ${error.message}`);
+      }
+    }
+
+    async function flipCamera() {
+      if (!faceWebcam) return;
+      
+      try {
+        await faceWebcam.toggleCamera();
+        logEvent('🔄 Camera flip requested');
+      } catch (error) {
+        logEvent(`❌ Error flipping camera: ${error.message}`);
+      }
+    }
+
+    function resetSettings() {
+      // Reset all controls to default values
+      document.getElementById('scoreThreshold').value = 0.6;
+      document.getElementById('scoreValue').textContent = '0.6';
+      document.getElementById('detectionTimer').value = 100;
+      document.getElementById('timerValue').textContent = '100ms';
+      document.getElementById('captureThreshold').value = 0.8;
+      document.getElementById('captureValue').textContent = '0.8';
+      document.getElementById('captureDelay').value = 3000;
+      document.getElementById('delayValue').textContent = '3000ms';
+
+      // Apply to component
+      if (faceWebcam) {
+        faceWebcam.scoreThreshold = 0.6;
+        faceWebcam.detectionTimer = 100;
+        faceWebcam.captureThreshold = 0.8;
+        faceWebcam.captureDelay = 3000;
+      }
+
+      logEvent('🔄 Settings reset to defaults');
+    }
+
+    // Utility functions
+    function logEvent(message) {
+      const eventLog = document.getElementById('eventLog');
+      const timestamp = new Date().toLocaleTimeString();
+      const eventItem = document.createElement('div');
+      eventItem.className = 'event-item';
+      eventItem.textContent = `[${timestamp}] ${message}`;
+      
+      eventLog.insertBefore(eventItem, eventLog.firstChild);
+      
+      // Keep only last 20 events
+      while (eventLog.children.length > 20) {
+        eventLog.removeChild(eventLog.lastChild);
+      }
+      
+      eventsCount++;
+    }
+
+    // Auto-update status
+    setInterval(() => {
+      const now = new Date().toLocaleTimeString();
+      if (faceWebcam) {
+        // You could add more real-time updates here
+      }
+    }, 1000);
+  </script>
+</body>
+</html>

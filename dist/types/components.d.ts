@@ -10,13 +10,17 @@ import { InputScanData } from "./components/input-scan-reader/input-scan-reader.
 import { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 import { CameraDirection } from "./utils/camera.service";
 import { DetectionImg } from "./utils/facepi.service";
+import { FaceDetectionError } from "./components/input-face-api-webcam/input-face-api-webcam";
 import { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
+import { WebcamError } from "./components/input-file-from-webcam/input-file-from-webcam";
 export { Html5QrcodeCameraScanConfig, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from "html5-qrcode";
 export { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 export { CameraDirection } from "./utils/camera.service";
 export { DetectionImg } from "./utils/facepi.service";
+export { FaceDetectionError } from "./components/input-face-api-webcam/input-face-api-webcam";
 export { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
+export { WebcamError } from "./components/input-file-from-webcam/input-file-from-webcam";
 export namespace Components {
     interface InputBarcode {
         /**
@@ -56,33 +60,61 @@ export namespace Components {
     }
     interface InputFaceApiWebcam {
         /**
-          * Score threshold to detect a face
+          * Enable automatic photo capture when face is detected
+         */
+        "autoCapture": boolean;
+        /**
+          * Auto-start detection when component loads
+         */
+        "autoStart": boolean;
+        /**
+          * Delay between automatic photo captures in milliseconds
+         */
+        "captureDelay": number;
+        /**
+          * Minimum confidence score for face detection to trigger photo capture
+         */
+        "captureThreshold": number;
+        /**
+          * Detection timer interval in milliseconds
          */
         "detectionTimer"?: number;
         /**
-          * disable face detection
+          * Enable or disable face detection
          */
         "enableDetection": boolean;
         /**
-          * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
+          * Facing mode options following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
          */
         "facingMode"?: CameraDirection;
+        /**
+          * Text for the flip camera button
+         */
+        "flipButtonText": string;
         /**
           * Giving a blob image, get the face landmarks
           * @returns face landmarks
          */
         "getBlobImageDescriptors": (blob: Blob) => Promise<FaceLandmarkerResult>;
         /**
+          * Diagnostic method to check detection status
+         */
+        "getDiagnosticInfo": () => Promise<any>;
+        /**
           * Giving current face in video canvas, get the face landmarks
           * @returns face landmarks
          */
         "getFaceLandMarks": () => Promise<FaceLandmarkerResult>;
         /**
-          * height of the video element
+          * Height of the video element
          */
         "height"?: number;
         /**
-          * Predicts best face match, uses worker to calculate distance between the given blob and the trained model  passed in trainedModel prop
+          * Initialize camera and face detection
+         */
+        "initializeCamera": () => Promise<void>;
+        /**
+          * Predicts best face match, uses worker to calculate distance between the given blob and the trained model passed in trainedModel prop
           * @param blob
           * @returns
          */
@@ -92,15 +124,39 @@ export namespace Components {
          */
         "scoreThreshold"?: number;
         /**
-          * enable face detection
+          * Show bounding boxes around detected faces
+         */
+        "showBoundingBoxes": boolean;
+        /**
+          * Show control buttons for starting/stopping detection
+         */
+        "showControls": boolean;
+        /**
+          * Show face landmarks on detected faces
+         */
+        "showLandmarks": boolean;
+        /**
+          * Text for the start detection button
+         */
+        "startButtonText": string;
+        /**
+          * Start face detection
          */
         "startDetection": () => Promise<void>;
         /**
-          * disable face detection
+          * Text for the stop detection button
+         */
+        "stopButtonText": string;
+        /**
+          * Stop face detection
          */
         "stopDetection": () => Promise<void>;
         /**
-          * trained models to use for recognition an best match
+          * Toggle camera between front and back
+         */
+        "toggleCamera": () => Promise<void>;
+        /**
+          * Trained models to use for recognition and best match
          */
         "trainedModel"?: LabeledDescriptorsArray;
         /**
@@ -110,6 +166,14 @@ export namespace Components {
     }
     interface InputFileFromWebcam {
         /**
+          * Auto-start camera when component loads
+         */
+        "autoStart"?: boolean;
+        /**
+          * Capture button text
+         */
+        "captureButtonText"?: string;
+        /**
           * you can pass a function and override the canvas.drawImage function so you can change the image adding filters or any kind of magin in your image  you just need to crear a function with all canvas.-drawImage arguments  here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
          */
         "drawImageCb"?: Function;
@@ -118,13 +182,37 @@ export namespace Components {
          */
         "facingMode"?: CameraDirection;
         /**
+          * Enable flash effect when taking picture
+         */
+        "flashEffect"?: boolean;
+        /**
+          * Flip camera button text
+         */
+        "flipButtonText"?: string;
+        /**
           * height of the video element
          */
         "height"?: number;
         /**
+          * Image quality for captured photos (0.1 to 1.0)
+         */
+        "imageQuality"?: number;
+        /**
           * Reset camera
          */
         "resetCamera": () => Promise<void>;
+        /**
+          * Show camera controls (flip, capture button, etc)
+         */
+        "showControls"?: boolean;
+        /**
+          * Start the camera
+         */
+        "startCamera": () => Promise<void>;
+        /**
+          * Stop the camera
+         */
+        "stopCamera": () => Promise<void>;
         /**
           * Take a picture
           * @returns a blob with the image
@@ -154,6 +242,9 @@ export namespace Components {
           * Show a modal with the scanned text. like a white blink on the screen
          */
         "modalTimer"?: number;
+        "scanTitle"?: string;
+        "start": () => Promise<void>;
+        "stop": () => Promise<void>;
     }
 }
 export interface InputBarcodeCustomEvent<T> extends CustomEvent<T> {
@@ -173,25 +264,81 @@ export interface InputScanReaderCustomEvent<T> extends CustomEvent<T> {
     target: HTMLInputScanReaderElement;
 }
 declare global {
+    interface HTMLInputBarcodeElementEventMap {
+        "scan": InputScanData;
+    }
     interface HTMLInputBarcodeElement extends Components.InputBarcode, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLInputBarcodeElementEventMap>(type: K, listener: (this: HTMLInputBarcodeElement, ev: InputBarcodeCustomEvent<HTMLInputBarcodeElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLInputBarcodeElementEventMap>(type: K, listener: (this: HTMLInputBarcodeElement, ev: InputBarcodeCustomEvent<HTMLInputBarcodeElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLInputBarcodeElement: {
         prototype: HTMLInputBarcodeElement;
         new (): HTMLInputBarcodeElement;
     };
+    interface HTMLInputFaceApiWebcamElementEventMap {
+        "faceDetected": DetectionImg;
+        "faceStopDetection": void;
+        "detectionStarted": void;
+        "detectionStopped": void;
+        "cameraStarted": MediaStream;
+        "cameraStopped": void;
+        "cameraError": FaceDetectionError;
+        "facingModeChanged": CameraDirection;
+        "photoCapture": Blob;
+    }
     interface HTMLInputFaceApiWebcamElement extends Components.InputFaceApiWebcam, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLInputFaceApiWebcamElementEventMap>(type: K, listener: (this: HTMLInputFaceApiWebcamElement, ev: InputFaceApiWebcamCustomEvent<HTMLInputFaceApiWebcamElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLInputFaceApiWebcamElementEventMap>(type: K, listener: (this: HTMLInputFaceApiWebcamElement, ev: InputFaceApiWebcamCustomEvent<HTMLInputFaceApiWebcamElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLInputFaceApiWebcamElement: {
         prototype: HTMLInputFaceApiWebcamElement;
         new (): HTMLInputFaceApiWebcamElement;
     };
+    interface HTMLInputFileFromWebcamElementEventMap {
+        "pictureTaken": Blob;
+        "facingModeChanged": CameraDirection;
+        "cameraStarted": void;
+        "cameraStopped": void;
+        "cameraError": WebcamError;
+    }
     interface HTMLInputFileFromWebcamElement extends Components.InputFileFromWebcam, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLInputFileFromWebcamElementEventMap>(type: K, listener: (this: HTMLInputFileFromWebcamElement, ev: InputFileFromWebcamCustomEvent<HTMLInputFileFromWebcamElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLInputFileFromWebcamElementEventMap>(type: K, listener: (this: HTMLInputFileFromWebcamElement, ev: InputFileFromWebcamCustomEvent<HTMLInputFileFromWebcamElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLInputFileFromWebcamElement: {
         prototype: HTMLInputFileFromWebcamElement;
         new (): HTMLInputFileFromWebcamElement;
     };
+    interface HTMLInputScanReaderElementEventMap {
+        "scan": InputScanData;
+    }
     interface HTMLInputScanReaderElement extends Components.InputScanReader, HTMLStencilElement {
+        addEventListener<K extends keyof HTMLInputScanReaderElementEventMap>(type: K, listener: (this: HTMLInputScanReaderElement, ev: InputScanReaderCustomEvent<HTMLInputScanReaderElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLInputScanReaderElementEventMap>(type: K, listener: (this: HTMLInputScanReaderElement, ev: InputScanReaderCustomEvent<HTMLInputScanReaderElementEventMap[K]>) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
     }
     var HTMLInputScanReaderElement: {
         prototype: HTMLInputScanReaderElement;
@@ -237,35 +384,103 @@ declare namespace LocalJSX {
     }
     interface InputFaceApiWebcam {
         /**
-          * Score threshold to detect a face
+          * Enable automatic photo capture when face is detected
+         */
+        "autoCapture"?: boolean;
+        /**
+          * Auto-start detection when component loads
+         */
+        "autoStart"?: boolean;
+        /**
+          * Delay between automatic photo captures in milliseconds
+         */
+        "captureDelay"?: number;
+        /**
+          * Minimum confidence score for face detection to trigger photo capture
+         */
+        "captureThreshold"?: number;
+        /**
+          * Detection timer interval in milliseconds
          */
         "detectionTimer"?: number;
         /**
-          * disable face detection
+          * Enable or disable face detection
          */
         "enableDetection"?: boolean;
         /**
-          * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
+          * Facing mode options following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
          */
         "facingMode"?: CameraDirection;
         /**
-          * height of the video element
+          * Text for the flip camera button
+         */
+        "flipButtonText"?: string;
+        /**
+          * Height of the video element
          */
         "height"?: number;
+        /**
+          * Event emitted when camera encounters an error
+         */
+        "onCameraError"?: (event: InputFaceApiWebcamCustomEvent<FaceDetectionError>) => void;
+        /**
+          * Event emitted when camera starts successfully
+         */
+        "onCameraStarted"?: (event: InputFaceApiWebcamCustomEvent<MediaStream>) => void;
+        /**
+          * Event emitted when camera stops
+         */
+        "onCameraStopped"?: (event: InputFaceApiWebcamCustomEvent<void>) => void;
+        /**
+          * Event emitted when detection starts
+         */
+        "onDetectionStarted"?: (event: InputFaceApiWebcamCustomEvent<void>) => void;
+        /**
+          * Event emitted when detection stops
+         */
+        "onDetectionStopped"?: (event: InputFaceApiWebcamCustomEvent<void>) => void;
         /**
           * Event emitted when a face is detected in video stream
          */
         "onFaceDetected"?: (event: InputFaceApiWebcamCustomEvent<DetectionImg>) => void;
         /**
-          * Event emitted when face detection whas stopped
+          * Event emitted when face detection was stopped
          */
         "onFaceStopDetection"?: (event: InputFaceApiWebcamCustomEvent<void>) => void;
+        /**
+          * Event emitted when facing mode changes
+         */
+        "onFacingModeChanged"?: (event: InputFaceApiWebcamCustomEvent<CameraDirection>) => void;
+        /**
+          * Event emitted when a photo is automatically captured
+         */
+        "onPhotoCapture"?: (event: InputFaceApiWebcamCustomEvent<Blob>) => void;
         /**
           * Score threshold to detect a face
          */
         "scoreThreshold"?: number;
         /**
-          * trained models to use for recognition an best match
+          * Show bounding boxes around detected faces
+         */
+        "showBoundingBoxes"?: boolean;
+        /**
+          * Show control buttons for starting/stopping detection
+         */
+        "showControls"?: boolean;
+        /**
+          * Show face landmarks on detected faces
+         */
+        "showLandmarks"?: boolean;
+        /**
+          * Text for the start detection button
+         */
+        "startButtonText"?: string;
+        /**
+          * Text for the stop detection button
+         */
+        "stopButtonText"?: string;
+        /**
+          * Trained models to use for recognition and best match
          */
         "trainedModel"?: LabeledDescriptorsArray;
         /**
@@ -275,6 +490,14 @@ declare namespace LocalJSX {
     }
     interface InputFileFromWebcam {
         /**
+          * Auto-start camera when component loads
+         */
+        "autoStart"?: boolean;
+        /**
+          * Capture button text
+         */
+        "captureButtonText"?: string;
+        /**
           * you can pass a function and override the canvas.drawImage function so you can change the image adding filters or any kind of magin in your image  you just need to crear a function with all canvas.-drawImage arguments  here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
          */
         "drawImageCb"?: Function;
@@ -283,17 +506,45 @@ declare namespace LocalJSX {
          */
         "facingMode"?: CameraDirection;
         /**
+          * Enable flash effect when taking picture
+         */
+        "flashEffect"?: boolean;
+        /**
+          * Flip camera button text
+         */
+        "flipButtonText"?: string;
+        /**
           * height of the video element
          */
         "height"?: number;
         /**
-          * Event emitted when the user takes a picture
+          * Image quality for captured photos (0.1 to 1.0)
+         */
+        "imageQuality"?: number;
+        /**
+          * Event emitted when camera encounters an error
+         */
+        "onCameraError"?: (event: InputFileFromWebcamCustomEvent<WebcamError>) => void;
+        /**
+          * Event emitted when camera starts successfully
+         */
+        "onCameraStarted"?: (event: InputFileFromWebcamCustomEvent<void>) => void;
+        /**
+          * Event emitted when camera stops
+         */
+        "onCameraStopped"?: (event: InputFileFromWebcamCustomEvent<void>) => void;
+        /**
+          * Event emitted when facing mode changes
          */
         "onFacingModeChanged"?: (event: InputFileFromWebcamCustomEvent<CameraDirection>) => void;
         /**
           * Event emitted when the user takes a picture
          */
         "onPictureTaken"?: (event: InputFileFromWebcamCustomEvent<Blob>) => void;
+        /**
+          * Show camera controls (flip, capture button, etc)
+         */
+        "showControls"?: boolean;
         /**
           * Width of the video element
          */
@@ -308,6 +559,7 @@ declare namespace LocalJSX {
           * Fired when the user press enter or tab used with scanners like BARCODES or QR
          */
         "onScan"?: (event: InputScanReaderCustomEvent<InputScanData>) => void;
+        "scanTitle"?: string;
     }
     interface IntrinsicElements {
         "input-barcode": InputBarcode;

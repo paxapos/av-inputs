@@ -1,7 +1,7 @@
 import { BoundingBox } from "@mediapipe/tasks-vision";
 export declare enum CameraDirection {
-  Rear = "REAR",
-  Front = "FRONT"
+    Rear = "REAR",
+    Front = "FRONT"
 }
 /**
  * Crea un HTMLVideoElement en el parentElement dado, siempre y cuando no exista
@@ -17,4 +17,4 @@ export declare function videoToCanvas(video: HTMLVideoElement, box: BoundingBox)
 export declare function videoToBlob(video: HTMLVideoElement, box?: BoundingBox, compression?: number): Promise<Blob>;
 export declare function renderToCanvas(canvas: any, video: any, drawImageCb?: Function | null): number;
 export declare function takePicture(canvas: any, compression?: number): Promise<File>;
-export declare function initWebcamToVideo(video: any, direction?: CameraDirection): Promise<unknown>;
+export declare function initWebcamToVideo(video: HTMLVideoElement, direction?: CameraDirection): Promise<MediaStream>;

@@ -1,65 +1,51 @@
-import { B as BUILD, c as consoleDevInfo, H, d as doc, N as NAMESPACE, p as promiseResolve, b as bootstrapLazy } from './index-9a369ae4.js';
-export { s as setNonce } from './index-9a369ae4.js';
-import { g as globalScripts } from './app-globals-0f993ce5.js';
+import { B as BUILD, c as consoleDevInfo, H, w as win, N as NAMESPACE, p as promiseResolve, b as bootstrapLazy } from './index-DOsxbypX.js';
+export { s as setNonce } from './index-DOsxbypX.js';
+import { g as globalScripts } from './app-globals-DQuL1Twl.js';
 
 /*
- Stencil Client Patch Browser v4.0.1 | MIT Licensed | https://stenciljs.com
+ Stencil Client Patch Browser v4.31.0 | MIT Licensed | https://stenciljs.com
  */
-const patchBrowser = () => {
-    // NOTE!! This fn cannot use async/await!
-    if (BUILD.isDev && !BUILD.isTesting) {
-        consoleDevInfo('Running in development mode.');
-    }
-    if (BUILD.cloneNodeFix) {
-        // opted-in to polyfill cloneNode() for slot polyfilled components
-        patchCloneNodeFix(H.prototype);
-    }
-    if (BUILD.profile && !performance.mark) {
-        // not all browsers support performance.mark/measure (Safari 10)
-        // because the mark/measure APIs are designed to write entries to a buffer in the browser that does not exist,
-        // simply stub the implementations out.
-        // TODO(STENCIL-323): Remove this patch when support for older browsers is removed (breaking)
-        // @ts-ignore
-        performance.mark = performance.measure = () => {
-            /*noop*/
-        };
-        performance.getEntriesByName = () => [];
-    }
-    // @ts-ignore
-    const scriptElm = BUILD.scriptDataOpts
-        ? Array.from(doc.querySelectorAll('script')).find((s) => new RegExp(`\/${NAMESPACE}(\\.esm)?\\.js($|\\?|#)`).test(s.src) ||
-            s.getAttribute('data-stencil-namespace') === NAMESPACE)
-        : null;
-    const importMeta = import.meta.url;
-    const opts = BUILD.scriptDataOpts ? (scriptElm || {})['data-opts'] || {} : {};
-    if (importMeta !== '') {
-        opts.resourcesUrl = new URL('.', importMeta).href;
-    }
-    return promiseResolve(opts);
+
+var patchBrowser = () => {
+  if (BUILD.isDev && !BUILD.isTesting) {
+    consoleDevInfo("Running in development mode.");
+  }
+  if (BUILD.cloneNodeFix) {
+    patchCloneNodeFix(H.prototype);
+  }
+  const scriptElm = BUILD.scriptDataOpts ? win.document && Array.from(win.document.querySelectorAll("script")).find(
+    (s) => new RegExp(`/${NAMESPACE}(\\.esm)?\\.js($|\\?|#)`).test(s.src) || s.getAttribute("data-stencil-namespace") === NAMESPACE
+  ) : null;
+  const importMeta = import.meta.url;
+  const opts = BUILD.scriptDataOpts ? (scriptElm || {})["data-opts"] || {} : {};
+  if (importMeta !== "") {
+    opts.resourcesUrl = new URL(".", importMeta).href;
+  }
+  return promiseResolve(opts);
 };
-const patchCloneNodeFix = (HTMLElementPrototype) => {
-    const nativeCloneNodeFn = HTMLElementPrototype.cloneNode;
-    HTMLElementPrototype.cloneNode = function (deep) {
-        if (this.nodeName === 'TEMPLATE') {
-            return nativeCloneNodeFn.call(this, deep);
+var patchCloneNodeFix = (HTMLElementPrototype) => {
+  const nativeCloneNodeFn = HTMLElementPrototype.cloneNode;
+  HTMLElementPrototype.cloneNode = function(deep) {
+    if (this.nodeName === "TEMPLATE") {
+      return nativeCloneNodeFn.call(this, deep);
+    }
+    const clonedNode = nativeCloneNodeFn.call(this, false);
+    const srcChildNodes = this.childNodes;
+    if (deep) {
+      for (let i = 0; i < srcChildNodes.length; i++) {
+        if (srcChildNodes[i].nodeType !== 2) {
+          clonedNode.appendChild(srcChildNodes[i].cloneNode(true));
         }
-        const clonedNode = nativeCloneNodeFn.call(this, false);
-        const srcChildNodes = this.childNodes;
-        if (deep) {
-            for (let i = 0; i < srcChildNodes.length; i++) {
-                // Node.ATTRIBUTE_NODE === 2, and checking because IE11
-                if (srcChildNodes[i].nodeType !== 2) {
-                    clonedNode.appendChild(srcChildNodes[i].cloneNode(true));
-                }
-            }
-        }
-        return clonedNode;
-    };
+      }
+    }
+    return clonedNode;
+  };
 };
 
-patchBrowser().then(options => {
-  globalScripts();
-  return bootstrapLazy([["input-barcode",[[0,"input-barcode",{"cameraId":[1,"camera-id"],"width":[1],"height":[1],"supportedFormats":[16],"facingMode":[1,"facing-mode"],"cameraConfig":[16],"getState":[64],"stop":[64],"start":[64],"getCameras":[64]}]]],["input-face-api-webcam",[[1,"input-face-api-webcam",{"enableDetection":[1540,"enable-detection"],"trainedModel":[16],"width":[1538],"height":[1538],"scoreThreshold":[1538,"score-threshold"],"detectionTimer":[1538,"detection-timer"],"facingMode":[1537,"facing-mode"],"detectionResult":[32],"loaded":[32],"stopDetection":[64],"startDetection":[64],"getBlobImageDescriptors":[64],"getFaceLandMarks":[64],"predictBestMatch":[64]}]]],["input-file-from-webcam",[[1,"input-file-from-webcam",{"width":[1538],"height":[1538],"facingMode":[1537,"facing-mode"],"drawImageCb":[16],"takePic":[64],"resetCamera":[64],"toggleCamera":[64]},[[0,"click","onClickHandler"]]]]],["input-scan-reader",[[1,"input-scan-reader",{"modalTimer":[2,"modal-timer"],"scannedText":[32],"getText":[64],"getData":[64]},[[0,"scan","handleScan"],[4,"keydown","handleKeyDown"]]]]]], options);
+patchBrowser().then(async (options) => {
+  await globalScripts();
+  return bootstrapLazy([["input-barcode",[[0,"input-barcode",{"cameraId":[1,"camera-id"],"width":[1],"height":[1],"supportedFormats":[16,"supported-formats"],"facingMode":[1,"facing-mode"],"cameraConfig":[16,"camera-config"],"getState":[64],"stop":[64],"start":[64],"getCameras":[64]}]]],["input-face-api-webcam",[[1,"input-face-api-webcam",{"enableDetection":[1540,"enable-detection"],"showControls":[4,"show-controls"],"autoStart":[4,"auto-start"],"showBoundingBoxes":[4,"show-bounding-boxes"],"showLandmarks":[4,"show-landmarks"],"startButtonText":[1,"start-button-text"],"stopButtonText":[1,"stop-button-text"],"flipButtonText":[1,"flip-button-text"],"trainedModel":[16,"trained-model"],"width":[1538],"height":[1538],"scoreThreshold":[1538,"score-threshold"],"detectionTimer":[1538,"detection-timer"],"facingMode":[1537,"facing-mode"],"autoCapture":[4,"auto-capture"],"captureThreshold":[2,"capture-threshold"],"captureDelay":[2,"capture-delay"],"detectionResult":[32],"loaded":[32],"cameraState":[32],"currentError":[32],"detectedFacesCount":[32],"isRecognizing":[32],"stopDetection":[64],"startDetection":[64],"toggleCamera":[64],"initializeCamera":[64],"getBlobImageDescriptors":[64],"getFaceLandMarks":[64],"predictBestMatch":[64],"getDiagnosticInfo":[64]},null,{"detectionResult":["detectionResultChangedHandler"]}]]],["input-file-from-webcam",[[1,"input-file-from-webcam",{"width":[1538],"height":[1538],"facingMode":[1537,"facing-mode"],"showControls":[4,"show-controls"],"autoStart":[4,"auto-start"],"imageQuality":[2,"image-quality"],"flashEffect":[4,"flash-effect"],"captureButtonText":[1,"capture-button-text"],"flipButtonText":[1,"flip-button-text"],"drawImageCb":[16,"draw-image-cb"],"cameraState":[32],"isFlipped":[32],"startCamera":[64],"stopCamera":[64],"takePic":[64],"resetCamera":[64],"toggleCamera":[64]},[[0,"click","onClickHandler"]],{"facingMode":["onFacingModeChange"]}]]],["input-scan-reader",[[1,"input-scan-reader",{"modalTimer":[2,"modal-timer"],"scanTitle":[1,"scan-title"],"reading":[32],"readingEnabled":[32],"scannedText":[32],"timeout":[32],"getText":[64],"getData":[64],"start":[64],"stop":[64]},[[0,"scan","handleScan"],[4,"keydown","handleKeyDown"]],{"scannedText":["watchScannedTextHandler"]}]]]], options);
 });
+//# sourceMappingURL=av-inputs.esm.js.map
 
 //# sourceMappingURL=av-inputs.esm.js.map

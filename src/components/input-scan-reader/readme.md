@@ -7,9 +7,10 @@
 
 ## Properties
 
-| Property     | Attribute     | Description                                                          | Type     | Default |
-| ------------ | ------------- | -------------------------------------------------------------------- | -------- | ------- |
-| `modalTimer` | `modal-timer` | Show a modal with the scanned text. like a white blink on the screen | `number` | `500`   |
+| Property     | Attribute     | Description                                                          | Type     | Default           |
+| ------------ | ------------- | -------------------------------------------------------------------- | -------- | ----------------- |
+| `modalTimer` | `modal-timer` | Show a modal with the scanned text. like a white blink on the screen | `number` | `0`               |
+| `scanTitle`  | `scan-title`  |                                                                      | `string` | `'Scanning Text'` |
 
 
 ## Events
@@ -40,6 +41,26 @@ get raw scanned text
 Type: `Promise<string>`
 
 the text scanned
+
+### `start() => Promise<void>`
+
+
+
+#### Returns
+
+Type: `Promise<void>`
+
+
+
+### `stop() => Promise<void>`
+
+
+
+#### Returns
+
+Type: `Promise<void>`
+
+
 
 
 ----------------------------------------------

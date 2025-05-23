@@ -4,14 +4,10 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, Even
 
 import { ProxyCmp, proxyOutputs } from './angular-component-lib/utils';
 
-import type { Components } from 'av-inputs/components';
+import { Components } from 'av-inputs';
 
-import { defineCustomElement as defineInputBarcode } from 'av-inputs/components/input-barcode.js';
-import { defineCustomElement as defineInputFaceApiWebcam } from 'av-inputs/components/input-face-api-webcam.js';
-import { defineCustomElement as defineInputFileFromWebcam } from 'av-inputs/components/input-file-from-webcam.js';
-import { defineCustomElement as defineInputScanReader } from 'av-inputs/components/input-scan-reader.js';
+
 @ProxyCmp({
-  defineCustomElementFn: defineInputBarcode,
   inputs: ['cameraConfig', 'cameraId', 'facingMode', 'height', 'supportedFormats', 'width'],
   methods: ['getState', 'stop', 'start', 'getCameras']
 })
@@ -23,7 +19,7 @@ import { defineCustomElement as defineInputScanReader } from 'av-inputs/componen
   inputs: ['cameraConfig', 'cameraId', 'facingMode', 'height', 'supportedFormats', 'width'],
 })
 export class InputBarcode {
-  protected el: HTMLElement;
+  protected el: HTMLInputBarcodeElement;
   constructor(c: ChangeDetectorRef, r: ElementRef, protected z: NgZone) {
     c.detach();
     this.el = r.nativeElement;
@@ -32,35 +28,40 @@ export class InputBarcode {
 }
 
 
-export declare interface InputBarcode extends Components.InputBarcode {
+import type { InputScanData as IInputBarcodeInputScanData } from 'av-inputs';
 
-  scan: EventEmitter<CustomEvent<string>>;
+export declare interface InputBarcode extends Components.InputBarcode {
+  /**
+   * Event Scan
+   */
+  scan: EventEmitter<CustomEvent<IInputBarcodeInputScanData>>;
 }
 
 
 @ProxyCmp({
-  defineCustomElementFn: defineInputFaceApiWebcam,
-  inputs: ['detectionTimer', 'enableDetection', 'facingMode', 'height', 'scoreThreshold', 'trainedModel', 'width'],
-  methods: ['stopDetection', 'startDetection', 'getBlobImageDescriptors', 'getFaceLandMarks', 'predictBestMatch']
+  inputs: ['autoCapture', 'autoStart', 'captureDelay', 'captureThreshold', 'detectionTimer', 'enableDetection', 'facingMode', 'flipButtonText', 'height', 'scoreThreshold', 'showBoundingBoxes', 'showControls', 'showLandmarks', 'startButtonText', 'stopButtonText', 'trainedModel', 'width'],
+  methods: ['stopDetection', 'startDetection', 'toggleCamera', 'initializeCamera', 'getBlobImageDescriptors', 'getFaceLandMarks', 'predictBestMatch', 'getDiagnosticInfo']
 })
 @Component({
   selector: 'input-face-api-webcam',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content></ng-content>',
   // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
-  inputs: ['detectionTimer', 'enableDetection', 'facingMode', 'height', 'scoreThreshold', 'trainedModel', 'width'],
+  inputs: ['autoCapture', 'autoStart', 'captureDelay', 'captureThreshold', 'detectionTimer', 'enableDetection', 'facingMode', 'flipButtonText', 'height', 'scoreThreshold', 'showBoundingBoxes', 'showControls', 'showLandmarks', 'startButtonText', 'stopButtonText', 'trainedModel', 'width'],
 })
 export class InputFaceApiWebcam {
-  protected el: HTMLElement;
+  protected el: HTMLInputFaceApiWebcamElement;
   constructor(c: ChangeDetectorRef, r: ElementRef, protected z: NgZone) {
     c.detach();
     this.el = r.nativeElement;
-    proxyOutputs(this, this.el, ['faceDetected', 'faceStopDetection']);
+    proxyOutputs(this, this.el, ['faceDetected', 'faceStopDetection', 'detectionStarted', 'detectionStopped', 'cameraStarted', 'cameraStopped', 'cameraError', 'facingModeChanged', 'photoCapture']);
   }
 }
 
 
-import type { DetectionImg as IInputFaceApiWebcamDetectionImg } from 'av-inputs/components';
+import type { DetectionImg as IInputFaceApiWebcamDetectionImg } from 'av-inputs';
+import type { FaceDetectionError as IInputFaceApiWebcamFaceDetectionError } from 'av-inputs';
+import type { CameraDirection as IInputFaceApiWebcamCameraDirection } from 'av-inputs';
 
 export declare interface InputFaceApiWebcam extends Components.InputFaceApiWebcam {
   /**
@@ -68,35 +69,63 @@ export declare interface InputFaceApiWebcam extends Components.InputFaceApiWebca
    */
   faceDetected: EventEmitter<CustomEvent<IInputFaceApiWebcamDetectionImg>>;
   /**
-   * Event emitted when face detection whas stopped
+   * Event emitted when face detection was stopped
    */
   faceStopDetection: EventEmitter<CustomEvent<void>>;
+  /**
+   * Event emitted when detection starts
+   */
+  detectionStarted: EventEmitter<CustomEvent<void>>;
+  /**
+   * Event emitted when detection stops
+   */
+  detectionStopped: EventEmitter<CustomEvent<void>>;
+  /**
+   * Event emitted when camera starts successfully
+   */
+  cameraStarted: EventEmitter<CustomEvent<MediaStream>>;
+  /**
+   * Event emitted when camera stops
+   */
+  cameraStopped: EventEmitter<CustomEvent<void>>;
+  /**
+   * Event emitted when camera encounters an error
+   */
+  cameraError: EventEmitter<CustomEvent<IInputFaceApiWebcamFaceDetectionError>>;
+  /**
+   * Event emitted when facing mode changes
+   */
+  facingModeChanged: EventEmitter<CustomEvent<IInputFaceApiWebcamCameraDirection>>;
+  /**
+   * Event emitted when a photo is automatically captured
+   */
+  photoCapture: EventEmitter<CustomEvent<Blob>>;
 }
 
 
 @ProxyCmp({
-  defineCustomElementFn: defineInputFileFromWebcam,
-  inputs: ['drawImageCb', 'facingMode', 'height', 'width'],
-  methods: ['takePic', 'resetCamera', 'toggleCamera']
+  inputs: ['autoStart', 'captureButtonText', 'drawImageCb', 'facingMode', 'flashEffect', 'flipButtonText', 'height', 'imageQuality', 'showControls', 'width'],
+  methods: ['startCamera', 'stopCamera', 'takePic', 'resetCamera', 'toggleCamera']
 })
 @Component({
   selector: 'input-file-from-webcam',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content></ng-content>',
   // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
-  inputs: ['drawImageCb', 'facingMode', 'height', 'width'],
+  inputs: ['autoStart', 'captureButtonText', 'drawImageCb', 'facingMode', 'flashEffect', 'flipButtonText', 'height', 'imageQuality', 'showControls', 'width'],
 })
 export class InputFileFromWebcam {
-  protected el: HTMLElement;
+  protected el: HTMLInputFileFromWebcamElement;
   constructor(c: ChangeDetectorRef, r: ElementRef, protected z: NgZone) {
     c.detach();
     this.el = r.nativeElement;
-    proxyOutputs(this, this.el, ['pictureTaken', 'facingModeChanged']);
+    proxyOutputs(this, this.el, ['pictureTaken', 'facingModeChanged', 'cameraStarted', 'cameraStopped', 'cameraError']);
   }
 }
 
 
-import type { CameraDirection as IInputFileFromWebcamCameraDirection } from 'av-inputs/components';
+import type { CameraDirection as IInputFileFromWebcamCameraDirection } from 'av-inputs';
+import type { WebcamError as IInputFileFromWebcamWebcamError } from 'av-inputs';
 
 export declare interface InputFileFromWebcam extends Components.InputFileFromWebcam {
   /**
@@ -104,26 +133,37 @@ export declare interface InputFileFromWebcam extends Components.InputFileFromWeb
    */
   pictureTaken: EventEmitter<CustomEvent<Blob>>;
   /**
-   * Event emitted when the user takes a picture
+   * Event emitted when facing mode changes
    */
   facingModeChanged: EventEmitter<CustomEvent<IInputFileFromWebcamCameraDirection>>;
+  /**
+   * Event emitted when camera starts successfully
+   */
+  cameraStarted: EventEmitter<CustomEvent<void>>;
+  /**
+   * Event emitted when camera stops
+   */
+  cameraStopped: EventEmitter<CustomEvent<void>>;
+  /**
+   * Event emitted when camera encounters an error
+   */
+  cameraError: EventEmitter<CustomEvent<IInputFileFromWebcamWebcamError>>;
 }
 
 
 @ProxyCmp({
-  defineCustomElementFn: defineInputScanReader,
-  inputs: ['modalTimer'],
-  methods: ['getText', 'getData']
+  inputs: ['modalTimer', 'scanTitle'],
+  methods: ['getText', 'getData', 'start', 'stop']
 })
 @Component({
   selector: 'input-scan-reader',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content></ng-content>',
   // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
-  inputs: ['modalTimer'],
+  inputs: ['modalTimer', 'scanTitle'],
 })
 export class InputScanReader {
-  protected el: HTMLElement;
+  protected el: HTMLInputScanReaderElement;
   constructor(c: ChangeDetectorRef, r: ElementRef, protected z: NgZone) {
     c.detach();
     this.el = r.nativeElement;
@@ -132,7 +172,7 @@ export class InputScanReader {
 }
 
 
-import type { InputScanData as IInputScanReaderInputScanData } from 'av-inputs/components';
+import type { InputScanData as IInputScanReaderInputScanData } from 'av-inputs';
 
 export declare interface InputScanReader extends Components.InputScanReader {
   /**

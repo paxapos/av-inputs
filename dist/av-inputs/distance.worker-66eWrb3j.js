@@ -11,23 +11,23 @@ const isInstanceOf = (value, className) => {
 }
 const getTransferables = (value) => {
   if (value != null) {
-  if (
-    isInstanceOf(value, "ArrayBuffer") ||
-    isInstanceOf(value, "MessagePort") ||
-    isInstanceOf(value, "ImageBitmap") ||
-    isInstanceOf(value, "OffscreenCanvas")
-  ) {
-    return [value];
-  }
-  if (typeof value === "object") {
-    if (value.constructor === Object) {
-    value = Object.values(value);
+    if (
+      isInstanceOf(value, "ArrayBuffer") ||
+      isInstanceOf(value, "MessagePort") ||
+      isInstanceOf(value, "ImageBitmap") ||
+      isInstanceOf(value, "OffscreenCanvas")
+    ) {
+      return [value];
     }
-    if (Array.isArray(value)) {
-    return value.flatMap(getTransferables);
+    if (typeof value === "object") {
+      if (value.constructor === Object) {
+        value = Object.values(value);
+      }
+      if (Array.isArray(value)) {
+        return value.flatMap(getTransferables);
+      }
+      return getTransferables(value.buffer);
     }
-    return getTransferables(value.buffer);
-  }
   }
   return [];
 };
@@ -36,60 +36,60 @@ const workerMsgId = 'stencil.distance.worker';
 const workerMsgCallbackId = workerMsgId + '.cb';
 addEventListener('message', async ({data}) => {
   if (data && data[0] === workerMsgId) {
-  let id = data[1];
-  let method = data[2];
-  let args = data[3];
-  let i = 0;
-  let argsLen = args.length;
-  let value;
-  let err;
+    let id = data[1];
+    let method = data[2];
+    let args = data[3];
+    let i = 0;
+    let argsLen = args.length;
+    let value;
+    let err;
 
-  try {
-    for (; i < argsLen; i++) {
-    if (Array.isArray(args[i]) && args[i][0] === workerMsgCallbackId) {
-      const callbackId = args[i][1];
-      args[i] = (...cbArgs) => {
-      postMessage(
-        [workerMsgCallbackId, callbackId, cbArgs]
-      );
-      };
-    }
-    }
-    
-    value = exports[method](...args);
-    if (!value || !value.then) {
-    throw new Error('The exported method "' + method + '" does not return a Promise, make sure it is an "async" function');
-    }
-    value = await value;
-    
-
-  } catch (e) {
-    value = null;
-    if (e instanceof Error) {
-    err = {
-      isError: true,
-      value: {
-      message: e.message,
-      name: e.name,
-      stack: e.stack,
+    try {
+      for (; i < argsLen; i++) {
+        if (Array.isArray(args[i]) && args[i][0] === workerMsgCallbackId) {
+          const callbackId = args[i][1];
+          args[i] = (...cbArgs) => {
+            postMessage(
+              [workerMsgCallbackId, callbackId, cbArgs]
+            );
+          };
+        }
       }
-    };
-    } else {
-    err = {
-      isError: false,
-      value: e
-    };
+      
+      value = exports[method](...args);
+      if (!value || !value.then) {
+        throw new Error('The exported method "' + method + '" does not return a Promise, make sure it is an "async" function');
+      }
+      value = await value;
+      
+
+    } catch (e) {
+      value = null;
+      if (e instanceof Error) {
+        err = {
+          isError: true,
+          value: {
+            message: e.message,
+            name: e.name,
+            stack: e.stack,
+          }
+        };
+      } else {
+        err = {
+          isError: false,
+          value: e
+        };
+      }
+      value = undefined;
     }
-    value = undefined;
-  }
 
-  const transferables = getTransferables(value);
-  if (transferables.length > 0) console.debug('Transfering', transferables);
+    const transferables = getTransferables(value);
+    if (transferables.length > 0) console.debug('Transfering', transferables);
 
-  postMessage(
-    [workerMsgId, id, value, err],
-    transferables
-  );
+    postMessage(
+      [workerMsgId, id, value, err],
+      transferables
+    );
   }
 });
 
@@ -244,7 +244,7 @@ function shuffle(array) {
         // Decrease counter by 1
         counter--;
         // And swap the last element with it
-        swap(array, counter, index);
+        swap$1(array, counter, index);
     }
 }
 /**
@@ -282,8 +282,8 @@ array2) {
         // Decrease counter by 1
         counter--;
         // And swap the last element of each array with it
-        swap(array, counter, index);
-        swap(array2, counter, index);
+        swap$1(array, counter, index);
+        swap$1(array2, counter, index);
     }
 }
 /** Clamps a value to a specified range. */
@@ -293,7 +293,7 @@ function clamp(min, x, max) {
 function nearestLargerEven(val) {
     return val % 2 === 0 ? val : val + 1;
 }
-function swap(object, left, right) {
+function swap$1(object, left, right) {
     const temp = object[left];
     object[left] = object[right];
     object[right] = temp;
@@ -908,7 +908,7 @@ class Environment {
     }
     setPlatform(platformName, platform) {
         if (this.platform != null) {
-            if (!(env().getBool('IS_TEST') || env().getBool('PROD'))) {
+            if (!(env$1().getBool('IS_TEST') || env$1().getBool('PROD'))) {
                 console.warn(`Platform ${this.platformName} has already been set. ` +
                     `Overwriting the platform with ${platformName}.`);
             }
@@ -922,7 +922,7 @@ class Environment {
         // the environment is initialized before flags get registered.
         if (this.urlFlags[flagName] != null) {
             const flagValue = this.urlFlags[flagName];
-            if (!(env().getBool('IS_TEST') || env().getBool('PROD'))) {
+            if (!(env$1().getBool('IS_TEST') || env$1().getBool('PROD'))) {
                 console.warn(`Setting feature override from URL ${flagName}: ${flagValue}.`);
             }
             this.set(flagName, flagValue);
@@ -1033,13 +1033,239 @@ function parseValue(flagName, value) {
  *
  * @doc {heading: 'Environment'}
  */
-function env() {
+function env$1() {
     return ENV$4;
 }
 let ENV$4 = null;
 function setEnvironmentGlobal(environment) {
     ENV$4 = environment;
 }
+
+var global$1 = (typeof global !== "undefined" ? global :
+  typeof self !== "undefined" ? self :
+  typeof window !== "undefined" ? window : {});
+
+// shim for using process in browser
+// based off https://github.com/defunctzombie/node-process/blob/master/browser.js
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+var cachedSetTimeout = defaultSetTimout;
+var cachedClearTimeout = defaultClearTimeout;
+if (typeof global$1.setTimeout === 'function') {
+    cachedSetTimeout = setTimeout;
+}
+if (typeof global$1.clearTimeout === 'function') {
+    cachedClearTimeout = clearTimeout;
+}
+
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+function nextTick(fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+}
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+var title = 'browser';
+var platform = 'browser';
+var browser$1 = true;
+var env = {};
+var argv = [];
+var version$8 = ''; // empty string to avoid regexp issues
+var versions = {};
+var release = {};
+var config = {};
+
+function noop() {}
+
+var on = noop;
+var addListener = noop;
+var once = noop;
+var off = noop;
+var removeListener = noop;
+var removeAllListeners = noop;
+var emit = noop;
+
+function binding(name) {
+    throw new Error('process.binding is not supported');
+}
+
+function cwd () { return '/' }
+function chdir (dir) {
+    throw new Error('process.chdir is not supported');
+}function umask() { return 0; }
+
+// from https://github.com/kumavis/browser-process-hrtime/blob/master/index.js
+var performance$1 = global$1.performance || {};
+var performanceNow =
+  performance$1.now        ||
+  performance$1.mozNow     ||
+  performance$1.msNow      ||
+  performance$1.oNow       ||
+  performance$1.webkitNow  ||
+  function(){ return (new Date()).getTime() };
+
+// generate timestamp or delta
+// see http://nodejs.org/api/process.html#process_process_hrtime
+function hrtime(previousTimestamp){
+  var clocktime = performanceNow.call(performance$1)*1e-3;
+  var seconds = Math.floor(clocktime);
+  var nanoseconds = Math.floor((clocktime%1)*1e9);
+  if (previousTimestamp) {
+    seconds = seconds - previousTimestamp[0];
+    nanoseconds = nanoseconds - previousTimestamp[1];
+    if (nanoseconds<0) {
+      seconds--;
+      nanoseconds += 1e9;
+    }
+  }
+  return [seconds,nanoseconds]
+}
+
+var startTime = new Date();
+function uptime() {
+  var currentTime = new Date();
+  var dif = currentTime - startTime;
+  return dif / 1000;
+}
+
+var browser$1$1 = {
+  nextTick: nextTick,
+  title: title,
+  browser: browser$1,
+  env: env,
+  argv: argv,
+  version: version$8,
+  versions: versions,
+  on: on,
+  addListener: addListener,
+  once: once,
+  off: off,
+  removeListener: removeListener,
+  removeAllListeners: removeAllListeners,
+  emit: emit,
+  binding: binding,
+  cwd: cwd,
+  chdir: chdir,
+  umask: umask,
+  hrtime: hrtime,
+  platform: platform,
+  release: release,
+  config: config,
+  uptime: uptime
+};
 
 /**
  * @license
@@ -1070,11 +1296,11 @@ function getGlobalNamespace() {
         if (typeof (window) !== 'undefined') {
             ns = window;
         }
-        else if (typeof (global) !== 'undefined') {
-            ns = global;
+        else if (typeof (global$1) !== 'undefined') {
+            ns = global$1;
         }
-        else if (typeof (process) !== 'undefined') {
-            ns = process;
+        else if (typeof (browser$1$1) !== 'undefined') {
+            ns = browser$1$1;
         }
         else if (typeof (self) !== 'undefined') {
             ns = self;
@@ -1314,12 +1540,12 @@ const FusedDepthwiseConv2D = 'FusedDepthwiseConv2D';
  * =============================================================================
  */
 function warn(...msg) {
-    if (!(env().getBool('IS_TEST') || env().getBool('PROD'))) {
+    if (!(env$1().getBool('IS_TEST') || env$1().getBool('PROD'))) {
         console.warn(...msg);
     }
 }
 function log$3(...msg) {
-    if (!(env().getBool('IS_TEST') || env().getBool('PROD'))) {
+    if (!(env$1().getBool('IS_TEST') || env$1().getBool('PROD'))) {
         console.log(...msg);
     }
 }
@@ -1408,7 +1634,7 @@ function registerGradient(config) {
     if (gradRegistry.has(kernelName)) {
         // TODO (yassogba) after 3.0 assess whether we need to keep this gated
         // to debug mode.
-        if (env().getBool('DEBUG')) {
+        if (env$1().getBool('DEBUG')) {
             warn(`Overriding the gradient for '${kernelName}'`);
         }
     }
@@ -1474,1333 +1700,1384 @@ function isTypedArrayBrowser(a) {
         a instanceof Uint8Array || a instanceof Uint8ClampedArray;
 }
 
-var long_1 = Long$1;
+var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-/**
- * wasm optimizations, to do native i64 multiplication and divide
- */
-var wasm = null;
-
-try {
-  wasm = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array([
-    0, 97, 115, 109, 1, 0, 0, 0, 1, 13, 2, 96, 0, 1, 127, 96, 4, 127, 127, 127, 127, 1, 127, 3, 7, 6, 0, 1, 1, 1, 1, 1, 6, 6, 1, 127, 1, 65, 0, 11, 7, 50, 6, 3, 109, 117, 108, 0, 1, 5, 100, 105, 118, 95, 115, 0, 2, 5, 100, 105, 118, 95, 117, 0, 3, 5, 114, 101, 109, 95, 115, 0, 4, 5, 114, 101, 109, 95, 117, 0, 5, 8, 103, 101, 116, 95, 104, 105, 103, 104, 0, 0, 10, 191, 1, 6, 4, 0, 35, 0, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 126, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 127, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 128, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 129, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 130, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11
-  ])), {}).exports;
-} catch (e) {
-  // no wasm support :(
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
 }
 
-/**
- * Constructs a 64 bit two's-complement integer, given its low and high 32 bit values as *signed* integers.
- *  See the from* functions below for more convenient ways of constructing Longs.
- * @exports Long
- * @class A Long class for representing a 64 bit two's-complement integer value.
- * @param {number} low The low (signed) 32 bits of the long
- * @param {number} high The high (signed) 32 bits of the long
- * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
- * @constructor
- */
-function Long$1(low, high, unsigned) {
-
-    /**
-     * The low 32 bits as a signed value.
-     * @type {number}
-     */
-    this.low = low | 0;
-
-    /**
-     * The high 32 bits as a signed value.
-     * @type {number}
-     */
-    this.high = high | 0;
-
-    /**
-     * Whether unsigned or not.
-     * @type {boolean}
-     */
-    this.unsigned = !!unsigned;
+function getDefaultExportFromNamespaceIfPresent (n) {
+	return n && Object.prototype.hasOwnProperty.call(n, 'default') ? n['default'] : n;
 }
 
-// The internal representation of a long is the two given signed, 32-bit values.
-// We use 32-bit pieces because these are the size of integers on which
-// Javascript performs bit-operations.  For operations like addition and
-// multiplication, we split each number into 16 bit pieces, which can easily be
-// multiplied within Javascript's floating-point representation without overflow
-// or change in sign.
-//
-// In the algorithms below, we frequently reduce the negative case to the
-// positive case by negating the input(s) and then post-processing the result.
-// Note that we must ALWAYS check specially whether those values are MIN_VALUE
-// (-2^63) because -MIN_VALUE == MIN_VALUE (since 2^63 cannot be represented as
-// a positive number, it overflows back into a negative).  Not handling this
-// case would often result in infinite recursion.
-//
-// Common constant values ZERO, ONE, NEG_ONE, etc. are defined below the from*
-// methods on which they depend.
-
-/**
- * An indicator used to reliably determine if an object is a Long or not.
- * @type {boolean}
- * @const
- * @private
- */
-Long$1.prototype.__isLong__;
-
-Object.defineProperty(Long$1.prototype, "__isLong__", { value: true });
-
-/**
- * @function
- * @param {*} obj Object
- * @returns {boolean}
- * @inner
- */
-function isLong(obj) {
-    return (obj && obj["__isLong__"]) === true;
+function getDefaultExportFromNamespaceIfNotNamed (n) {
+	return n && Object.prototype.hasOwnProperty.call(n, 'default') && Object.keys(n).length === 1 ? n['default'] : n;
 }
 
-/**
- * Tests if the specified object is a Long.
- * @function
- * @param {*} obj Object
- * @returns {boolean}
- */
-Long$1.isLong = isLong;
-
-/**
- * A cache of the Long representations of small integer values.
- * @type {!Object}
- * @inner
- */
-var INT_CACHE = {};
-
-/**
- * A cache of the Long representations of small unsigned integer values.
- * @type {!Object}
- * @inner
- */
-var UINT_CACHE = {};
-
-/**
- * @param {number} value
- * @param {boolean=} unsigned
- * @returns {!Long}
- * @inner
- */
-function fromInt(value, unsigned) {
-    var obj, cachedObj, cache;
-    if (unsigned) {
-        value >>>= 0;
-        if (cache = (0 <= value && value < 256)) {
-            cachedObj = UINT_CACHE[value];
-            if (cachedObj)
-                return cachedObj;
-        }
-        obj = fromBits(value, (value | 0) < 0 ? -1 : 0, true);
-        if (cache)
-            UINT_CACHE[value] = obj;
-        return obj;
-    } else {
-        value |= 0;
-        if (cache = (-128 <= value && value < 128)) {
-            cachedObj = INT_CACHE[value];
-            if (cachedObj)
-                return cachedObj;
-        }
-        obj = fromBits(value, value < 0 ? -1 : 0, false);
-        if (cache)
-            INT_CACHE[value] = obj;
-        return obj;
-    }
+function getAugmentedNamespace(n) {
+  if (n.__esModule) return n;
+  var f = n.default;
+	if (typeof f == "function") {
+		var a = function a () {
+			if (this instanceof a) {
+        return Reflect.construct(f, arguments, this.constructor);
+			}
+			return f.apply(this, arguments);
+		};
+		a.prototype = f.prototype;
+  } else a = {};
+  Object.defineProperty(a, '__esModule', {value: true});
+	Object.keys(n).forEach(function (k) {
+		var d = Object.getOwnPropertyDescriptor(n, k);
+		Object.defineProperty(a, k, d.get ? d : {
+			enumerable: true,
+			get: function () {
+				return n[k];
+			}
+		});
+	});
+	return a;
 }
 
-/**
- * Returns a Long representing the given 32 bit integer value.
- * @function
- * @param {number} value The 32 bit integer in question
- * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
- * @returns {!Long} The corresponding Long value
- */
-Long$1.fromInt = fromInt;
+var long$1;
+var hasRequiredLong;
 
-/**
- * @param {number} value
- * @param {boolean=} unsigned
- * @returns {!Long}
- * @inner
- */
-function fromNumber(value, unsigned) {
-    if (isNaN(value))
-        return unsigned ? UZERO : ZERO;
-    if (unsigned) {
-        if (value < 0)
-            return UZERO;
-        if (value >= TWO_PWR_64_DBL)
-            return MAX_UNSIGNED_VALUE;
-    } else {
-        if (value <= -TWO_PWR_63_DBL)
-            return MIN_VALUE;
-        if (value + 1 >= TWO_PWR_63_DBL)
-            return MAX_VALUE;
-    }
-    if (value < 0)
-        return fromNumber(-value, unsigned).neg();
-    return fromBits((value % TWO_PWR_32_DBL) | 0, (value / TWO_PWR_32_DBL) | 0, unsigned);
+function requireLong () {
+	if (hasRequiredLong) return long$1;
+	hasRequiredLong = 1;
+	long$1 = Long;
+
+	/**
+	 * wasm optimizations, to do native i64 multiplication and divide
+	 */
+	var wasm = null;
+
+	try {
+	  wasm = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array([
+	    0, 97, 115, 109, 1, 0, 0, 0, 1, 13, 2, 96, 0, 1, 127, 96, 4, 127, 127, 127, 127, 1, 127, 3, 7, 6, 0, 1, 1, 1, 1, 1, 6, 6, 1, 127, 1, 65, 0, 11, 7, 50, 6, 3, 109, 117, 108, 0, 1, 5, 100, 105, 118, 95, 115, 0, 2, 5, 100, 105, 118, 95, 117, 0, 3, 5, 114, 101, 109, 95, 115, 0, 4, 5, 114, 101, 109, 95, 117, 0, 5, 8, 103, 101, 116, 95, 104, 105, 103, 104, 0, 0, 10, 191, 1, 6, 4, 0, 35, 0, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 126, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 127, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 128, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 129, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 130, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11
+	  ])), {}).exports;
+	} catch (e) {
+	  // no wasm support :(
+	}
+
+	/**
+	 * Constructs a 64 bit two's-complement integer, given its low and high 32 bit values as *signed* integers.
+	 *  See the from* functions below for more convenient ways of constructing Longs.
+	 * @exports Long
+	 * @class A Long class for representing a 64 bit two's-complement integer value.
+	 * @param {number} low The low (signed) 32 bits of the long
+	 * @param {number} high The high (signed) 32 bits of the long
+	 * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
+	 * @constructor
+	 */
+	function Long(low, high, unsigned) {
+
+	    /**
+	     * The low 32 bits as a signed value.
+	     * @type {number}
+	     */
+	    this.low = low | 0;
+
+	    /**
+	     * The high 32 bits as a signed value.
+	     * @type {number}
+	     */
+	    this.high = high | 0;
+
+	    /**
+	     * Whether unsigned or not.
+	     * @type {boolean}
+	     */
+	    this.unsigned = !!unsigned;
+	}
+
+	// The internal representation of a long is the two given signed, 32-bit values.
+	// We use 32-bit pieces because these are the size of integers on which
+	// Javascript performs bit-operations.  For operations like addition and
+	// multiplication, we split each number into 16 bit pieces, which can easily be
+	// multiplied within Javascript's floating-point representation without overflow
+	// or change in sign.
+	//
+	// In the algorithms below, we frequently reduce the negative case to the
+	// positive case by negating the input(s) and then post-processing the result.
+	// Note that we must ALWAYS check specially whether those values are MIN_VALUE
+	// (-2^63) because -MIN_VALUE == MIN_VALUE (since 2^63 cannot be represented as
+	// a positive number, it overflows back into a negative).  Not handling this
+	// case would often result in infinite recursion.
+	//
+	// Common constant values ZERO, ONE, NEG_ONE, etc. are defined below the from*
+	// methods on which they depend.
+
+	/**
+	 * An indicator used to reliably determine if an object is a Long or not.
+	 * @type {boolean}
+	 * @const
+	 * @private
+	 */
+	Long.prototype.__isLong__;
+
+	Object.defineProperty(Long.prototype, "__isLong__", { value: true });
+
+	/**
+	 * @function
+	 * @param {*} obj Object
+	 * @returns {boolean}
+	 * @inner
+	 */
+	function isLong(obj) {
+	    return (obj && obj["__isLong__"]) === true;
+	}
+
+	/**
+	 * Tests if the specified object is a Long.
+	 * @function
+	 * @param {*} obj Object
+	 * @returns {boolean}
+	 */
+	Long.isLong = isLong;
+
+	/**
+	 * A cache of the Long representations of small integer values.
+	 * @type {!Object}
+	 * @inner
+	 */
+	var INT_CACHE = {};
+
+	/**
+	 * A cache of the Long representations of small unsigned integer values.
+	 * @type {!Object}
+	 * @inner
+	 */
+	var UINT_CACHE = {};
+
+	/**
+	 * @param {number} value
+	 * @param {boolean=} unsigned
+	 * @returns {!Long}
+	 * @inner
+	 */
+	function fromInt(value, unsigned) {
+	    var obj, cachedObj, cache;
+	    if (unsigned) {
+	        value >>>= 0;
+	        if (cache = (0 <= value && value < 256)) {
+	            cachedObj = UINT_CACHE[value];
+	            if (cachedObj)
+	                return cachedObj;
+	        }
+	        obj = fromBits(value, (value | 0) < 0 ? -1 : 0, true);
+	        if (cache)
+	            UINT_CACHE[value] = obj;
+	        return obj;
+	    } else {
+	        value |= 0;
+	        if (cache = (-128 <= value && value < 128)) {
+	            cachedObj = INT_CACHE[value];
+	            if (cachedObj)
+	                return cachedObj;
+	        }
+	        obj = fromBits(value, value < 0 ? -1 : 0, false);
+	        if (cache)
+	            INT_CACHE[value] = obj;
+	        return obj;
+	    }
+	}
+
+	/**
+	 * Returns a Long representing the given 32 bit integer value.
+	 * @function
+	 * @param {number} value The 32 bit integer in question
+	 * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
+	 * @returns {!Long} The corresponding Long value
+	 */
+	Long.fromInt = fromInt;
+
+	/**
+	 * @param {number} value
+	 * @param {boolean=} unsigned
+	 * @returns {!Long}
+	 * @inner
+	 */
+	function fromNumber(value, unsigned) {
+	    if (isNaN(value))
+	        return unsigned ? UZERO : ZERO;
+	    if (unsigned) {
+	        if (value < 0)
+	            return UZERO;
+	        if (value >= TWO_PWR_64_DBL)
+	            return MAX_UNSIGNED_VALUE;
+	    } else {
+	        if (value <= -TWO_PWR_63_DBL)
+	            return MIN_VALUE;
+	        if (value + 1 >= TWO_PWR_63_DBL)
+	            return MAX_VALUE;
+	    }
+	    if (value < 0)
+	        return fromNumber(-value, unsigned).neg();
+	    return fromBits((value % TWO_PWR_32_DBL) | 0, (value / TWO_PWR_32_DBL) | 0, unsigned);
+	}
+
+	/**
+	 * Returns a Long representing the given value, provided that it is a finite number. Otherwise, zero is returned.
+	 * @function
+	 * @param {number} value The number in question
+	 * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
+	 * @returns {!Long} The corresponding Long value
+	 */
+	Long.fromNumber = fromNumber;
+
+	/**
+	 * @param {number} lowBits
+	 * @param {number} highBits
+	 * @param {boolean=} unsigned
+	 * @returns {!Long}
+	 * @inner
+	 */
+	function fromBits(lowBits, highBits, unsigned) {
+	    return new Long(lowBits, highBits, unsigned);
+	}
+
+	/**
+	 * Returns a Long representing the 64 bit integer that comes by concatenating the given low and high bits. Each is
+	 *  assumed to use 32 bits.
+	 * @function
+	 * @param {number} lowBits The low 32 bits
+	 * @param {number} highBits The high 32 bits
+	 * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
+	 * @returns {!Long} The corresponding Long value
+	 */
+	Long.fromBits = fromBits;
+
+	/**
+	 * @function
+	 * @param {number} base
+	 * @param {number} exponent
+	 * @returns {number}
+	 * @inner
+	 */
+	var pow_dbl = Math.pow; // Used 4 times (4*8 to 15+4)
+
+	/**
+	 * @param {string} str
+	 * @param {(boolean|number)=} unsigned
+	 * @param {number=} radix
+	 * @returns {!Long}
+	 * @inner
+	 */
+	function fromString(str, unsigned, radix) {
+	    if (str.length === 0)
+	        throw Error('empty string');
+	    if (str === "NaN" || str === "Infinity" || str === "+Infinity" || str === "-Infinity")
+	        return ZERO;
+	    if (typeof unsigned === 'number') {
+	        // For goog.math.long compatibility
+	        radix = unsigned,
+	        unsigned = false;
+	    } else {
+	        unsigned = !! unsigned;
+	    }
+	    radix = radix || 10;
+	    if (radix < 2 || 36 < radix)
+	        throw RangeError('radix');
+
+	    var p;
+	    if ((p = str.indexOf('-')) > 0)
+	        throw Error('interior hyphen');
+	    else if (p === 0) {
+	        return fromString(str.substring(1), unsigned, radix).neg();
+	    }
+
+	    // Do several (8) digits each time through the loop, so as to
+	    // minimize the calls to the very expensive emulated div.
+	    var radixToPower = fromNumber(pow_dbl(radix, 8));
+
+	    var result = ZERO;
+	    for (var i = 0; i < str.length; i += 8) {
+	        var size = Math.min(8, str.length - i),
+	            value = parseInt(str.substring(i, i + size), radix);
+	        if (size < 8) {
+	            var power = fromNumber(pow_dbl(radix, size));
+	            result = result.mul(power).add(fromNumber(value));
+	        } else {
+	            result = result.mul(radixToPower);
+	            result = result.add(fromNumber(value));
+	        }
+	    }
+	    result.unsigned = unsigned;
+	    return result;
+	}
+
+	/**
+	 * Returns a Long representation of the given string, written using the specified radix.
+	 * @function
+	 * @param {string} str The textual representation of the Long
+	 * @param {(boolean|number)=} unsigned Whether unsigned or not, defaults to signed
+	 * @param {number=} radix The radix in which the text is written (2-36), defaults to 10
+	 * @returns {!Long} The corresponding Long value
+	 */
+	Long.fromString = fromString;
+
+	/**
+	 * @function
+	 * @param {!Long|number|string|!{low: number, high: number, unsigned: boolean}} val
+	 * @param {boolean=} unsigned
+	 * @returns {!Long}
+	 * @inner
+	 */
+	function fromValue(val, unsigned) {
+	    if (typeof val === 'number')
+	        return fromNumber(val, unsigned);
+	    if (typeof val === 'string')
+	        return fromString(val, unsigned);
+	    // Throws for non-objects, converts non-instanceof Long:
+	    return fromBits(val.low, val.high, typeof unsigned === 'boolean' ? unsigned : val.unsigned);
+	}
+
+	/**
+	 * Converts the specified value to a Long using the appropriate from* function for its type.
+	 * @function
+	 * @param {!Long|number|string|!{low: number, high: number, unsigned: boolean}} val Value
+	 * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
+	 * @returns {!Long}
+	 */
+	Long.fromValue = fromValue;
+
+	// NOTE: the compiler should inline these constant values below and then remove these variables, so there should be
+	// no runtime penalty for these.
+
+	/**
+	 * @type {number}
+	 * @const
+	 * @inner
+	 */
+	var TWO_PWR_16_DBL = 1 << 16;
+
+	/**
+	 * @type {number}
+	 * @const
+	 * @inner
+	 */
+	var TWO_PWR_24_DBL = 1 << 24;
+
+	/**
+	 * @type {number}
+	 * @const
+	 * @inner
+	 */
+	var TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
+
+	/**
+	 * @type {number}
+	 * @const
+	 * @inner
+	 */
+	var TWO_PWR_64_DBL = TWO_PWR_32_DBL * TWO_PWR_32_DBL;
+
+	/**
+	 * @type {number}
+	 * @const
+	 * @inner
+	 */
+	var TWO_PWR_63_DBL = TWO_PWR_64_DBL / 2;
+
+	/**
+	 * @type {!Long}
+	 * @const
+	 * @inner
+	 */
+	var TWO_PWR_24 = fromInt(TWO_PWR_24_DBL);
+
+	/**
+	 * @type {!Long}
+	 * @inner
+	 */
+	var ZERO = fromInt(0);
+
+	/**
+	 * Signed zero.
+	 * @type {!Long}
+	 */
+	Long.ZERO = ZERO;
+
+	/**
+	 * @type {!Long}
+	 * @inner
+	 */
+	var UZERO = fromInt(0, true);
+
+	/**
+	 * Unsigned zero.
+	 * @type {!Long}
+	 */
+	Long.UZERO = UZERO;
+
+	/**
+	 * @type {!Long}
+	 * @inner
+	 */
+	var ONE = fromInt(1);
+
+	/**
+	 * Signed one.
+	 * @type {!Long}
+	 */
+	Long.ONE = ONE;
+
+	/**
+	 * @type {!Long}
+	 * @inner
+	 */
+	var UONE = fromInt(1, true);
+
+	/**
+	 * Unsigned one.
+	 * @type {!Long}
+	 */
+	Long.UONE = UONE;
+
+	/**
+	 * @type {!Long}
+	 * @inner
+	 */
+	var NEG_ONE = fromInt(-1);
+
+	/**
+	 * Signed negative one.
+	 * @type {!Long}
+	 */
+	Long.NEG_ONE = NEG_ONE;
+
+	/**
+	 * @type {!Long}
+	 * @inner
+	 */
+	var MAX_VALUE = fromBits(0xFFFFFFFF|0, 0x7FFFFFFF|0, false);
+
+	/**
+	 * Maximum signed value.
+	 * @type {!Long}
+	 */
+	Long.MAX_VALUE = MAX_VALUE;
+
+	/**
+	 * @type {!Long}
+	 * @inner
+	 */
+	var MAX_UNSIGNED_VALUE = fromBits(0xFFFFFFFF|0, 0xFFFFFFFF|0, true);
+
+	/**
+	 * Maximum unsigned value.
+	 * @type {!Long}
+	 */
+	Long.MAX_UNSIGNED_VALUE = MAX_UNSIGNED_VALUE;
+
+	/**
+	 * @type {!Long}
+	 * @inner
+	 */
+	var MIN_VALUE = fromBits(0, 0x80000000|0, false);
+
+	/**
+	 * Minimum signed value.
+	 * @type {!Long}
+	 */
+	Long.MIN_VALUE = MIN_VALUE;
+
+	/**
+	 * @alias Long.prototype
+	 * @inner
+	 */
+	var LongPrototype = Long.prototype;
+
+	/**
+	 * Converts the Long to a 32 bit integer, assuming it is a 32 bit integer.
+	 * @returns {number}
+	 */
+	LongPrototype.toInt = function toInt() {
+	    return this.unsigned ? this.low >>> 0 : this.low;
+	};
+
+	/**
+	 * Converts the Long to a the nearest floating-point representation of this value (double, 53 bit mantissa).
+	 * @returns {number}
+	 */
+	LongPrototype.toNumber = function toNumber() {
+	    if (this.unsigned)
+	        return ((this.high >>> 0) * TWO_PWR_32_DBL) + (this.low >>> 0);
+	    return this.high * TWO_PWR_32_DBL + (this.low >>> 0);
+	};
+
+	/**
+	 * Converts the Long to a string written in the specified radix.
+	 * @param {number=} radix Radix (2-36), defaults to 10
+	 * @returns {string}
+	 * @override
+	 * @throws {RangeError} If `radix` is out of range
+	 */
+	LongPrototype.toString = function toString(radix) {
+	    radix = radix || 10;
+	    if (radix < 2 || 36 < radix)
+	        throw RangeError('radix');
+	    if (this.isZero())
+	        return '0';
+	    if (this.isNegative()) { // Unsigned Longs are never negative
+	        if (this.eq(MIN_VALUE)) {
+	            // We need to change the Long value before it can be negated, so we remove
+	            // the bottom-most digit in this base and then recurse to do the rest.
+	            var radixLong = fromNumber(radix),
+	                div = this.div(radixLong),
+	                rem1 = div.mul(radixLong).sub(this);
+	            return div.toString(radix) + rem1.toInt().toString(radix);
+	        } else
+	            return '-' + this.neg().toString(radix);
+	    }
+
+	    // Do several (6) digits each time through the loop, so as to
+	    // minimize the calls to the very expensive emulated div.
+	    var radixToPower = fromNumber(pow_dbl(radix, 6), this.unsigned),
+	        rem = this;
+	    var result = '';
+	    while (true) {
+	        var remDiv = rem.div(radixToPower),
+	            intval = rem.sub(remDiv.mul(radixToPower)).toInt() >>> 0,
+	            digits = intval.toString(radix);
+	        rem = remDiv;
+	        if (rem.isZero())
+	            return digits + result;
+	        else {
+	            while (digits.length < 6)
+	                digits = '0' + digits;
+	            result = '' + digits + result;
+	        }
+	    }
+	};
+
+	/**
+	 * Gets the high 32 bits as a signed integer.
+	 * @returns {number} Signed high bits
+	 */
+	LongPrototype.getHighBits = function getHighBits() {
+	    return this.high;
+	};
+
+	/**
+	 * Gets the high 32 bits as an unsigned integer.
+	 * @returns {number} Unsigned high bits
+	 */
+	LongPrototype.getHighBitsUnsigned = function getHighBitsUnsigned() {
+	    return this.high >>> 0;
+	};
+
+	/**
+	 * Gets the low 32 bits as a signed integer.
+	 * @returns {number} Signed low bits
+	 */
+	LongPrototype.getLowBits = function getLowBits() {
+	    return this.low;
+	};
+
+	/**
+	 * Gets the low 32 bits as an unsigned integer.
+	 * @returns {number} Unsigned low bits
+	 */
+	LongPrototype.getLowBitsUnsigned = function getLowBitsUnsigned() {
+	    return this.low >>> 0;
+	};
+
+	/**
+	 * Gets the number of bits needed to represent the absolute value of this Long.
+	 * @returns {number}
+	 */
+	LongPrototype.getNumBitsAbs = function getNumBitsAbs() {
+	    if (this.isNegative()) // Unsigned Longs are never negative
+	        return this.eq(MIN_VALUE) ? 64 : this.neg().getNumBitsAbs();
+	    var val = this.high != 0 ? this.high : this.low;
+	    for (var bit = 31; bit > 0; bit--)
+	        if ((val & (1 << bit)) != 0)
+	            break;
+	    return this.high != 0 ? bit + 33 : bit + 1;
+	};
+
+	/**
+	 * Tests if this Long's value equals zero.
+	 * @returns {boolean}
+	 */
+	LongPrototype.isZero = function isZero() {
+	    return this.high === 0 && this.low === 0;
+	};
+
+	/**
+	 * Tests if this Long's value equals zero. This is an alias of {@link Long#isZero}.
+	 * @returns {boolean}
+	 */
+	LongPrototype.eqz = LongPrototype.isZero;
+
+	/**
+	 * Tests if this Long's value is negative.
+	 * @returns {boolean}
+	 */
+	LongPrototype.isNegative = function isNegative() {
+	    return !this.unsigned && this.high < 0;
+	};
+
+	/**
+	 * Tests if this Long's value is positive.
+	 * @returns {boolean}
+	 */
+	LongPrototype.isPositive = function isPositive() {
+	    return this.unsigned || this.high >= 0;
+	};
+
+	/**
+	 * Tests if this Long's value is odd.
+	 * @returns {boolean}
+	 */
+	LongPrototype.isOdd = function isOdd() {
+	    return (this.low & 1) === 1;
+	};
+
+	/**
+	 * Tests if this Long's value is even.
+	 * @returns {boolean}
+	 */
+	LongPrototype.isEven = function isEven() {
+	    return (this.low & 1) === 0;
+	};
+
+	/**
+	 * Tests if this Long's value equals the specified's.
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.equals = function equals(other) {
+	    if (!isLong(other))
+	        other = fromValue(other);
+	    if (this.unsigned !== other.unsigned && (this.high >>> 31) === 1 && (other.high >>> 31) === 1)
+	        return false;
+	    return this.high === other.high && this.low === other.low;
+	};
+
+	/**
+	 * Tests if this Long's value equals the specified's. This is an alias of {@link Long#equals}.
+	 * @function
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.eq = LongPrototype.equals;
+
+	/**
+	 * Tests if this Long's value differs from the specified's.
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.notEquals = function notEquals(other) {
+	    return !this.eq(/* validates */ other);
+	};
+
+	/**
+	 * Tests if this Long's value differs from the specified's. This is an alias of {@link Long#notEquals}.
+	 * @function
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.neq = LongPrototype.notEquals;
+
+	/**
+	 * Tests if this Long's value differs from the specified's. This is an alias of {@link Long#notEquals}.
+	 * @function
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.ne = LongPrototype.notEquals;
+
+	/**
+	 * Tests if this Long's value is less than the specified's.
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.lessThan = function lessThan(other) {
+	    return this.comp(/* validates */ other) < 0;
+	};
+
+	/**
+	 * Tests if this Long's value is less than the specified's. This is an alias of {@link Long#lessThan}.
+	 * @function
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.lt = LongPrototype.lessThan;
+
+	/**
+	 * Tests if this Long's value is less than or equal the specified's.
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.lessThanOrEqual = function lessThanOrEqual(other) {
+	    return this.comp(/* validates */ other) <= 0;
+	};
+
+	/**
+	 * Tests if this Long's value is less than or equal the specified's. This is an alias of {@link Long#lessThanOrEqual}.
+	 * @function
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.lte = LongPrototype.lessThanOrEqual;
+
+	/**
+	 * Tests if this Long's value is less than or equal the specified's. This is an alias of {@link Long#lessThanOrEqual}.
+	 * @function
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.le = LongPrototype.lessThanOrEqual;
+
+	/**
+	 * Tests if this Long's value is greater than the specified's.
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.greaterThan = function greaterThan(other) {
+	    return this.comp(/* validates */ other) > 0;
+	};
+
+	/**
+	 * Tests if this Long's value is greater than the specified's. This is an alias of {@link Long#greaterThan}.
+	 * @function
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.gt = LongPrototype.greaterThan;
+
+	/**
+	 * Tests if this Long's value is greater than or equal the specified's.
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.greaterThanOrEqual = function greaterThanOrEqual(other) {
+	    return this.comp(/* validates */ other) >= 0;
+	};
+
+	/**
+	 * Tests if this Long's value is greater than or equal the specified's. This is an alias of {@link Long#greaterThanOrEqual}.
+	 * @function
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.gte = LongPrototype.greaterThanOrEqual;
+
+	/**
+	 * Tests if this Long's value is greater than or equal the specified's. This is an alias of {@link Long#greaterThanOrEqual}.
+	 * @function
+	 * @param {!Long|number|string} other Other value
+	 * @returns {boolean}
+	 */
+	LongPrototype.ge = LongPrototype.greaterThanOrEqual;
+
+	/**
+	 * Compares this Long's value with the specified's.
+	 * @param {!Long|number|string} other Other value
+	 * @returns {number} 0 if they are the same, 1 if the this is greater and -1
+	 *  if the given one is greater
+	 */
+	LongPrototype.compare = function compare(other) {
+	    if (!isLong(other))
+	        other = fromValue(other);
+	    if (this.eq(other))
+	        return 0;
+	    var thisNeg = this.isNegative(),
+	        otherNeg = other.isNegative();
+	    if (thisNeg && !otherNeg)
+	        return -1;
+	    if (!thisNeg && otherNeg)
+	        return 1;
+	    // At this point the sign bits are the same
+	    if (!this.unsigned)
+	        return this.sub(other).isNegative() ? -1 : 1;
+	    // Both are positive if at least one is unsigned
+	    return (other.high >>> 0) > (this.high >>> 0) || (other.high === this.high && (other.low >>> 0) > (this.low >>> 0)) ? -1 : 1;
+	};
+
+	/**
+	 * Compares this Long's value with the specified's. This is an alias of {@link Long#compare}.
+	 * @function
+	 * @param {!Long|number|string} other Other value
+	 * @returns {number} 0 if they are the same, 1 if the this is greater and -1
+	 *  if the given one is greater
+	 */
+	LongPrototype.comp = LongPrototype.compare;
+
+	/**
+	 * Negates this Long's value.
+	 * @returns {!Long} Negated Long
+	 */
+	LongPrototype.negate = function negate() {
+	    if (!this.unsigned && this.eq(MIN_VALUE))
+	        return MIN_VALUE;
+	    return this.not().add(ONE);
+	};
+
+	/**
+	 * Negates this Long's value. This is an alias of {@link Long#negate}.
+	 * @function
+	 * @returns {!Long} Negated Long
+	 */
+	LongPrototype.neg = LongPrototype.negate;
+
+	/**
+	 * Returns the sum of this and the specified Long.
+	 * @param {!Long|number|string} addend Addend
+	 * @returns {!Long} Sum
+	 */
+	LongPrototype.add = function add(addend) {
+	    if (!isLong(addend))
+	        addend = fromValue(addend);
+
+	    // Divide each number into 4 chunks of 16 bits, and then sum the chunks.
+
+	    var a48 = this.high >>> 16;
+	    var a32 = this.high & 0xFFFF;
+	    var a16 = this.low >>> 16;
+	    var a00 = this.low & 0xFFFF;
+
+	    var b48 = addend.high >>> 16;
+	    var b32 = addend.high & 0xFFFF;
+	    var b16 = addend.low >>> 16;
+	    var b00 = addend.low & 0xFFFF;
+
+	    var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
+	    c00 += a00 + b00;
+	    c16 += c00 >>> 16;
+	    c00 &= 0xFFFF;
+	    c16 += a16 + b16;
+	    c32 += c16 >>> 16;
+	    c16 &= 0xFFFF;
+	    c32 += a32 + b32;
+	    c48 += c32 >>> 16;
+	    c32 &= 0xFFFF;
+	    c48 += a48 + b48;
+	    c48 &= 0xFFFF;
+	    return fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
+	};
+
+	/**
+	 * Returns the difference of this and the specified Long.
+	 * @param {!Long|number|string} subtrahend Subtrahend
+	 * @returns {!Long} Difference
+	 */
+	LongPrototype.subtract = function subtract(subtrahend) {
+	    if (!isLong(subtrahend))
+	        subtrahend = fromValue(subtrahend);
+	    return this.add(subtrahend.neg());
+	};
+
+	/**
+	 * Returns the difference of this and the specified Long. This is an alias of {@link Long#subtract}.
+	 * @function
+	 * @param {!Long|number|string} subtrahend Subtrahend
+	 * @returns {!Long} Difference
+	 */
+	LongPrototype.sub = LongPrototype.subtract;
+
+	/**
+	 * Returns the product of this and the specified Long.
+	 * @param {!Long|number|string} multiplier Multiplier
+	 * @returns {!Long} Product
+	 */
+	LongPrototype.multiply = function multiply(multiplier) {
+	    if (this.isZero())
+	        return ZERO;
+	    if (!isLong(multiplier))
+	        multiplier = fromValue(multiplier);
+
+	    // use wasm support if present
+	    if (wasm) {
+	        var low = wasm.mul(this.low,
+	                           this.high,
+	                           multiplier.low,
+	                           multiplier.high);
+	        return fromBits(low, wasm.get_high(), this.unsigned);
+	    }
+
+	    if (multiplier.isZero())
+	        return ZERO;
+	    if (this.eq(MIN_VALUE))
+	        return multiplier.isOdd() ? MIN_VALUE : ZERO;
+	    if (multiplier.eq(MIN_VALUE))
+	        return this.isOdd() ? MIN_VALUE : ZERO;
+
+	    if (this.isNegative()) {
+	        if (multiplier.isNegative())
+	            return this.neg().mul(multiplier.neg());
+	        else
+	            return this.neg().mul(multiplier).neg();
+	    } else if (multiplier.isNegative())
+	        return this.mul(multiplier.neg()).neg();
+
+	    // If both longs are small, use float multiplication
+	    if (this.lt(TWO_PWR_24) && multiplier.lt(TWO_PWR_24))
+	        return fromNumber(this.toNumber() * multiplier.toNumber(), this.unsigned);
+
+	    // Divide each long into 4 chunks of 16 bits, and then add up 4x4 products.
+	    // We can skip products that would overflow.
+
+	    var a48 = this.high >>> 16;
+	    var a32 = this.high & 0xFFFF;
+	    var a16 = this.low >>> 16;
+	    var a00 = this.low & 0xFFFF;
+
+	    var b48 = multiplier.high >>> 16;
+	    var b32 = multiplier.high & 0xFFFF;
+	    var b16 = multiplier.low >>> 16;
+	    var b00 = multiplier.low & 0xFFFF;
+
+	    var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
+	    c00 += a00 * b00;
+	    c16 += c00 >>> 16;
+	    c00 &= 0xFFFF;
+	    c16 += a16 * b00;
+	    c32 += c16 >>> 16;
+	    c16 &= 0xFFFF;
+	    c16 += a00 * b16;
+	    c32 += c16 >>> 16;
+	    c16 &= 0xFFFF;
+	    c32 += a32 * b00;
+	    c48 += c32 >>> 16;
+	    c32 &= 0xFFFF;
+	    c32 += a16 * b16;
+	    c48 += c32 >>> 16;
+	    c32 &= 0xFFFF;
+	    c32 += a00 * b32;
+	    c48 += c32 >>> 16;
+	    c32 &= 0xFFFF;
+	    c48 += a48 * b00 + a32 * b16 + a16 * b32 + a00 * b48;
+	    c48 &= 0xFFFF;
+	    return fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
+	};
+
+	/**
+	 * Returns the product of this and the specified Long. This is an alias of {@link Long#multiply}.
+	 * @function
+	 * @param {!Long|number|string} multiplier Multiplier
+	 * @returns {!Long} Product
+	 */
+	LongPrototype.mul = LongPrototype.multiply;
+
+	/**
+	 * Returns this Long divided by the specified. The result is signed if this Long is signed or
+	 *  unsigned if this Long is unsigned.
+	 * @param {!Long|number|string} divisor Divisor
+	 * @returns {!Long} Quotient
+	 */
+	LongPrototype.divide = function divide(divisor) {
+	    if (!isLong(divisor))
+	        divisor = fromValue(divisor);
+	    if (divisor.isZero())
+	        throw Error('division by zero');
+
+	    // use wasm support if present
+	    if (wasm) {
+	        // guard against signed division overflow: the largest
+	        // negative number / -1 would be 1 larger than the largest
+	        // positive number, due to two's complement.
+	        if (!this.unsigned &&
+	            this.high === -0x80000000 &&
+	            divisor.low === -1 && divisor.high === -1) {
+	            // be consistent with non-wasm code path
+	            return this;
+	        }
+	        var low = (this.unsigned ? wasm.div_u : wasm.div_s)(
+	            this.low,
+	            this.high,
+	            divisor.low,
+	            divisor.high
+	        );
+	        return fromBits(low, wasm.get_high(), this.unsigned);
+	    }
+
+	    if (this.isZero())
+	        return this.unsigned ? UZERO : ZERO;
+	    var approx, rem, res;
+	    if (!this.unsigned) {
+	        // This section is only relevant for signed longs and is derived from the
+	        // closure library as a whole.
+	        if (this.eq(MIN_VALUE)) {
+	            if (divisor.eq(ONE) || divisor.eq(NEG_ONE))
+	                return MIN_VALUE;  // recall that -MIN_VALUE == MIN_VALUE
+	            else if (divisor.eq(MIN_VALUE))
+	                return ONE;
+	            else {
+	                // At this point, we have |other| >= 2, so |this/other| < |MIN_VALUE|.
+	                var halfThis = this.shr(1);
+	                approx = halfThis.div(divisor).shl(1);
+	                if (approx.eq(ZERO)) {
+	                    return divisor.isNegative() ? ONE : NEG_ONE;
+	                } else {
+	                    rem = this.sub(divisor.mul(approx));
+	                    res = approx.add(rem.div(divisor));
+	                    return res;
+	                }
+	            }
+	        } else if (divisor.eq(MIN_VALUE))
+	            return this.unsigned ? UZERO : ZERO;
+	        if (this.isNegative()) {
+	            if (divisor.isNegative())
+	                return this.neg().div(divisor.neg());
+	            return this.neg().div(divisor).neg();
+	        } else if (divisor.isNegative())
+	            return this.div(divisor.neg()).neg();
+	        res = ZERO;
+	    } else {
+	        // The algorithm below has not been made for unsigned longs. It's therefore
+	        // required to take special care of the MSB prior to running it.
+	        if (!divisor.unsigned)
+	            divisor = divisor.toUnsigned();
+	        if (divisor.gt(this))
+	            return UZERO;
+	        if (divisor.gt(this.shru(1))) // 15 >>> 1 = 7 ; with divisor = 8 ; true
+	            return UONE;
+	        res = UZERO;
+	    }
+
+	    // Repeat the following until the remainder is less than other:  find a
+	    // floating-point that approximates remainder / other *from below*, add this
+	    // into the result, and subtract it from the remainder.  It is critical that
+	    // the approximate value is less than or equal to the real value so that the
+	    // remainder never becomes negative.
+	    rem = this;
+	    while (rem.gte(divisor)) {
+	        // Approximate the result of division. This may be a little greater or
+	        // smaller than the actual value.
+	        approx = Math.max(1, Math.floor(rem.toNumber() / divisor.toNumber()));
+
+	        // We will tweak the approximate result by changing it in the 48-th digit or
+	        // the smallest non-fractional digit, whichever is larger.
+	        var log2 = Math.ceil(Math.log(approx) / Math.LN2),
+	            delta = (log2 <= 48) ? 1 : pow_dbl(2, log2 - 48),
+
+	        // Decrease the approximation until it is smaller than the remainder.  Note
+	        // that if it is too large, the product overflows and is negative.
+	            approxRes = fromNumber(approx),
+	            approxRem = approxRes.mul(divisor);
+	        while (approxRem.isNegative() || approxRem.gt(rem)) {
+	            approx -= delta;
+	            approxRes = fromNumber(approx, this.unsigned);
+	            approxRem = approxRes.mul(divisor);
+	        }
+
+	        // We know the answer can't be zero... and actually, zero would cause
+	        // infinite recursion since we would make no progress.
+	        if (approxRes.isZero())
+	            approxRes = ONE;
+
+	        res = res.add(approxRes);
+	        rem = rem.sub(approxRem);
+	    }
+	    return res;
+	};
+
+	/**
+	 * Returns this Long divided by the specified. This is an alias of {@link Long#divide}.
+	 * @function
+	 * @param {!Long|number|string} divisor Divisor
+	 * @returns {!Long} Quotient
+	 */
+	LongPrototype.div = LongPrototype.divide;
+
+	/**
+	 * Returns this Long modulo the specified.
+	 * @param {!Long|number|string} divisor Divisor
+	 * @returns {!Long} Remainder
+	 */
+	LongPrototype.modulo = function modulo(divisor) {
+	    if (!isLong(divisor))
+	        divisor = fromValue(divisor);
+
+	    // use wasm support if present
+	    if (wasm) {
+	        var low = (this.unsigned ? wasm.rem_u : wasm.rem_s)(
+	            this.low,
+	            this.high,
+	            divisor.low,
+	            divisor.high
+	        );
+	        return fromBits(low, wasm.get_high(), this.unsigned);
+	    }
+
+	    return this.sub(this.div(divisor).mul(divisor));
+	};
+
+	/**
+	 * Returns this Long modulo the specified. This is an alias of {@link Long#modulo}.
+	 * @function
+	 * @param {!Long|number|string} divisor Divisor
+	 * @returns {!Long} Remainder
+	 */
+	LongPrototype.mod = LongPrototype.modulo;
+
+	/**
+	 * Returns this Long modulo the specified. This is an alias of {@link Long#modulo}.
+	 * @function
+	 * @param {!Long|number|string} divisor Divisor
+	 * @returns {!Long} Remainder
+	 */
+	LongPrototype.rem = LongPrototype.modulo;
+
+	/**
+	 * Returns the bitwise NOT of this Long.
+	 * @returns {!Long}
+	 */
+	LongPrototype.not = function not() {
+	    return fromBits(~this.low, ~this.high, this.unsigned);
+	};
+
+	/**
+	 * Returns the bitwise AND of this Long and the specified.
+	 * @param {!Long|number|string} other Other Long
+	 * @returns {!Long}
+	 */
+	LongPrototype.and = function and(other) {
+	    if (!isLong(other))
+	        other = fromValue(other);
+	    return fromBits(this.low & other.low, this.high & other.high, this.unsigned);
+	};
+
+	/**
+	 * Returns the bitwise OR of this Long and the specified.
+	 * @param {!Long|number|string} other Other Long
+	 * @returns {!Long}
+	 */
+	LongPrototype.or = function or(other) {
+	    if (!isLong(other))
+	        other = fromValue(other);
+	    return fromBits(this.low | other.low, this.high | other.high, this.unsigned);
+	};
+
+	/**
+	 * Returns the bitwise XOR of this Long and the given one.
+	 * @param {!Long|number|string} other Other Long
+	 * @returns {!Long}
+	 */
+	LongPrototype.xor = function xor(other) {
+	    if (!isLong(other))
+	        other = fromValue(other);
+	    return fromBits(this.low ^ other.low, this.high ^ other.high, this.unsigned);
+	};
+
+	/**
+	 * Returns this Long with bits shifted to the left by the given amount.
+	 * @param {number|!Long} numBits Number of bits
+	 * @returns {!Long} Shifted Long
+	 */
+	LongPrototype.shiftLeft = function shiftLeft(numBits) {
+	    if (isLong(numBits))
+	        numBits = numBits.toInt();
+	    if ((numBits &= 63) === 0)
+	        return this;
+	    else if (numBits < 32)
+	        return fromBits(this.low << numBits, (this.high << numBits) | (this.low >>> (32 - numBits)), this.unsigned);
+	    else
+	        return fromBits(0, this.low << (numBits - 32), this.unsigned);
+	};
+
+	/**
+	 * Returns this Long with bits shifted to the left by the given amount. This is an alias of {@link Long#shiftLeft}.
+	 * @function
+	 * @param {number|!Long} numBits Number of bits
+	 * @returns {!Long} Shifted Long
+	 */
+	LongPrototype.shl = LongPrototype.shiftLeft;
+
+	/**
+	 * Returns this Long with bits arithmetically shifted to the right by the given amount.
+	 * @param {number|!Long} numBits Number of bits
+	 * @returns {!Long} Shifted Long
+	 */
+	LongPrototype.shiftRight = function shiftRight(numBits) {
+	    if (isLong(numBits))
+	        numBits = numBits.toInt();
+	    if ((numBits &= 63) === 0)
+	        return this;
+	    else if (numBits < 32)
+	        return fromBits((this.low >>> numBits) | (this.high << (32 - numBits)), this.high >> numBits, this.unsigned);
+	    else
+	        return fromBits(this.high >> (numBits - 32), this.high >= 0 ? 0 : -1, this.unsigned);
+	};
+
+	/**
+	 * Returns this Long with bits arithmetically shifted to the right by the given amount. This is an alias of {@link Long#shiftRight}.
+	 * @function
+	 * @param {number|!Long} numBits Number of bits
+	 * @returns {!Long} Shifted Long
+	 */
+	LongPrototype.shr = LongPrototype.shiftRight;
+
+	/**
+	 * Returns this Long with bits logically shifted to the right by the given amount.
+	 * @param {number|!Long} numBits Number of bits
+	 * @returns {!Long} Shifted Long
+	 */
+	LongPrototype.shiftRightUnsigned = function shiftRightUnsigned(numBits) {
+	    if (isLong(numBits))
+	        numBits = numBits.toInt();
+	    numBits &= 63;
+	    if (numBits === 0)
+	        return this;
+	    else {
+	        var high = this.high;
+	        if (numBits < 32) {
+	            var low = this.low;
+	            return fromBits((low >>> numBits) | (high << (32 - numBits)), high >>> numBits, this.unsigned);
+	        } else if (numBits === 32)
+	            return fromBits(high, 0, this.unsigned);
+	        else
+	            return fromBits(high >>> (numBits - 32), 0, this.unsigned);
+	    }
+	};
+
+	/**
+	 * Returns this Long with bits logically shifted to the right by the given amount. This is an alias of {@link Long#shiftRightUnsigned}.
+	 * @function
+	 * @param {number|!Long} numBits Number of bits
+	 * @returns {!Long} Shifted Long
+	 */
+	LongPrototype.shru = LongPrototype.shiftRightUnsigned;
+
+	/**
+	 * Returns this Long with bits logically shifted to the right by the given amount. This is an alias of {@link Long#shiftRightUnsigned}.
+	 * @function
+	 * @param {number|!Long} numBits Number of bits
+	 * @returns {!Long} Shifted Long
+	 */
+	LongPrototype.shr_u = LongPrototype.shiftRightUnsigned;
+
+	/**
+	 * Converts this Long to signed.
+	 * @returns {!Long} Signed long
+	 */
+	LongPrototype.toSigned = function toSigned() {
+	    if (!this.unsigned)
+	        return this;
+	    return fromBits(this.low, this.high, false);
+	};
+
+	/**
+	 * Converts this Long to unsigned.
+	 * @returns {!Long} Unsigned long
+	 */
+	LongPrototype.toUnsigned = function toUnsigned() {
+	    if (this.unsigned)
+	        return this;
+	    return fromBits(this.low, this.high, true);
+	};
+
+	/**
+	 * Converts this Long to its byte representation.
+	 * @param {boolean=} le Whether little or big endian, defaults to big endian
+	 * @returns {!Array.<number>} Byte representation
+	 */
+	LongPrototype.toBytes = function toBytes(le) {
+	    return le ? this.toBytesLE() : this.toBytesBE();
+	};
+
+	/**
+	 * Converts this Long to its little endian byte representation.
+	 * @returns {!Array.<number>} Little endian byte representation
+	 */
+	LongPrototype.toBytesLE = function toBytesLE() {
+	    var hi = this.high,
+	        lo = this.low;
+	    return [
+	        lo        & 0xff,
+	        lo >>>  8 & 0xff,
+	        lo >>> 16 & 0xff,
+	        lo >>> 24       ,
+	        hi        & 0xff,
+	        hi >>>  8 & 0xff,
+	        hi >>> 16 & 0xff,
+	        hi >>> 24
+	    ];
+	};
+
+	/**
+	 * Converts this Long to its big endian byte representation.
+	 * @returns {!Array.<number>} Big endian byte representation
+	 */
+	LongPrototype.toBytesBE = function toBytesBE() {
+	    var hi = this.high,
+	        lo = this.low;
+	    return [
+	        hi >>> 24       ,
+	        hi >>> 16 & 0xff,
+	        hi >>>  8 & 0xff,
+	        hi        & 0xff,
+	        lo >>> 24       ,
+	        lo >>> 16 & 0xff,
+	        lo >>>  8 & 0xff,
+	        lo        & 0xff
+	    ];
+	};
+
+	/**
+	 * Creates a Long from its byte representation.
+	 * @param {!Array.<number>} bytes Byte representation
+	 * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
+	 * @param {boolean=} le Whether little or big endian, defaults to big endian
+	 * @returns {Long} The corresponding Long value
+	 */
+	Long.fromBytes = function fromBytes(bytes, unsigned, le) {
+	    return le ? Long.fromBytesLE(bytes, unsigned) : Long.fromBytesBE(bytes, unsigned);
+	};
+
+	/**
+	 * Creates a Long from its little endian byte representation.
+	 * @param {!Array.<number>} bytes Little endian byte representation
+	 * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
+	 * @returns {Long} The corresponding Long value
+	 */
+	Long.fromBytesLE = function fromBytesLE(bytes, unsigned) {
+	    return new Long(
+	        bytes[0]       |
+	        bytes[1] <<  8 |
+	        bytes[2] << 16 |
+	        bytes[3] << 24,
+	        bytes[4]       |
+	        bytes[5] <<  8 |
+	        bytes[6] << 16 |
+	        bytes[7] << 24,
+	        unsigned
+	    );
+	};
+
+	/**
+	 * Creates a Long from its big endian byte representation.
+	 * @param {!Array.<number>} bytes Big endian byte representation
+	 * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
+	 * @returns {Long} The corresponding Long value
+	 */
+	Long.fromBytesBE = function fromBytesBE(bytes, unsigned) {
+	    return new Long(
+	        bytes[4] << 24 |
+	        bytes[5] << 16 |
+	        bytes[6] <<  8 |
+	        bytes[7],
+	        bytes[0] << 24 |
+	        bytes[1] << 16 |
+	        bytes[2] <<  8 |
+	        bytes[3],
+	        unsigned
+	    );
+	};
+	return long$1;
 }
 
-/**
- * Returns a Long representing the given value, provided that it is a finite number. Otherwise, zero is returned.
- * @function
- * @param {number} value The number in question
- * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
- * @returns {!Long} The corresponding Long value
- */
-Long$1.fromNumber = fromNumber;
-
-/**
- * @param {number} lowBits
- * @param {number} highBits
- * @param {boolean=} unsigned
- * @returns {!Long}
- * @inner
- */
-function fromBits(lowBits, highBits, unsigned) {
-    return new Long$1(lowBits, highBits, unsigned);
-}
-
-/**
- * Returns a Long representing the 64 bit integer that comes by concatenating the given low and high bits. Each is
- *  assumed to use 32 bits.
- * @function
- * @param {number} lowBits The low 32 bits
- * @param {number} highBits The high 32 bits
- * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
- * @returns {!Long} The corresponding Long value
- */
-Long$1.fromBits = fromBits;
-
-/**
- * @function
- * @param {number} base
- * @param {number} exponent
- * @returns {number}
- * @inner
- */
-var pow_dbl = Math.pow; // Used 4 times (4*8 to 15+4)
-
-/**
- * @param {string} str
- * @param {(boolean|number)=} unsigned
- * @param {number=} radix
- * @returns {!Long}
- * @inner
- */
-function fromString(str, unsigned, radix) {
-    if (str.length === 0)
-        throw Error('empty string');
-    if (str === "NaN" || str === "Infinity" || str === "+Infinity" || str === "-Infinity")
-        return ZERO;
-    if (typeof unsigned === 'number') {
-        // For goog.math.long compatibility
-        radix = unsigned,
-        unsigned = false;
-    } else {
-        unsigned = !! unsigned;
-    }
-    radix = radix || 10;
-    if (radix < 2 || 36 < radix)
-        throw RangeError('radix');
-
-    var p;
-    if ((p = str.indexOf('-')) > 0)
-        throw Error('interior hyphen');
-    else if (p === 0) {
-        return fromString(str.substring(1), unsigned, radix).neg();
-    }
-
-    // Do several (8) digits each time through the loop, so as to
-    // minimize the calls to the very expensive emulated div.
-    var radixToPower = fromNumber(pow_dbl(radix, 8));
-
-    var result = ZERO;
-    for (var i = 0; i < str.length; i += 8) {
-        var size = Math.min(8, str.length - i),
-            value = parseInt(str.substring(i, i + size), radix);
-        if (size < 8) {
-            var power = fromNumber(pow_dbl(radix, size));
-            result = result.mul(power).add(fromNumber(value));
-        } else {
-            result = result.mul(radixToPower);
-            result = result.add(fromNumber(value));
-        }
-    }
-    result.unsigned = unsigned;
-    return result;
-}
-
-/**
- * Returns a Long representation of the given string, written using the specified radix.
- * @function
- * @param {string} str The textual representation of the Long
- * @param {(boolean|number)=} unsigned Whether unsigned or not, defaults to signed
- * @param {number=} radix The radix in which the text is written (2-36), defaults to 10
- * @returns {!Long} The corresponding Long value
- */
-Long$1.fromString = fromString;
-
-/**
- * @function
- * @param {!Long|number|string|!{low: number, high: number, unsigned: boolean}} val
- * @param {boolean=} unsigned
- * @returns {!Long}
- * @inner
- */
-function fromValue(val, unsigned) {
-    if (typeof val === 'number')
-        return fromNumber(val, unsigned);
-    if (typeof val === 'string')
-        return fromString(val, unsigned);
-    // Throws for non-objects, converts non-instanceof Long:
-    return fromBits(val.low, val.high, typeof unsigned === 'boolean' ? unsigned : val.unsigned);
-}
-
-/**
- * Converts the specified value to a Long using the appropriate from* function for its type.
- * @function
- * @param {!Long|number|string|!{low: number, high: number, unsigned: boolean}} val Value
- * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
- * @returns {!Long}
- */
-Long$1.fromValue = fromValue;
-
-// NOTE: the compiler should inline these constant values below and then remove these variables, so there should be
-// no runtime penalty for these.
-
-/**
- * @type {number}
- * @const
- * @inner
- */
-var TWO_PWR_16_DBL = 1 << 16;
-
-/**
- * @type {number}
- * @const
- * @inner
- */
-var TWO_PWR_24_DBL = 1 << 24;
-
-/**
- * @type {number}
- * @const
- * @inner
- */
-var TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
-
-/**
- * @type {number}
- * @const
- * @inner
- */
-var TWO_PWR_64_DBL = TWO_PWR_32_DBL * TWO_PWR_32_DBL;
-
-/**
- * @type {number}
- * @const
- * @inner
- */
-var TWO_PWR_63_DBL = TWO_PWR_64_DBL / 2;
-
-/**
- * @type {!Long}
- * @const
- * @inner
- */
-var TWO_PWR_24 = fromInt(TWO_PWR_24_DBL);
-
-/**
- * @type {!Long}
- * @inner
- */
-var ZERO = fromInt(0);
-
-/**
- * Signed zero.
- * @type {!Long}
- */
-Long$1.ZERO = ZERO;
-
-/**
- * @type {!Long}
- * @inner
- */
-var UZERO = fromInt(0, true);
-
-/**
- * Unsigned zero.
- * @type {!Long}
- */
-Long$1.UZERO = UZERO;
-
-/**
- * @type {!Long}
- * @inner
- */
-var ONE = fromInt(1);
-
-/**
- * Signed one.
- * @type {!Long}
- */
-Long$1.ONE = ONE;
-
-/**
- * @type {!Long}
- * @inner
- */
-var UONE = fromInt(1, true);
-
-/**
- * Unsigned one.
- * @type {!Long}
- */
-Long$1.UONE = UONE;
-
-/**
- * @type {!Long}
- * @inner
- */
-var NEG_ONE = fromInt(-1);
-
-/**
- * Signed negative one.
- * @type {!Long}
- */
-Long$1.NEG_ONE = NEG_ONE;
-
-/**
- * @type {!Long}
- * @inner
- */
-var MAX_VALUE = fromBits(0xFFFFFFFF|0, 0x7FFFFFFF|0, false);
-
-/**
- * Maximum signed value.
- * @type {!Long}
- */
-Long$1.MAX_VALUE = MAX_VALUE;
-
-/**
- * @type {!Long}
- * @inner
- */
-var MAX_UNSIGNED_VALUE = fromBits(0xFFFFFFFF|0, 0xFFFFFFFF|0, true);
-
-/**
- * Maximum unsigned value.
- * @type {!Long}
- */
-Long$1.MAX_UNSIGNED_VALUE = MAX_UNSIGNED_VALUE;
-
-/**
- * @type {!Long}
- * @inner
- */
-var MIN_VALUE = fromBits(0, 0x80000000|0, false);
-
-/**
- * Minimum signed value.
- * @type {!Long}
- */
-Long$1.MIN_VALUE = MIN_VALUE;
-
-/**
- * @alias Long.prototype
- * @inner
- */
-var LongPrototype = Long$1.prototype;
-
-/**
- * Converts the Long to a 32 bit integer, assuming it is a 32 bit integer.
- * @returns {number}
- */
-LongPrototype.toInt = function toInt() {
-    return this.unsigned ? this.low >>> 0 : this.low;
-};
-
-/**
- * Converts the Long to a the nearest floating-point representation of this value (double, 53 bit mantissa).
- * @returns {number}
- */
-LongPrototype.toNumber = function toNumber() {
-    if (this.unsigned)
-        return ((this.high >>> 0) * TWO_PWR_32_DBL) + (this.low >>> 0);
-    return this.high * TWO_PWR_32_DBL + (this.low >>> 0);
-};
-
-/**
- * Converts the Long to a string written in the specified radix.
- * @param {number=} radix Radix (2-36), defaults to 10
- * @returns {string}
- * @override
- * @throws {RangeError} If `radix` is out of range
- */
-LongPrototype.toString = function toString(radix) {
-    radix = radix || 10;
-    if (radix < 2 || 36 < radix)
-        throw RangeError('radix');
-    if (this.isZero())
-        return '0';
-    if (this.isNegative()) { // Unsigned Longs are never negative
-        if (this.eq(MIN_VALUE)) {
-            // We need to change the Long value before it can be negated, so we remove
-            // the bottom-most digit in this base and then recurse to do the rest.
-            var radixLong = fromNumber(radix),
-                div = this.div(radixLong),
-                rem1 = div.mul(radixLong).sub(this);
-            return div.toString(radix) + rem1.toInt().toString(radix);
-        } else
-            return '-' + this.neg().toString(radix);
-    }
-
-    // Do several (6) digits each time through the loop, so as to
-    // minimize the calls to the very expensive emulated div.
-    var radixToPower = fromNumber(pow_dbl(radix, 6), this.unsigned),
-        rem = this;
-    var result = '';
-    while (true) {
-        var remDiv = rem.div(radixToPower),
-            intval = rem.sub(remDiv.mul(radixToPower)).toInt() >>> 0,
-            digits = intval.toString(radix);
-        rem = remDiv;
-        if (rem.isZero())
-            return digits + result;
-        else {
-            while (digits.length < 6)
-                digits = '0' + digits;
-            result = '' + digits + result;
-        }
-    }
-};
-
-/**
- * Gets the high 32 bits as a signed integer.
- * @returns {number} Signed high bits
- */
-LongPrototype.getHighBits = function getHighBits() {
-    return this.high;
-};
-
-/**
- * Gets the high 32 bits as an unsigned integer.
- * @returns {number} Unsigned high bits
- */
-LongPrototype.getHighBitsUnsigned = function getHighBitsUnsigned() {
-    return this.high >>> 0;
-};
-
-/**
- * Gets the low 32 bits as a signed integer.
- * @returns {number} Signed low bits
- */
-LongPrototype.getLowBits = function getLowBits() {
-    return this.low;
-};
-
-/**
- * Gets the low 32 bits as an unsigned integer.
- * @returns {number} Unsigned low bits
- */
-LongPrototype.getLowBitsUnsigned = function getLowBitsUnsigned() {
-    return this.low >>> 0;
-};
-
-/**
- * Gets the number of bits needed to represent the absolute value of this Long.
- * @returns {number}
- */
-LongPrototype.getNumBitsAbs = function getNumBitsAbs() {
-    if (this.isNegative()) // Unsigned Longs are never negative
-        return this.eq(MIN_VALUE) ? 64 : this.neg().getNumBitsAbs();
-    var val = this.high != 0 ? this.high : this.low;
-    for (var bit = 31; bit > 0; bit--)
-        if ((val & (1 << bit)) != 0)
-            break;
-    return this.high != 0 ? bit + 33 : bit + 1;
-};
-
-/**
- * Tests if this Long's value equals zero.
- * @returns {boolean}
- */
-LongPrototype.isZero = function isZero() {
-    return this.high === 0 && this.low === 0;
-};
-
-/**
- * Tests if this Long's value equals zero. This is an alias of {@link Long#isZero}.
- * @returns {boolean}
- */
-LongPrototype.eqz = LongPrototype.isZero;
-
-/**
- * Tests if this Long's value is negative.
- * @returns {boolean}
- */
-LongPrototype.isNegative = function isNegative() {
-    return !this.unsigned && this.high < 0;
-};
-
-/**
- * Tests if this Long's value is positive.
- * @returns {boolean}
- */
-LongPrototype.isPositive = function isPositive() {
-    return this.unsigned || this.high >= 0;
-};
-
-/**
- * Tests if this Long's value is odd.
- * @returns {boolean}
- */
-LongPrototype.isOdd = function isOdd() {
-    return (this.low & 1) === 1;
-};
-
-/**
- * Tests if this Long's value is even.
- * @returns {boolean}
- */
-LongPrototype.isEven = function isEven() {
-    return (this.low & 1) === 0;
-};
-
-/**
- * Tests if this Long's value equals the specified's.
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.equals = function equals(other) {
-    if (!isLong(other))
-        other = fromValue(other);
-    if (this.unsigned !== other.unsigned && (this.high >>> 31) === 1 && (other.high >>> 31) === 1)
-        return false;
-    return this.high === other.high && this.low === other.low;
-};
-
-/**
- * Tests if this Long's value equals the specified's. This is an alias of {@link Long#equals}.
- * @function
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.eq = LongPrototype.equals;
-
-/**
- * Tests if this Long's value differs from the specified's.
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.notEquals = function notEquals(other) {
-    return !this.eq(/* validates */ other);
-};
-
-/**
- * Tests if this Long's value differs from the specified's. This is an alias of {@link Long#notEquals}.
- * @function
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.neq = LongPrototype.notEquals;
-
-/**
- * Tests if this Long's value differs from the specified's. This is an alias of {@link Long#notEquals}.
- * @function
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.ne = LongPrototype.notEquals;
-
-/**
- * Tests if this Long's value is less than the specified's.
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.lessThan = function lessThan(other) {
-    return this.comp(/* validates */ other) < 0;
-};
-
-/**
- * Tests if this Long's value is less than the specified's. This is an alias of {@link Long#lessThan}.
- * @function
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.lt = LongPrototype.lessThan;
-
-/**
- * Tests if this Long's value is less than or equal the specified's.
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.lessThanOrEqual = function lessThanOrEqual(other) {
-    return this.comp(/* validates */ other) <= 0;
-};
-
-/**
- * Tests if this Long's value is less than or equal the specified's. This is an alias of {@link Long#lessThanOrEqual}.
- * @function
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.lte = LongPrototype.lessThanOrEqual;
-
-/**
- * Tests if this Long's value is less than or equal the specified's. This is an alias of {@link Long#lessThanOrEqual}.
- * @function
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.le = LongPrototype.lessThanOrEqual;
-
-/**
- * Tests if this Long's value is greater than the specified's.
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.greaterThan = function greaterThan(other) {
-    return this.comp(/* validates */ other) > 0;
-};
-
-/**
- * Tests if this Long's value is greater than the specified's. This is an alias of {@link Long#greaterThan}.
- * @function
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.gt = LongPrototype.greaterThan;
-
-/**
- * Tests if this Long's value is greater than or equal the specified's.
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.greaterThanOrEqual = function greaterThanOrEqual(other) {
-    return this.comp(/* validates */ other) >= 0;
-};
-
-/**
- * Tests if this Long's value is greater than or equal the specified's. This is an alias of {@link Long#greaterThanOrEqual}.
- * @function
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.gte = LongPrototype.greaterThanOrEqual;
-
-/**
- * Tests if this Long's value is greater than or equal the specified's. This is an alias of {@link Long#greaterThanOrEqual}.
- * @function
- * @param {!Long|number|string} other Other value
- * @returns {boolean}
- */
-LongPrototype.ge = LongPrototype.greaterThanOrEqual;
-
-/**
- * Compares this Long's value with the specified's.
- * @param {!Long|number|string} other Other value
- * @returns {number} 0 if they are the same, 1 if the this is greater and -1
- *  if the given one is greater
- */
-LongPrototype.compare = function compare(other) {
-    if (!isLong(other))
-        other = fromValue(other);
-    if (this.eq(other))
-        return 0;
-    var thisNeg = this.isNegative(),
-        otherNeg = other.isNegative();
-    if (thisNeg && !otherNeg)
-        return -1;
-    if (!thisNeg && otherNeg)
-        return 1;
-    // At this point the sign bits are the same
-    if (!this.unsigned)
-        return this.sub(other).isNegative() ? -1 : 1;
-    // Both are positive if at least one is unsigned
-    return (other.high >>> 0) > (this.high >>> 0) || (other.high === this.high && (other.low >>> 0) > (this.low >>> 0)) ? -1 : 1;
-};
-
-/**
- * Compares this Long's value with the specified's. This is an alias of {@link Long#compare}.
- * @function
- * @param {!Long|number|string} other Other value
- * @returns {number} 0 if they are the same, 1 if the this is greater and -1
- *  if the given one is greater
- */
-LongPrototype.comp = LongPrototype.compare;
-
-/**
- * Negates this Long's value.
- * @returns {!Long} Negated Long
- */
-LongPrototype.negate = function negate() {
-    if (!this.unsigned && this.eq(MIN_VALUE))
-        return MIN_VALUE;
-    return this.not().add(ONE);
-};
-
-/**
- * Negates this Long's value. This is an alias of {@link Long#negate}.
- * @function
- * @returns {!Long} Negated Long
- */
-LongPrototype.neg = LongPrototype.negate;
-
-/**
- * Returns the sum of this and the specified Long.
- * @param {!Long|number|string} addend Addend
- * @returns {!Long} Sum
- */
-LongPrototype.add = function add(addend) {
-    if (!isLong(addend))
-        addend = fromValue(addend);
-
-    // Divide each number into 4 chunks of 16 bits, and then sum the chunks.
-
-    var a48 = this.high >>> 16;
-    var a32 = this.high & 0xFFFF;
-    var a16 = this.low >>> 16;
-    var a00 = this.low & 0xFFFF;
-
-    var b48 = addend.high >>> 16;
-    var b32 = addend.high & 0xFFFF;
-    var b16 = addend.low >>> 16;
-    var b00 = addend.low & 0xFFFF;
-
-    var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
-    c00 += a00 + b00;
-    c16 += c00 >>> 16;
-    c00 &= 0xFFFF;
-    c16 += a16 + b16;
-    c32 += c16 >>> 16;
-    c16 &= 0xFFFF;
-    c32 += a32 + b32;
-    c48 += c32 >>> 16;
-    c32 &= 0xFFFF;
-    c48 += a48 + b48;
-    c48 &= 0xFFFF;
-    return fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
-};
-
-/**
- * Returns the difference of this and the specified Long.
- * @param {!Long|number|string} subtrahend Subtrahend
- * @returns {!Long} Difference
- */
-LongPrototype.subtract = function subtract(subtrahend) {
-    if (!isLong(subtrahend))
-        subtrahend = fromValue(subtrahend);
-    return this.add(subtrahend.neg());
-};
-
-/**
- * Returns the difference of this and the specified Long. This is an alias of {@link Long#subtract}.
- * @function
- * @param {!Long|number|string} subtrahend Subtrahend
- * @returns {!Long} Difference
- */
-LongPrototype.sub = LongPrototype.subtract;
-
-/**
- * Returns the product of this and the specified Long.
- * @param {!Long|number|string} multiplier Multiplier
- * @returns {!Long} Product
- */
-LongPrototype.multiply = function multiply(multiplier) {
-    if (this.isZero())
-        return ZERO;
-    if (!isLong(multiplier))
-        multiplier = fromValue(multiplier);
-
-    // use wasm support if present
-    if (wasm) {
-        var low = wasm.mul(this.low,
-                           this.high,
-                           multiplier.low,
-                           multiplier.high);
-        return fromBits(low, wasm.get_high(), this.unsigned);
-    }
-
-    if (multiplier.isZero())
-        return ZERO;
-    if (this.eq(MIN_VALUE))
-        return multiplier.isOdd() ? MIN_VALUE : ZERO;
-    if (multiplier.eq(MIN_VALUE))
-        return this.isOdd() ? MIN_VALUE : ZERO;
-
-    if (this.isNegative()) {
-        if (multiplier.isNegative())
-            return this.neg().mul(multiplier.neg());
-        else
-            return this.neg().mul(multiplier).neg();
-    } else if (multiplier.isNegative())
-        return this.mul(multiplier.neg()).neg();
-
-    // If both longs are small, use float multiplication
-    if (this.lt(TWO_PWR_24) && multiplier.lt(TWO_PWR_24))
-        return fromNumber(this.toNumber() * multiplier.toNumber(), this.unsigned);
-
-    // Divide each long into 4 chunks of 16 bits, and then add up 4x4 products.
-    // We can skip products that would overflow.
-
-    var a48 = this.high >>> 16;
-    var a32 = this.high & 0xFFFF;
-    var a16 = this.low >>> 16;
-    var a00 = this.low & 0xFFFF;
-
-    var b48 = multiplier.high >>> 16;
-    var b32 = multiplier.high & 0xFFFF;
-    var b16 = multiplier.low >>> 16;
-    var b00 = multiplier.low & 0xFFFF;
-
-    var c48 = 0, c32 = 0, c16 = 0, c00 = 0;
-    c00 += a00 * b00;
-    c16 += c00 >>> 16;
-    c00 &= 0xFFFF;
-    c16 += a16 * b00;
-    c32 += c16 >>> 16;
-    c16 &= 0xFFFF;
-    c16 += a00 * b16;
-    c32 += c16 >>> 16;
-    c16 &= 0xFFFF;
-    c32 += a32 * b00;
-    c48 += c32 >>> 16;
-    c32 &= 0xFFFF;
-    c32 += a16 * b16;
-    c48 += c32 >>> 16;
-    c32 &= 0xFFFF;
-    c32 += a00 * b32;
-    c48 += c32 >>> 16;
-    c32 &= 0xFFFF;
-    c48 += a48 * b00 + a32 * b16 + a16 * b32 + a00 * b48;
-    c48 &= 0xFFFF;
-    return fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
-};
-
-/**
- * Returns the product of this and the specified Long. This is an alias of {@link Long#multiply}.
- * @function
- * @param {!Long|number|string} multiplier Multiplier
- * @returns {!Long} Product
- */
-LongPrototype.mul = LongPrototype.multiply;
-
-/**
- * Returns this Long divided by the specified. The result is signed if this Long is signed or
- *  unsigned if this Long is unsigned.
- * @param {!Long|number|string} divisor Divisor
- * @returns {!Long} Quotient
- */
-LongPrototype.divide = function divide(divisor) {
-    if (!isLong(divisor))
-        divisor = fromValue(divisor);
-    if (divisor.isZero())
-        throw Error('division by zero');
-
-    // use wasm support if present
-    if (wasm) {
-        // guard against signed division overflow: the largest
-        // negative number / -1 would be 1 larger than the largest
-        // positive number, due to two's complement.
-        if (!this.unsigned &&
-            this.high === -0x80000000 &&
-            divisor.low === -1 && divisor.high === -1) {
-            // be consistent with non-wasm code path
-            return this;
-        }
-        var low = (this.unsigned ? wasm.div_u : wasm.div_s)(
-            this.low,
-            this.high,
-            divisor.low,
-            divisor.high
-        );
-        return fromBits(low, wasm.get_high(), this.unsigned);
-    }
-
-    if (this.isZero())
-        return this.unsigned ? UZERO : ZERO;
-    var approx, rem, res;
-    if (!this.unsigned) {
-        // This section is only relevant for signed longs and is derived from the
-        // closure library as a whole.
-        if (this.eq(MIN_VALUE)) {
-            if (divisor.eq(ONE) || divisor.eq(NEG_ONE))
-                return MIN_VALUE;  // recall that -MIN_VALUE == MIN_VALUE
-            else if (divisor.eq(MIN_VALUE))
-                return ONE;
-            else {
-                // At this point, we have |other| >= 2, so |this/other| < |MIN_VALUE|.
-                var halfThis = this.shr(1);
-                approx = halfThis.div(divisor).shl(1);
-                if (approx.eq(ZERO)) {
-                    return divisor.isNegative() ? ONE : NEG_ONE;
-                } else {
-                    rem = this.sub(divisor.mul(approx));
-                    res = approx.add(rem.div(divisor));
-                    return res;
-                }
-            }
-        } else if (divisor.eq(MIN_VALUE))
-            return this.unsigned ? UZERO : ZERO;
-        if (this.isNegative()) {
-            if (divisor.isNegative())
-                return this.neg().div(divisor.neg());
-            return this.neg().div(divisor).neg();
-        } else if (divisor.isNegative())
-            return this.div(divisor.neg()).neg();
-        res = ZERO;
-    } else {
-        // The algorithm below has not been made for unsigned longs. It's therefore
-        // required to take special care of the MSB prior to running it.
-        if (!divisor.unsigned)
-            divisor = divisor.toUnsigned();
-        if (divisor.gt(this))
-            return UZERO;
-        if (divisor.gt(this.shru(1))) // 15 >>> 1 = 7 ; with divisor = 8 ; true
-            return UONE;
-        res = UZERO;
-    }
-
-    // Repeat the following until the remainder is less than other:  find a
-    // floating-point that approximates remainder / other *from below*, add this
-    // into the result, and subtract it from the remainder.  It is critical that
-    // the approximate value is less than or equal to the real value so that the
-    // remainder never becomes negative.
-    rem = this;
-    while (rem.gte(divisor)) {
-        // Approximate the result of division. This may be a little greater or
-        // smaller than the actual value.
-        approx = Math.max(1, Math.floor(rem.toNumber() / divisor.toNumber()));
-
-        // We will tweak the approximate result by changing it in the 48-th digit or
-        // the smallest non-fractional digit, whichever is larger.
-        var log2 = Math.ceil(Math.log(approx) / Math.LN2),
-            delta = (log2 <= 48) ? 1 : pow_dbl(2, log2 - 48),
-
-        // Decrease the approximation until it is smaller than the remainder.  Note
-        // that if it is too large, the product overflows and is negative.
-            approxRes = fromNumber(approx),
-            approxRem = approxRes.mul(divisor);
-        while (approxRem.isNegative() || approxRem.gt(rem)) {
-            approx -= delta;
-            approxRes = fromNumber(approx, this.unsigned);
-            approxRem = approxRes.mul(divisor);
-        }
-
-        // We know the answer can't be zero... and actually, zero would cause
-        // infinite recursion since we would make no progress.
-        if (approxRes.isZero())
-            approxRes = ONE;
-
-        res = res.add(approxRes);
-        rem = rem.sub(approxRem);
-    }
-    return res;
-};
-
-/**
- * Returns this Long divided by the specified. This is an alias of {@link Long#divide}.
- * @function
- * @param {!Long|number|string} divisor Divisor
- * @returns {!Long} Quotient
- */
-LongPrototype.div = LongPrototype.divide;
-
-/**
- * Returns this Long modulo the specified.
- * @param {!Long|number|string} divisor Divisor
- * @returns {!Long} Remainder
- */
-LongPrototype.modulo = function modulo(divisor) {
-    if (!isLong(divisor))
-        divisor = fromValue(divisor);
-
-    // use wasm support if present
-    if (wasm) {
-        var low = (this.unsigned ? wasm.rem_u : wasm.rem_s)(
-            this.low,
-            this.high,
-            divisor.low,
-            divisor.high
-        );
-        return fromBits(low, wasm.get_high(), this.unsigned);
-    }
-
-    return this.sub(this.div(divisor).mul(divisor));
-};
-
-/**
- * Returns this Long modulo the specified. This is an alias of {@link Long#modulo}.
- * @function
- * @param {!Long|number|string} divisor Divisor
- * @returns {!Long} Remainder
- */
-LongPrototype.mod = LongPrototype.modulo;
-
-/**
- * Returns this Long modulo the specified. This is an alias of {@link Long#modulo}.
- * @function
- * @param {!Long|number|string} divisor Divisor
- * @returns {!Long} Remainder
- */
-LongPrototype.rem = LongPrototype.modulo;
-
-/**
- * Returns the bitwise NOT of this Long.
- * @returns {!Long}
- */
-LongPrototype.not = function not() {
-    return fromBits(~this.low, ~this.high, this.unsigned);
-};
-
-/**
- * Returns the bitwise AND of this Long and the specified.
- * @param {!Long|number|string} other Other Long
- * @returns {!Long}
- */
-LongPrototype.and = function and(other) {
-    if (!isLong(other))
-        other = fromValue(other);
-    return fromBits(this.low & other.low, this.high & other.high, this.unsigned);
-};
-
-/**
- * Returns the bitwise OR of this Long and the specified.
- * @param {!Long|number|string} other Other Long
- * @returns {!Long}
- */
-LongPrototype.or = function or(other) {
-    if (!isLong(other))
-        other = fromValue(other);
-    return fromBits(this.low | other.low, this.high | other.high, this.unsigned);
-};
-
-/**
- * Returns the bitwise XOR of this Long and the given one.
- * @param {!Long|number|string} other Other Long
- * @returns {!Long}
- */
-LongPrototype.xor = function xor(other) {
-    if (!isLong(other))
-        other = fromValue(other);
-    return fromBits(this.low ^ other.low, this.high ^ other.high, this.unsigned);
-};
-
-/**
- * Returns this Long with bits shifted to the left by the given amount.
- * @param {number|!Long} numBits Number of bits
- * @returns {!Long} Shifted Long
- */
-LongPrototype.shiftLeft = function shiftLeft(numBits) {
-    if (isLong(numBits))
-        numBits = numBits.toInt();
-    if ((numBits &= 63) === 0)
-        return this;
-    else if (numBits < 32)
-        return fromBits(this.low << numBits, (this.high << numBits) | (this.low >>> (32 - numBits)), this.unsigned);
-    else
-        return fromBits(0, this.low << (numBits - 32), this.unsigned);
-};
-
-/**
- * Returns this Long with bits shifted to the left by the given amount. This is an alias of {@link Long#shiftLeft}.
- * @function
- * @param {number|!Long} numBits Number of bits
- * @returns {!Long} Shifted Long
- */
-LongPrototype.shl = LongPrototype.shiftLeft;
-
-/**
- * Returns this Long with bits arithmetically shifted to the right by the given amount.
- * @param {number|!Long} numBits Number of bits
- * @returns {!Long} Shifted Long
- */
-LongPrototype.shiftRight = function shiftRight(numBits) {
-    if (isLong(numBits))
-        numBits = numBits.toInt();
-    if ((numBits &= 63) === 0)
-        return this;
-    else if (numBits < 32)
-        return fromBits((this.low >>> numBits) | (this.high << (32 - numBits)), this.high >> numBits, this.unsigned);
-    else
-        return fromBits(this.high >> (numBits - 32), this.high >= 0 ? 0 : -1, this.unsigned);
-};
-
-/**
- * Returns this Long with bits arithmetically shifted to the right by the given amount. This is an alias of {@link Long#shiftRight}.
- * @function
- * @param {number|!Long} numBits Number of bits
- * @returns {!Long} Shifted Long
- */
-LongPrototype.shr = LongPrototype.shiftRight;
-
-/**
- * Returns this Long with bits logically shifted to the right by the given amount.
- * @param {number|!Long} numBits Number of bits
- * @returns {!Long} Shifted Long
- */
-LongPrototype.shiftRightUnsigned = function shiftRightUnsigned(numBits) {
-    if (isLong(numBits))
-        numBits = numBits.toInt();
-    numBits &= 63;
-    if (numBits === 0)
-        return this;
-    else {
-        var high = this.high;
-        if (numBits < 32) {
-            var low = this.low;
-            return fromBits((low >>> numBits) | (high << (32 - numBits)), high >>> numBits, this.unsigned);
-        } else if (numBits === 32)
-            return fromBits(high, 0, this.unsigned);
-        else
-            return fromBits(high >>> (numBits - 32), 0, this.unsigned);
-    }
-};
-
-/**
- * Returns this Long with bits logically shifted to the right by the given amount. This is an alias of {@link Long#shiftRightUnsigned}.
- * @function
- * @param {number|!Long} numBits Number of bits
- * @returns {!Long} Shifted Long
- */
-LongPrototype.shru = LongPrototype.shiftRightUnsigned;
-
-/**
- * Returns this Long with bits logically shifted to the right by the given amount. This is an alias of {@link Long#shiftRightUnsigned}.
- * @function
- * @param {number|!Long} numBits Number of bits
- * @returns {!Long} Shifted Long
- */
-LongPrototype.shr_u = LongPrototype.shiftRightUnsigned;
-
-/**
- * Converts this Long to signed.
- * @returns {!Long} Signed long
- */
-LongPrototype.toSigned = function toSigned() {
-    if (!this.unsigned)
-        return this;
-    return fromBits(this.low, this.high, false);
-};
-
-/**
- * Converts this Long to unsigned.
- * @returns {!Long} Unsigned long
- */
-LongPrototype.toUnsigned = function toUnsigned() {
-    if (this.unsigned)
-        return this;
-    return fromBits(this.low, this.high, true);
-};
-
-/**
- * Converts this Long to its byte representation.
- * @param {boolean=} le Whether little or big endian, defaults to big endian
- * @returns {!Array.<number>} Byte representation
- */
-LongPrototype.toBytes = function toBytes(le) {
-    return le ? this.toBytesLE() : this.toBytesBE();
-};
-
-/**
- * Converts this Long to its little endian byte representation.
- * @returns {!Array.<number>} Little endian byte representation
- */
-LongPrototype.toBytesLE = function toBytesLE() {
-    var hi = this.high,
-        lo = this.low;
-    return [
-        lo        & 0xff,
-        lo >>>  8 & 0xff,
-        lo >>> 16 & 0xff,
-        lo >>> 24       ,
-        hi        & 0xff,
-        hi >>>  8 & 0xff,
-        hi >>> 16 & 0xff,
-        hi >>> 24
-    ];
-};
-
-/**
- * Converts this Long to its big endian byte representation.
- * @returns {!Array.<number>} Big endian byte representation
- */
-LongPrototype.toBytesBE = function toBytesBE() {
-    var hi = this.high,
-        lo = this.low;
-    return [
-        hi >>> 24       ,
-        hi >>> 16 & 0xff,
-        hi >>>  8 & 0xff,
-        hi        & 0xff,
-        lo >>> 24       ,
-        lo >>> 16 & 0xff,
-        lo >>>  8 & 0xff,
-        lo        & 0xff
-    ];
-};
-
-/**
- * Creates a Long from its byte representation.
- * @param {!Array.<number>} bytes Byte representation
- * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
- * @param {boolean=} le Whether little or big endian, defaults to big endian
- * @returns {Long} The corresponding Long value
- */
-Long$1.fromBytes = function fromBytes(bytes, unsigned, le) {
-    return le ? Long$1.fromBytesLE(bytes, unsigned) : Long$1.fromBytesBE(bytes, unsigned);
-};
-
-/**
- * Creates a Long from its little endian byte representation.
- * @param {!Array.<number>} bytes Little endian byte representation
- * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
- * @returns {Long} The corresponding Long value
- */
-Long$1.fromBytesLE = function fromBytesLE(bytes, unsigned) {
-    return new Long$1(
-        bytes[0]       |
-        bytes[1] <<  8 |
-        bytes[2] << 16 |
-        bytes[3] << 24,
-        bytes[4]       |
-        bytes[5] <<  8 |
-        bytes[6] << 16 |
-        bytes[7] << 24,
-        unsigned
-    );
-};
-
-/**
- * Creates a Long from its big endian byte representation.
- * @param {!Array.<number>} bytes Big endian byte representation
- * @param {boolean=} unsigned Whether unsigned or not, defaults to signed
- * @returns {Long} The corresponding Long value
- */
-Long$1.fromBytesBE = function fromBytesBE(bytes, unsigned) {
-    return new Long$1(
-        bytes[4] << 24 |
-        bytes[5] << 16 |
-        bytes[6] <<  8 |
-        bytes[7],
-        bytes[0] << 24 |
-        bytes[1] << 16 |
-        bytes[2] <<  8 |
-        bytes[3],
-        unsigned
-    );
-};
-
-const LongExports = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.assign(/*#__PURE__*/Object.create(null), long_1, {
-    'default': long_1
-}));
+var longExports = requireLong();
+var long = /*@__PURE__*/getDefaultExportFromCjs(longExports);
+
+var LongExports = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    default: long
+});
 
 /**
  * @license
@@ -2818,10 +3095,12 @@ const LongExports = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.assign(/*#__P
  * limitations under the License.
  * =============================================================================
  */
+// Workaround for allowing cjs module to be included in bundle created by
+// rollup.
 // tslint:disable-next-line
 const Long = 
 // tslint:disable-next-line
-long_1 || LongExports;
+long || LongExports;
 function hexToLong(hex) {
     return Long.fromString(hex, true, 16);
 }
@@ -3008,7 +3287,7 @@ function toTypedArray(a, dtype) {
     if (Array.isArray(a)) {
         a = flatten$2(a);
     }
-    if (env().getBool('DEBUG')) {
+    if (env$1().getBool('DEBUG')) {
         checkConversionForErrors(a, dtype);
     }
     if (noConversionNeeded(a, dtype)) {
@@ -3045,7 +3324,7 @@ function toTypedArray(a, dtype) {
  * @doc {heading: 'Util', namespace: 'util'}
  */
 function now() {
-    return env().platform.now();
+    return env$1().platform.now();
 }
 /**
  * Returns a platform-specific implementation of
@@ -3064,7 +3343,7 @@ function now() {
  * @doc {heading: 'Util'}
  */
 function fetch$1(path, requestInits) {
-    return env().platform.fetch(path, requestInits);
+    return env$1().platform.fetch(path, requestInits);
 }
 /**
  * Encodes the provided string into bytes using the provided encoding scheme.
@@ -3076,7 +3355,7 @@ function fetch$1(path, requestInits) {
  */
 function encodeString(s, encoding = 'utf-8') {
     encoding = encoding || 'utf-8';
-    return env().platform.encode(s, encoding);
+    return env$1().platform.encode(s, encoding);
 }
 /**
  * Decodes the provided bytes into a string using the provided encoding scheme.
@@ -3088,12 +3367,12 @@ function encodeString(s, encoding = 'utf-8') {
  */
 function decodeString(bytes, encoding = 'utf-8') {
     encoding = encoding || 'utf-8';
-    return env().platform.decode(bytes, encoding);
+    return env$1().platform.decode(bytes, encoding);
 }
 function isTypedArray(a) {
     // TODO(mattsoulanille): Remove this fallback in 5.0.0
-    if (env().platform.isTypedArray != null) {
-        return env().platform.isTypedArray(a);
+    if (env$1().platform.isTypedArray != null) {
+        return env$1().platform.isTypedArray(a);
     }
     else {
         return isTypedArrayBrowser(a);
@@ -3148,6 +3427,67 @@ function flatten$2(arr, result = [], skipTypedArray = false) {
     return result;
 }
 
+var util = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    arraysEqual: arraysEqual,
+    arraysEqualWithNull: arraysEqualWithNull,
+    assert: assert$1,
+    assertNonNegativeIntegerDimensions: assertNonNegativeIntegerDimensions,
+    assertNonNull: assertNonNull,
+    assertShapesMatch: assertShapesMatch,
+    bytesFromStringArray: bytesFromStringArray,
+    bytesPerElement: bytesPerElement,
+    checkConversionForErrors: checkConversionForErrors,
+    clamp: clamp,
+    computeStrides: computeStrides,
+    convertBackendValuesAndArrayBuffer: convertBackendValuesAndArrayBuffer,
+    createScalarValue: createScalarValue,
+    createShuffledIndices: createShuffledIndices,
+    decodeString: decodeString,
+    distSquared: distSquared,
+    encodeString: encodeString,
+    fetch: fetch$1,
+    fingerPrint64: fingerPrint64,
+    flatten: flatten$2,
+    getArrayFromDType: getArrayFromDType,
+    getTypedArrayFromDType: getTypedArrayFromDType,
+    hasEncodingLoss: hasEncodingLoss,
+    hexToLong: hexToLong,
+    indexToLoc: indexToLoc,
+    inferDtype: inferDtype,
+    inferFromImplicitShape: inferFromImplicitShape,
+    isBoolean: isBoolean,
+    isFunction: isFunction,
+    isInt: isInt,
+    isNumber: isNumber,
+    isPromise: isPromise,
+    isScalarShape: isScalarShape,
+    isString: isString,
+    isTypedArray: isTypedArray,
+    isValidDtype: isValidDtype,
+    locToIndex: locToIndex,
+    makeOnesTypedArray: makeOnesTypedArray,
+    makeZerosNestedTypedArray: makeZerosNestedTypedArray,
+    makeZerosTypedArray: makeZerosTypedArray,
+    nearestDivisor: nearestDivisor,
+    nearestLargerEven: nearestLargerEven,
+    now: now,
+    parseAxisParam: parseAxisParam,
+    randUniform: randUniform,
+    repeatedTry: repeatedTry,
+    rightPad: rightPad,
+    shuffle: shuffle,
+    shuffleCombo: shuffleCombo,
+    sizeFromShape: sizeFromShape,
+    sizeToSquarishShape: sizeToSquarishShape,
+    squeezeShape: squeezeShape,
+    sum: sum$4,
+    swap: swap$1,
+    tanh: tanh$3,
+    toNestedArray: toNestedArray,
+    toTypedArray: toTypedArray
+});
+
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -3189,7 +3529,7 @@ class Profiler {
             }
             timer = Promise.resolve({ kernelMs: now() - start });
         }
-        if (env().getBool('CHECK_COMPUTATION_FOR_ERRORS')) {
+        if (env$1().getBool('CHECK_COMPUTATION_FOR_ERRORS')) {
             for (let i = 0; i < outputs.length; i++) {
                 const output = outputs[i];
                 // Dangling promise here because we don't want to propagate up
@@ -3585,6 +3925,8 @@ function createComplexTuples(vals) {
  * limitations under the License.
  * =============================================================================
  */
+// Workaround for: https://github.com/bazelbuild/rules_nodejs/issues/1265
+/// <reference types="@webgpu/types/dist" />
 /**
  * A mutable object, similar to `tf.Tensor`, that allows users to set values
  * at locations before converting to an immutable `tf.Tensor`.
@@ -3955,7 +4297,7 @@ Object.defineProperty(Tensor, Symbol.hasInstance, {
 });
 function getGlobalTensorClass() {
     // Use getGlobal so that we can augment the Tensor class across package
-    // boundaries becase the node resolution alg may result in different modules
+    // boundaries because the node resolution alg may result in different modules
     // being returned for this file depending on the path they are loaded from.
     return getGlobal('Tensor', () => {
         return Tensor;
@@ -4166,6 +4508,14 @@ function isIterable$1(obj) {
     return Array.isArray(obj) || typeof obj === 'object';
 }
 
+var tensor_util = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    assertTypesMatch: assertTypesMatch,
+    getTensorsInContainer: getTensorsInContainer,
+    isTensorInList: isTensorInList,
+    makeTypesMatch: makeTypesMatch
+});
+
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -4344,7 +4694,7 @@ class Engine {
     /**
      * Initializes a backend by looking up the backend name in the factory
      * registry and calling the factory method. Returns a boolean representing
-     * whether the initialization of the backend suceeded. Throws an error if
+     * whether the initialization of the backend succeeded. Throws an error if
      * there is no backend in the factory registry.
      */
     initializeBackend(backendName) {
@@ -5240,23 +5590,14 @@ function isBrowser() {
         (typeof WorkerGlobalScope !== 'undefined');
 }
 
-/**
- * @license
- * Copyright 2019 Google LLC. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * =============================================================================
- */
-const ENV$3 = env();
+var device_util = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    isBrowser: isBrowser,
+    isMobile: isMobile,
+    mockIsMobile: mockIsMobile
+});
+
+const ENV$3 = env$1();
 /**
  * This file contains environment-related flag registrations.
  */
@@ -5271,9 +5612,9 @@ ENV$3.registerFlag('DEBUG', () => false, debugValue => {
 /** Whether we are in a browser (as versus, say, node.js) environment. */
 ENV$3.registerFlag('IS_BROWSER', () => isBrowser());
 /** Whether we are in a browser (as versus, say, node.js) environment. */
-ENV$3.registerFlag('IS_NODE', () => (typeof process !== 'undefined') &&
-    (typeof process.versions !== 'undefined') &&
-    (typeof process.versions.node !== 'undefined'));
+ENV$3.registerFlag('IS_NODE', () => (typeof browser$1$1 !== 'undefined') &&
+    (typeof browser$1$1.versions !== 'undefined') &&
+    (typeof browser$1$1.versions.node !== 'undefined'));
 /** Whether this browser is Chrome. */
 ENV$3.registerFlag('IS_CHROME', () => typeof navigator !== 'undefined' && navigator != null &&
     navigator.userAgent != null && /Chrome/.test(navigator.userAgent) &&
@@ -5304,6 +5645,1986 @@ ENV$3.registerFlag('WRAP_TO_IMAGEBITMAP', () => false);
 ENV$3.registerFlag('CANVAS2D_WILL_READ_FREQUENTLY_FOR_GPU', () => false);
 /** Whether to use setTimeoutCustom */
 ENV$3.registerFlag('USE_SETTIMEOUTCUSTOM', () => false);
+
+var lookup = [];
+var revLookup = [];
+var Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array;
+var inited = false;
+function init () {
+  inited = true;
+  var code = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  for (var i = 0, len = code.length; i < len; ++i) {
+    lookup[i] = code[i];
+    revLookup[code.charCodeAt(i)] = i;
+  }
+
+  revLookup['-'.charCodeAt(0)] = 62;
+  revLookup['_'.charCodeAt(0)] = 63;
+}
+
+function toByteArray (b64) {
+  if (!inited) {
+    init();
+  }
+  var i, j, l, tmp, placeHolders, arr;
+  var len = b64.length;
+
+  if (len % 4 > 0) {
+    throw new Error('Invalid string. Length must be a multiple of 4')
+  }
+
+  // the number of equal signs (place holders)
+  // if there are two placeholders, than the two characters before it
+  // represent one byte
+  // if there is only one, then the three characters before it represent 2 bytes
+  // this is just a cheap hack to not do indexOf twice
+  placeHolders = b64[len - 2] === '=' ? 2 : b64[len - 1] === '=' ? 1 : 0;
+
+  // base64 is 4/3 + up to two characters of the original data
+  arr = new Arr(len * 3 / 4 - placeHolders);
+
+  // if there are placeholders, only get up to the last complete 4 chars
+  l = placeHolders > 0 ? len - 4 : len;
+
+  var L = 0;
+
+  for (i = 0, j = 0; i < l; i += 4, j += 3) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 18) | (revLookup[b64.charCodeAt(i + 1)] << 12) | (revLookup[b64.charCodeAt(i + 2)] << 6) | revLookup[b64.charCodeAt(i + 3)];
+    arr[L++] = (tmp >> 16) & 0xFF;
+    arr[L++] = (tmp >> 8) & 0xFF;
+    arr[L++] = tmp & 0xFF;
+  }
+
+  if (placeHolders === 2) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 2) | (revLookup[b64.charCodeAt(i + 1)] >> 4);
+    arr[L++] = tmp & 0xFF;
+  } else if (placeHolders === 1) {
+    tmp = (revLookup[b64.charCodeAt(i)] << 10) | (revLookup[b64.charCodeAt(i + 1)] << 4) | (revLookup[b64.charCodeAt(i + 2)] >> 2);
+    arr[L++] = (tmp >> 8) & 0xFF;
+    arr[L++] = tmp & 0xFF;
+  }
+
+  return arr
+}
+
+function tripletToBase64 (num) {
+  return lookup[num >> 18 & 0x3F] + lookup[num >> 12 & 0x3F] + lookup[num >> 6 & 0x3F] + lookup[num & 0x3F]
+}
+
+function encodeChunk (uint8, start, end) {
+  var tmp;
+  var output = [];
+  for (var i = start; i < end; i += 3) {
+    tmp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2]);
+    output.push(tripletToBase64(tmp));
+  }
+  return output.join('')
+}
+
+function fromByteArray (uint8) {
+  if (!inited) {
+    init();
+  }
+  var tmp;
+  var len = uint8.length;
+  var extraBytes = len % 3; // if we have 1 byte left, pad 2 bytes
+  var output = '';
+  var parts = [];
+  var maxChunkLength = 16383; // must be multiple of 3
+
+  // go through the array every three bytes, we'll deal with trailing stuff later
+  for (var i = 0, len2 = len - extraBytes; i < len2; i += maxChunkLength) {
+    parts.push(encodeChunk(uint8, i, (i + maxChunkLength) > len2 ? len2 : (i + maxChunkLength)));
+  }
+
+  // pad the end with zeros, but make sure to not forget the extra bytes
+  if (extraBytes === 1) {
+    tmp = uint8[len - 1];
+    output += lookup[tmp >> 2];
+    output += lookup[(tmp << 4) & 0x3F];
+    output += '==';
+  } else if (extraBytes === 2) {
+    tmp = (uint8[len - 2] << 8) + (uint8[len - 1]);
+    output += lookup[tmp >> 10];
+    output += lookup[(tmp >> 4) & 0x3F];
+    output += lookup[(tmp << 2) & 0x3F];
+    output += '=';
+  }
+
+  parts.push(output);
+
+  return parts.join('')
+}
+
+function read (buffer, offset, isLE, mLen, nBytes) {
+  var e, m;
+  var eLen = nBytes * 8 - mLen - 1;
+  var eMax = (1 << eLen) - 1;
+  var eBias = eMax >> 1;
+  var nBits = -7;
+  var i = isLE ? (nBytes - 1) : 0;
+  var d = isLE ? -1 : 1;
+  var s = buffer[offset + i];
+
+  i += d;
+
+  e = s & ((1 << (-nBits)) - 1);
+  s >>= (-nBits);
+  nBits += eLen;
+  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  m = e & ((1 << (-nBits)) - 1);
+  e >>= (-nBits);
+  nBits += mLen;
+  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  if (e === 0) {
+    e = 1 - eBias;
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
+  } else {
+    m = m + Math.pow(2, mLen);
+    e = e - eBias;
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+}
+
+function write (buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c;
+  var eLen = nBytes * 8 - mLen - 1;
+  var eMax = (1 << eLen) - 1;
+  var eBias = eMax >> 1;
+  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0);
+  var i = isLE ? 0 : (nBytes - 1);
+  var d = isLE ? 1 : -1;
+  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0;
+
+  value = Math.abs(value);
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0;
+    e = eMax;
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2);
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--;
+      c *= 2;
+    }
+    if (e + eBias >= 1) {
+      value += rt / c;
+    } else {
+      value += rt * Math.pow(2, 1 - eBias);
+    }
+    if (value * c >= 2) {
+      e++;
+      c /= 2;
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0;
+      e = eMax;
+    } else if (e + eBias >= 1) {
+      m = (value * c - 1) * Math.pow(2, mLen);
+      e = e + eBias;
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen);
+      e = 0;
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+  e = (e << mLen) | m;
+  eLen += mLen;
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+  buffer[offset + i - d] |= s * 128;
+}
+
+var toString = {}.toString;
+
+var isArray = Array.isArray || function (arr) {
+  return toString.call(arr) == '[object Array]';
+};
+
+/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
+ */
+
+var INSPECT_MAX_BYTES = 50;
+
+/**
+ * If `Buffer.TYPED_ARRAY_SUPPORT`:
+ *   === true    Use Uint8Array implementation (fastest)
+ *   === false   Use Object implementation (most compatible, even IE6)
+ *
+ * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
+ * Opera 11.6+, iOS 4.2+.
+ *
+ * Due to various browser bugs, sometimes the Object implementation will be used even
+ * when the browser supports typed arrays.
+ *
+ * Note:
+ *
+ *   - Firefox 4-29 lacks support for adding new properties to `Uint8Array` instances,
+ *     See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
+ *
+ *   - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
+ *
+ *   - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
+ *     incorrect length in some situations.
+
+ * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they
+ * get the Object implementation, which is slower but behaves correctly.
+ */
+Buffer.TYPED_ARRAY_SUPPORT = global$1.TYPED_ARRAY_SUPPORT !== undefined
+  ? global$1.TYPED_ARRAY_SUPPORT
+  : true;
+
+/*
+ * Export kMaxLength after typed array support is determined.
+ */
+var _kMaxLength = kMaxLength();
+
+function kMaxLength () {
+  return Buffer.TYPED_ARRAY_SUPPORT
+    ? 0x7fffffff
+    : 0x3fffffff
+}
+
+function createBuffer (that, length) {
+  if (kMaxLength() < length) {
+    throw new RangeError('Invalid typed array length')
+  }
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    that = new Uint8Array(length);
+    that.__proto__ = Buffer.prototype;
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    if (that === null) {
+      that = new Buffer(length);
+    }
+    that.length = length;
+  }
+
+  return that
+}
+
+/**
+ * The Buffer constructor returns instances of `Uint8Array` that have their
+ * prototype changed to `Buffer.prototype`. Furthermore, `Buffer` is a subclass of
+ * `Uint8Array`, so the returned instances will have all the node `Buffer` methods
+ * and the `Uint8Array` methods. Square bracket notation works as expected -- it
+ * returns a single octet.
+ *
+ * The `Uint8Array` prototype remains unmodified.
+ */
+
+function Buffer (arg, encodingOrOffset, length) {
+  if (!Buffer.TYPED_ARRAY_SUPPORT && !(this instanceof Buffer)) {
+    return new Buffer(arg, encodingOrOffset, length)
+  }
+
+  // Common case.
+  if (typeof arg === 'number') {
+    if (typeof encodingOrOffset === 'string') {
+      throw new Error(
+        'If encoding is specified then the first argument must be a string'
+      )
+    }
+    return allocUnsafe(this, arg)
+  }
+  return from(this, arg, encodingOrOffset, length)
+}
+
+Buffer.poolSize = 8192; // not used by this implementation
+
+// TODO: Legacy, not needed anymore. Remove in next major version.
+Buffer._augment = function (arr) {
+  arr.__proto__ = Buffer.prototype;
+  return arr
+};
+
+function from (that, value, encodingOrOffset, length) {
+  if (typeof value === 'number') {
+    throw new TypeError('"value" argument must not be a number')
+  }
+
+  if (typeof ArrayBuffer !== 'undefined' && value instanceof ArrayBuffer) {
+    return fromArrayBuffer(that, value, encodingOrOffset, length)
+  }
+
+  if (typeof value === 'string') {
+    return fromString(that, value, encodingOrOffset)
+  }
+
+  return fromObject(that, value)
+}
+
+/**
+ * Functionally equivalent to Buffer(arg, encoding) but throws a TypeError
+ * if value is a number.
+ * Buffer.from(str[, encoding])
+ * Buffer.from(array)
+ * Buffer.from(buffer)
+ * Buffer.from(arrayBuffer[, byteOffset[, length]])
+ **/
+Buffer.from = function (value, encodingOrOffset, length) {
+  return from(null, value, encodingOrOffset, length)
+};
+
+if (Buffer.TYPED_ARRAY_SUPPORT) {
+  Buffer.prototype.__proto__ = Uint8Array.prototype;
+  Buffer.__proto__ = Uint8Array;
+}
+
+function assertSize (size) {
+  if (typeof size !== 'number') {
+    throw new TypeError('"size" argument must be a number')
+  } else if (size < 0) {
+    throw new RangeError('"size" argument must not be negative')
+  }
+}
+
+function alloc (that, size, fill, encoding) {
+  assertSize(size);
+  if (size <= 0) {
+    return createBuffer(that, size)
+  }
+  if (fill !== undefined) {
+    // Only pay attention to encoding if it's a string. This
+    // prevents accidentally sending in a number that would
+    // be interpretted as a start offset.
+    return typeof encoding === 'string'
+      ? createBuffer(that, size).fill(fill, encoding)
+      : createBuffer(that, size).fill(fill)
+  }
+  return createBuffer(that, size)
+}
+
+/**
+ * Creates a new filled Buffer instance.
+ * alloc(size[, fill[, encoding]])
+ **/
+Buffer.alloc = function (size, fill, encoding) {
+  return alloc(null, size, fill, encoding)
+};
+
+function allocUnsafe (that, size) {
+  assertSize(size);
+  that = createBuffer(that, size < 0 ? 0 : checked(size) | 0);
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    for (var i = 0; i < size; ++i) {
+      that[i] = 0;
+    }
+  }
+  return that
+}
+
+/**
+ * Equivalent to Buffer(num), by default creates a non-zero-filled Buffer instance.
+ * */
+Buffer.allocUnsafe = function (size) {
+  return allocUnsafe(null, size)
+};
+/**
+ * Equivalent to SlowBuffer(num), by default creates a non-zero-filled Buffer instance.
+ */
+Buffer.allocUnsafeSlow = function (size) {
+  return allocUnsafe(null, size)
+};
+
+function fromString (that, string, encoding) {
+  if (typeof encoding !== 'string' || encoding === '') {
+    encoding = 'utf8';
+  }
+
+  if (!Buffer.isEncoding(encoding)) {
+    throw new TypeError('"encoding" must be a valid string encoding')
+  }
+
+  var length = byteLength(string, encoding) | 0;
+  that = createBuffer(that, length);
+
+  var actual = that.write(string, encoding);
+
+  if (actual !== length) {
+    // Writing a hex string, for example, that contains invalid characters will
+    // cause everything after the first invalid character to be ignored. (e.g.
+    // 'abxxcd' will be treated as 'ab')
+    that = that.slice(0, actual);
+  }
+
+  return that
+}
+
+function fromArrayLike (that, array) {
+  var length = array.length < 0 ? 0 : checked(array.length) | 0;
+  that = createBuffer(that, length);
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255;
+  }
+  return that
+}
+
+function fromArrayBuffer (that, array, byteOffset, length) {
+  array.byteLength; // this throws if `array` is not a valid ArrayBuffer
+
+  if (byteOffset < 0 || array.byteLength < byteOffset) {
+    throw new RangeError('\'offset\' is out of bounds')
+  }
+
+  if (array.byteLength < byteOffset + (length || 0)) {
+    throw new RangeError('\'length\' is out of bounds')
+  }
+
+  if (byteOffset === undefined && length === undefined) {
+    array = new Uint8Array(array);
+  } else if (length === undefined) {
+    array = new Uint8Array(array, byteOffset);
+  } else {
+    array = new Uint8Array(array, byteOffset, length);
+  }
+
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    that = array;
+    that.__proto__ = Buffer.prototype;
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    that = fromArrayLike(that, array);
+  }
+  return that
+}
+
+function fromObject (that, obj) {
+  if (internalIsBuffer(obj)) {
+    var len = checked(obj.length) | 0;
+    that = createBuffer(that, len);
+
+    if (that.length === 0) {
+      return that
+    }
+
+    obj.copy(that, 0, 0, len);
+    return that
+  }
+
+  if (obj) {
+    if ((typeof ArrayBuffer !== 'undefined' &&
+        obj.buffer instanceof ArrayBuffer) || 'length' in obj) {
+      if (typeof obj.length !== 'number' || isnan(obj.length)) {
+        return createBuffer(that, 0)
+      }
+      return fromArrayLike(that, obj)
+    }
+
+    if (obj.type === 'Buffer' && isArray(obj.data)) {
+      return fromArrayLike(that, obj.data)
+    }
+  }
+
+  throw new TypeError('First argument must be a string, Buffer, ArrayBuffer, Array, or array-like object.')
+}
+
+function checked (length) {
+  // Note: cannot use `length < kMaxLength()` here because that fails when
+  // length is NaN (which is otherwise coerced to zero.)
+  if (length >= kMaxLength()) {
+    throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
+                         'size: 0x' + kMaxLength().toString(16) + ' bytes')
+  }
+  return length | 0
+}
+
+function SlowBuffer (length) {
+  if (+length != length) { // eslint-disable-line eqeqeq
+    length = 0;
+  }
+  return Buffer.alloc(+length)
+}
+Buffer.isBuffer = isBuffer;
+function internalIsBuffer (b) {
+  return !!(b != null && b._isBuffer)
+}
+
+Buffer.compare = function compare (a, b) {
+  if (!internalIsBuffer(a) || !internalIsBuffer(b)) {
+    throw new TypeError('Arguments must be Buffers')
+  }
+
+  if (a === b) return 0
+
+  var x = a.length;
+  var y = b.length;
+
+  for (var i = 0, len = Math.min(x, y); i < len; ++i) {
+    if (a[i] !== b[i]) {
+      x = a[i];
+      y = b[i];
+      break
+    }
+  }
+
+  if (x < y) return -1
+  if (y < x) return 1
+  return 0
+};
+
+Buffer.isEncoding = function isEncoding (encoding) {
+  switch (String(encoding).toLowerCase()) {
+    case 'hex':
+    case 'utf8':
+    case 'utf-8':
+    case 'ascii':
+    case 'latin1':
+    case 'binary':
+    case 'base64':
+    case 'ucs2':
+    case 'ucs-2':
+    case 'utf16le':
+    case 'utf-16le':
+      return true
+    default:
+      return false
+  }
+};
+
+Buffer.concat = function concat (list, length) {
+  if (!isArray(list)) {
+    throw new TypeError('"list" argument must be an Array of Buffers')
+  }
+
+  if (list.length === 0) {
+    return Buffer.alloc(0)
+  }
+
+  var i;
+  if (length === undefined) {
+    length = 0;
+    for (i = 0; i < list.length; ++i) {
+      length += list[i].length;
+    }
+  }
+
+  var buffer = Buffer.allocUnsafe(length);
+  var pos = 0;
+  for (i = 0; i < list.length; ++i) {
+    var buf = list[i];
+    if (!internalIsBuffer(buf)) {
+      throw new TypeError('"list" argument must be an Array of Buffers')
+    }
+    buf.copy(buffer, pos);
+    pos += buf.length;
+  }
+  return buffer
+};
+
+function byteLength (string, encoding) {
+  if (internalIsBuffer(string)) {
+    return string.length
+  }
+  if (typeof ArrayBuffer !== 'undefined' && typeof ArrayBuffer.isView === 'function' &&
+      (ArrayBuffer.isView(string) || string instanceof ArrayBuffer)) {
+    return string.byteLength
+  }
+  if (typeof string !== 'string') {
+    string = '' + string;
+  }
+
+  var len = string.length;
+  if (len === 0) return 0
+
+  // Use a for loop to avoid recursion
+  var loweredCase = false;
+  for (;;) {
+    switch (encoding) {
+      case 'ascii':
+      case 'latin1':
+      case 'binary':
+        return len
+      case 'utf8':
+      case 'utf-8':
+      case undefined:
+        return utf8ToBytes(string).length
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return len * 2
+      case 'hex':
+        return len >>> 1
+      case 'base64':
+        return base64ToBytes(string).length
+      default:
+        if (loweredCase) return utf8ToBytes(string).length // assume utf8
+        encoding = ('' + encoding).toLowerCase();
+        loweredCase = true;
+    }
+  }
+}
+Buffer.byteLength = byteLength;
+
+function slowToString (encoding, start, end) {
+  var loweredCase = false;
+
+  // No need to verify that "this.length <= MAX_UINT32" since it's a read-only
+  // property of a typed array.
+
+  // This behaves neither like String nor Uint8Array in that we set start/end
+  // to their upper/lower bounds if the value passed is out of range.
+  // undefined is handled specially as per ECMA-262 6th Edition,
+  // Section 13.3.3.7 Runtime Semantics: KeyedBindingInitialization.
+  if (start === undefined || start < 0) {
+    start = 0;
+  }
+  // Return early if start > this.length. Done here to prevent potential uint32
+  // coercion fail below.
+  if (start > this.length) {
+    return ''
+  }
+
+  if (end === undefined || end > this.length) {
+    end = this.length;
+  }
+
+  if (end <= 0) {
+    return ''
+  }
+
+  // Force coersion to uint32. This will also coerce falsey/NaN values to 0.
+  end >>>= 0;
+  start >>>= 0;
+
+  if (end <= start) {
+    return ''
+  }
+
+  if (!encoding) encoding = 'utf8';
+
+  while (true) {
+    switch (encoding) {
+      case 'hex':
+        return hexSlice(this, start, end)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Slice(this, start, end)
+
+      case 'ascii':
+        return asciiSlice(this, start, end)
+
+      case 'latin1':
+      case 'binary':
+        return latin1Slice(this, start, end)
+
+      case 'base64':
+        return base64Slice(this, start, end)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return utf16leSlice(this, start, end)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = (encoding + '').toLowerCase();
+        loweredCase = true;
+    }
+  }
+}
+
+// The property is used by `Buffer.isBuffer` and `is-buffer` (in Safari 5-7) to detect
+// Buffer instances.
+Buffer.prototype._isBuffer = true;
+
+function swap (b, n, m) {
+  var i = b[n];
+  b[n] = b[m];
+  b[m] = i;
+}
+
+Buffer.prototype.swap16 = function swap16 () {
+  var len = this.length;
+  if (len % 2 !== 0) {
+    throw new RangeError('Buffer size must be a multiple of 16-bits')
+  }
+  for (var i = 0; i < len; i += 2) {
+    swap(this, i, i + 1);
+  }
+  return this
+};
+
+Buffer.prototype.swap32 = function swap32 () {
+  var len = this.length;
+  if (len % 4 !== 0) {
+    throw new RangeError('Buffer size must be a multiple of 32-bits')
+  }
+  for (var i = 0; i < len; i += 4) {
+    swap(this, i, i + 3);
+    swap(this, i + 1, i + 2);
+  }
+  return this
+};
+
+Buffer.prototype.swap64 = function swap64 () {
+  var len = this.length;
+  if (len % 8 !== 0) {
+    throw new RangeError('Buffer size must be a multiple of 64-bits')
+  }
+  for (var i = 0; i < len; i += 8) {
+    swap(this, i, i + 7);
+    swap(this, i + 1, i + 6);
+    swap(this, i + 2, i + 5);
+    swap(this, i + 3, i + 4);
+  }
+  return this
+};
+
+Buffer.prototype.toString = function toString () {
+  var length = this.length | 0;
+  if (length === 0) return ''
+  if (arguments.length === 0) return utf8Slice(this, 0, length)
+  return slowToString.apply(this, arguments)
+};
+
+Buffer.prototype.equals = function equals (b) {
+  if (!internalIsBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return true
+  return Buffer.compare(this, b) === 0
+};
+
+Buffer.prototype.inspect = function inspect () {
+  var str = '';
+  var max = INSPECT_MAX_BYTES;
+  if (this.length > 0) {
+    str = this.toString('hex', 0, max).match(/.{2}/g).join(' ');
+    if (this.length > max) str += ' ... ';
+  }
+  return '<Buffer ' + str + '>'
+};
+
+Buffer.prototype.compare = function compare (target, start, end, thisStart, thisEnd) {
+  if (!internalIsBuffer(target)) {
+    throw new TypeError('Argument must be a Buffer')
+  }
+
+  if (start === undefined) {
+    start = 0;
+  }
+  if (end === undefined) {
+    end = target ? target.length : 0;
+  }
+  if (thisStart === undefined) {
+    thisStart = 0;
+  }
+  if (thisEnd === undefined) {
+    thisEnd = this.length;
+  }
+
+  if (start < 0 || end > target.length || thisStart < 0 || thisEnd > this.length) {
+    throw new RangeError('out of range index')
+  }
+
+  if (thisStart >= thisEnd && start >= end) {
+    return 0
+  }
+  if (thisStart >= thisEnd) {
+    return -1
+  }
+  if (start >= end) {
+    return 1
+  }
+
+  start >>>= 0;
+  end >>>= 0;
+  thisStart >>>= 0;
+  thisEnd >>>= 0;
+
+  if (this === target) return 0
+
+  var x = thisEnd - thisStart;
+  var y = end - start;
+  var len = Math.min(x, y);
+
+  var thisCopy = this.slice(thisStart, thisEnd);
+  var targetCopy = target.slice(start, end);
+
+  for (var i = 0; i < len; ++i) {
+    if (thisCopy[i] !== targetCopy[i]) {
+      x = thisCopy[i];
+      y = targetCopy[i];
+      break
+    }
+  }
+
+  if (x < y) return -1
+  if (y < x) return 1
+  return 0
+};
+
+// Finds either the first index of `val` in `buffer` at offset >= `byteOffset`,
+// OR the last index of `val` in `buffer` at offset <= `byteOffset`.
+//
+// Arguments:
+// - buffer - a Buffer to search
+// - val - a string, Buffer, or number
+// - byteOffset - an index into `buffer`; will be clamped to an int32
+// - encoding - an optional encoding, relevant is val is a string
+// - dir - true for indexOf, false for lastIndexOf
+function bidirectionalIndexOf (buffer, val, byteOffset, encoding, dir) {
+  // Empty buffer means no match
+  if (buffer.length === 0) return -1
+
+  // Normalize byteOffset
+  if (typeof byteOffset === 'string') {
+    encoding = byteOffset;
+    byteOffset = 0;
+  } else if (byteOffset > 0x7fffffff) {
+    byteOffset = 0x7fffffff;
+  } else if (byteOffset < -0x80000000) {
+    byteOffset = -0x80000000;
+  }
+  byteOffset = +byteOffset;  // Coerce to Number.
+  if (isNaN(byteOffset)) {
+    // byteOffset: it it's undefined, null, NaN, "foo", etc, search whole buffer
+    byteOffset = dir ? 0 : (buffer.length - 1);
+  }
+
+  // Normalize byteOffset: negative offsets start from the end of the buffer
+  if (byteOffset < 0) byteOffset = buffer.length + byteOffset;
+  if (byteOffset >= buffer.length) {
+    if (dir) return -1
+    else byteOffset = buffer.length - 1;
+  } else if (byteOffset < 0) {
+    if (dir) byteOffset = 0;
+    else return -1
+  }
+
+  // Normalize val
+  if (typeof val === 'string') {
+    val = Buffer.from(val, encoding);
+  }
+
+  // Finally, search either indexOf (if dir is true) or lastIndexOf
+  if (internalIsBuffer(val)) {
+    // Special case: looking for empty string/buffer always fails
+    if (val.length === 0) {
+      return -1
+    }
+    return arrayIndexOf(buffer, val, byteOffset, encoding, dir)
+  } else if (typeof val === 'number') {
+    val = val & 0xFF; // Search for a byte value [0-255]
+    if (Buffer.TYPED_ARRAY_SUPPORT &&
+        typeof Uint8Array.prototype.indexOf === 'function') {
+      if (dir) {
+        return Uint8Array.prototype.indexOf.call(buffer, val, byteOffset)
+      } else {
+        return Uint8Array.prototype.lastIndexOf.call(buffer, val, byteOffset)
+      }
+    }
+    return arrayIndexOf(buffer, [ val ], byteOffset, encoding, dir)
+  }
+
+  throw new TypeError('val must be string, number or Buffer')
+}
+
+function arrayIndexOf (arr, val, byteOffset, encoding, dir) {
+  var indexSize = 1;
+  var arrLength = arr.length;
+  var valLength = val.length;
+
+  if (encoding !== undefined) {
+    encoding = String(encoding).toLowerCase();
+    if (encoding === 'ucs2' || encoding === 'ucs-2' ||
+        encoding === 'utf16le' || encoding === 'utf-16le') {
+      if (arr.length < 2 || val.length < 2) {
+        return -1
+      }
+      indexSize = 2;
+      arrLength /= 2;
+      valLength /= 2;
+      byteOffset /= 2;
+    }
+  }
+
+  function read (buf, i) {
+    if (indexSize === 1) {
+      return buf[i]
+    } else {
+      return buf.readUInt16BE(i * indexSize)
+    }
+  }
+
+  var i;
+  if (dir) {
+    var foundIndex = -1;
+    for (i = byteOffset; i < arrLength; i++) {
+      if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
+        if (foundIndex === -1) foundIndex = i;
+        if (i - foundIndex + 1 === valLength) return foundIndex * indexSize
+      } else {
+        if (foundIndex !== -1) i -= i - foundIndex;
+        foundIndex = -1;
+      }
+    }
+  } else {
+    if (byteOffset + valLength > arrLength) byteOffset = arrLength - valLength;
+    for (i = byteOffset; i >= 0; i--) {
+      var found = true;
+      for (var j = 0; j < valLength; j++) {
+        if (read(arr, i + j) !== read(val, j)) {
+          found = false;
+          break
+        }
+      }
+      if (found) return i
+    }
+  }
+
+  return -1
+}
+
+Buffer.prototype.includes = function includes (val, byteOffset, encoding) {
+  return this.indexOf(val, byteOffset, encoding) !== -1
+};
+
+Buffer.prototype.indexOf = function indexOf (val, byteOffset, encoding) {
+  return bidirectionalIndexOf(this, val, byteOffset, encoding, true)
+};
+
+Buffer.prototype.lastIndexOf = function lastIndexOf (val, byteOffset, encoding) {
+  return bidirectionalIndexOf(this, val, byteOffset, encoding, false)
+};
+
+function hexWrite (buf, string, offset, length) {
+  offset = Number(offset) || 0;
+  var remaining = buf.length - offset;
+  if (!length) {
+    length = remaining;
+  } else {
+    length = Number(length);
+    if (length > remaining) {
+      length = remaining;
+    }
+  }
+
+  // must be an even number of digits
+  var strLen = string.length;
+  if (strLen % 2 !== 0) throw new TypeError('Invalid hex string')
+
+  if (length > strLen / 2) {
+    length = strLen / 2;
+  }
+  for (var i = 0; i < length; ++i) {
+    var parsed = parseInt(string.substr(i * 2, 2), 16);
+    if (isNaN(parsed)) return i
+    buf[offset + i] = parsed;
+  }
+  return i
+}
+
+function utf8Write (buf, string, offset, length) {
+  return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+function asciiWrite (buf, string, offset, length) {
+  return blitBuffer(asciiToBytes(string), buf, offset, length)
+}
+
+function latin1Write (buf, string, offset, length) {
+  return asciiWrite(buf, string, offset, length)
+}
+
+function base64Write (buf, string, offset, length) {
+  return blitBuffer(base64ToBytes(string), buf, offset, length)
+}
+
+function ucs2Write (buf, string, offset, length) {
+  return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+Buffer.prototype.write = function write (string, offset, length, encoding) {
+  // Buffer#write(string)
+  if (offset === undefined) {
+    encoding = 'utf8';
+    length = this.length;
+    offset = 0;
+  // Buffer#write(string, encoding)
+  } else if (length === undefined && typeof offset === 'string') {
+    encoding = offset;
+    length = this.length;
+    offset = 0;
+  // Buffer#write(string, offset[, length][, encoding])
+  } else if (isFinite(offset)) {
+    offset = offset | 0;
+    if (isFinite(length)) {
+      length = length | 0;
+      if (encoding === undefined) encoding = 'utf8';
+    } else {
+      encoding = length;
+      length = undefined;
+    }
+  // legacy write(string, encoding, offset, length) - remove in v0.13
+  } else {
+    throw new Error(
+      'Buffer.write(string, encoding, offset[, length]) is no longer supported'
+    )
+  }
+
+  var remaining = this.length - offset;
+  if (length === undefined || length > remaining) length = remaining;
+
+  if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
+    throw new RangeError('Attempt to write outside buffer bounds')
+  }
+
+  if (!encoding) encoding = 'utf8';
+
+  var loweredCase = false;
+  for (;;) {
+    switch (encoding) {
+      case 'hex':
+        return hexWrite(this, string, offset, length)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Write(this, string, offset, length)
+
+      case 'ascii':
+        return asciiWrite(this, string, offset, length)
+
+      case 'latin1':
+      case 'binary':
+        return latin1Write(this, string, offset, length)
+
+      case 'base64':
+        // Warning: maxLength not taken into account in base64Write
+        return base64Write(this, string, offset, length)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return ucs2Write(this, string, offset, length)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = ('' + encoding).toLowerCase();
+        loweredCase = true;
+    }
+  }
+};
+
+Buffer.prototype.toJSON = function toJSON () {
+  return {
+    type: 'Buffer',
+    data: Array.prototype.slice.call(this._arr || this, 0)
+  }
+};
+
+function base64Slice (buf, start, end) {
+  if (start === 0 && end === buf.length) {
+    return fromByteArray(buf)
+  } else {
+    return fromByteArray(buf.slice(start, end))
+  }
+}
+
+function utf8Slice (buf, start, end) {
+  end = Math.min(buf.length, end);
+  var res = [];
+
+  var i = start;
+  while (i < end) {
+    var firstByte = buf[i];
+    var codePoint = null;
+    var bytesPerSequence = (firstByte > 0xEF) ? 4
+      : (firstByte > 0xDF) ? 3
+      : (firstByte > 0xBF) ? 2
+      : 1;
+
+    if (i + bytesPerSequence <= end) {
+      var secondByte, thirdByte, fourthByte, tempCodePoint;
+
+      switch (bytesPerSequence) {
+        case 1:
+          if (firstByte < 0x80) {
+            codePoint = firstByte;
+          }
+          break
+        case 2:
+          secondByte = buf[i + 1];
+          if ((secondByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0x1F) << 0x6 | (secondByte & 0x3F);
+            if (tempCodePoint > 0x7F) {
+              codePoint = tempCodePoint;
+            }
+          }
+          break
+        case 3:
+          secondByte = buf[i + 1];
+          thirdByte = buf[i + 2];
+          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0xF) << 0xC | (secondByte & 0x3F) << 0x6 | (thirdByte & 0x3F);
+            if (tempCodePoint > 0x7FF && (tempCodePoint < 0xD800 || tempCodePoint > 0xDFFF)) {
+              codePoint = tempCodePoint;
+            }
+          }
+          break
+        case 4:
+          secondByte = buf[i + 1];
+          thirdByte = buf[i + 2];
+          fourthByte = buf[i + 3];
+          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80 && (fourthByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0xF) << 0x12 | (secondByte & 0x3F) << 0xC | (thirdByte & 0x3F) << 0x6 | (fourthByte & 0x3F);
+            if (tempCodePoint > 0xFFFF && tempCodePoint < 0x110000) {
+              codePoint = tempCodePoint;
+            }
+          }
+      }
+    }
+
+    if (codePoint === null) {
+      // we did not generate a valid codePoint so insert a
+      // replacement char (U+FFFD) and advance only 1 byte
+      codePoint = 0xFFFD;
+      bytesPerSequence = 1;
+    } else if (codePoint > 0xFFFF) {
+      // encode to utf16 (surrogate pair dance)
+      codePoint -= 0x10000;
+      res.push(codePoint >>> 10 & 0x3FF | 0xD800);
+      codePoint = 0xDC00 | codePoint & 0x3FF;
+    }
+
+    res.push(codePoint);
+    i += bytesPerSequence;
+  }
+
+  return decodeCodePointsArray(res)
+}
+
+// Based on http://stackoverflow.com/a/22747272/680742, the browser with
+// the lowest limit is Chrome, with 0x10000 args.
+// We go 1 magnitude less, for safety
+var MAX_ARGUMENTS_LENGTH = 0x1000;
+
+function decodeCodePointsArray (codePoints) {
+  var len = codePoints.length;
+  if (len <= MAX_ARGUMENTS_LENGTH) {
+    return String.fromCharCode.apply(String, codePoints) // avoid extra slice()
+  }
+
+  // Decode in chunks to avoid "call stack size exceeded".
+  var res = '';
+  var i = 0;
+  while (i < len) {
+    res += String.fromCharCode.apply(
+      String,
+      codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH)
+    );
+  }
+  return res
+}
+
+function asciiSlice (buf, start, end) {
+  var ret = '';
+  end = Math.min(buf.length, end);
+
+  for (var i = start; i < end; ++i) {
+    ret += String.fromCharCode(buf[i] & 0x7F);
+  }
+  return ret
+}
+
+function latin1Slice (buf, start, end) {
+  var ret = '';
+  end = Math.min(buf.length, end);
+
+  for (var i = start; i < end; ++i) {
+    ret += String.fromCharCode(buf[i]);
+  }
+  return ret
+}
+
+function hexSlice (buf, start, end) {
+  var len = buf.length;
+
+  if (!start || start < 0) start = 0;
+  if (!end || end < 0 || end > len) end = len;
+
+  var out = '';
+  for (var i = start; i < end; ++i) {
+    out += toHex(buf[i]);
+  }
+  return out
+}
+
+function utf16leSlice (buf, start, end) {
+  var bytes = buf.slice(start, end);
+  var res = '';
+  for (var i = 0; i < bytes.length; i += 2) {
+    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256);
+  }
+  return res
+}
+
+Buffer.prototype.slice = function slice (start, end) {
+  var len = this.length;
+  start = ~~start;
+  end = end === undefined ? len : ~~end;
+
+  if (start < 0) {
+    start += len;
+    if (start < 0) start = 0;
+  } else if (start > len) {
+    start = len;
+  }
+
+  if (end < 0) {
+    end += len;
+    if (end < 0) end = 0;
+  } else if (end > len) {
+    end = len;
+  }
+
+  if (end < start) end = start;
+
+  var newBuf;
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    newBuf = this.subarray(start, end);
+    newBuf.__proto__ = Buffer.prototype;
+  } else {
+    var sliceLen = end - start;
+    newBuf = new Buffer(sliceLen, undefined);
+    for (var i = 0; i < sliceLen; ++i) {
+      newBuf[i] = this[i + start];
+    }
+  }
+
+  return newBuf
+};
+
+/*
+ * Need to make sure that buffer isn't trying to write out of bounds.
+ */
+function checkOffset (offset, ext, length) {
+  if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint')
+  if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
+}
+
+Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
+  offset = offset | 0;
+  byteLength = byteLength | 0;
+  if (!noAssert) checkOffset(offset, byteLength, this.length);
+
+  var val = this[offset];
+  var mul = 1;
+  var i = 0;
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul;
+  }
+
+  return val
+};
+
+Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
+  offset = offset | 0;
+  byteLength = byteLength | 0;
+  if (!noAssert) {
+    checkOffset(offset, byteLength, this.length);
+  }
+
+  var val = this[offset + --byteLength];
+  var mul = 1;
+  while (byteLength > 0 && (mul *= 0x100)) {
+    val += this[offset + --byteLength] * mul;
+  }
+
+  return val
+};
+
+Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length);
+  return this[offset]
+};
+
+Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length);
+  return this[offset] | (this[offset + 1] << 8)
+};
+
+Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length);
+  return (this[offset] << 8) | this[offset + 1]
+};
+
+Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length);
+
+  return ((this[offset]) |
+      (this[offset + 1] << 8) |
+      (this[offset + 2] << 16)) +
+      (this[offset + 3] * 0x1000000)
+};
+
+Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length);
+
+  return (this[offset] * 0x1000000) +
+    ((this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    this[offset + 3])
+};
+
+Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
+  offset = offset | 0;
+  byteLength = byteLength | 0;
+  if (!noAssert) checkOffset(offset, byteLength, this.length);
+
+  var val = this[offset];
+  var mul = 1;
+  var i = 0;
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul;
+  }
+  mul *= 0x80;
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength);
+
+  return val
+};
+
+Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
+  offset = offset | 0;
+  byteLength = byteLength | 0;
+  if (!noAssert) checkOffset(offset, byteLength, this.length);
+
+  var i = byteLength;
+  var mul = 1;
+  var val = this[offset + --i];
+  while (i > 0 && (mul *= 0x100)) {
+    val += this[offset + --i] * mul;
+  }
+  mul *= 0x80;
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength);
+
+  return val
+};
+
+Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length);
+  if (!(this[offset] & 0x80)) return (this[offset])
+  return ((0xff - this[offset] + 1) * -1)
+};
+
+Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length);
+  var val = this[offset] | (this[offset + 1] << 8);
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+};
+
+Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length);
+  var val = this[offset + 1] | (this[offset] << 8);
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+};
+
+Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length);
+
+  return (this[offset]) |
+    (this[offset + 1] << 8) |
+    (this[offset + 2] << 16) |
+    (this[offset + 3] << 24)
+};
+
+Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length);
+
+  return (this[offset] << 24) |
+    (this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    (this[offset + 3])
+};
+
+Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length);
+  return read(this, offset, true, 23, 4)
+};
+
+Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length);
+  return read(this, offset, false, 23, 4)
+};
+
+Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length);
+  return read(this, offset, true, 52, 8)
+};
+
+Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length);
+  return read(this, offset, false, 52, 8)
+};
+
+function checkInt (buf, value, offset, ext, max, min) {
+  if (!internalIsBuffer(buf)) throw new TypeError('"buffer" argument must be a Buffer instance')
+  if (value > max || value < min) throw new RangeError('"value" argument is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('Index out of range')
+}
+
+Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  byteLength = byteLength | 0;
+  if (!noAssert) {
+    var maxBytes = Math.pow(2, 8 * byteLength) - 1;
+    checkInt(this, value, offset, byteLength, maxBytes, 0);
+  }
+
+  var mul = 1;
+  var i = 0;
+  this[offset] = value & 0xFF;
+  while (++i < byteLength && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) & 0xFF;
+  }
+
+  return offset + byteLength
+};
+
+Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  byteLength = byteLength | 0;
+  if (!noAssert) {
+    var maxBytes = Math.pow(2, 8 * byteLength) - 1;
+    checkInt(this, value, offset, byteLength, maxBytes, 0);
+  }
+
+  var i = byteLength - 1;
+  var mul = 1;
+  this[offset + i] = value & 0xFF;
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) & 0xFF;
+  }
+
+  return offset + byteLength
+};
+
+Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0);
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value);
+  this[offset] = (value & 0xff);
+  return offset + 1
+};
+
+function objectWriteUInt16 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffff + value + 1;
+  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; ++i) {
+    buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
+      (littleEndian ? i : 1 - i) * 8;
+  }
+}
+
+Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0);
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value & 0xff);
+    this[offset + 1] = (value >>> 8);
+  } else {
+    objectWriteUInt16(this, value, offset, true);
+  }
+  return offset + 2
+};
+
+Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0);
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8);
+    this[offset + 1] = (value & 0xff);
+  } else {
+    objectWriteUInt16(this, value, offset, false);
+  }
+  return offset + 2
+};
+
+function objectWriteUInt32 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffffffff + value + 1;
+  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; ++i) {
+    buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff;
+  }
+}
+
+Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0);
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset + 3] = (value >>> 24);
+    this[offset + 2] = (value >>> 16);
+    this[offset + 1] = (value >>> 8);
+    this[offset] = (value & 0xff);
+  } else {
+    objectWriteUInt32(this, value, offset, true);
+  }
+  return offset + 4
+};
+
+Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0);
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24);
+    this[offset + 1] = (value >>> 16);
+    this[offset + 2] = (value >>> 8);
+    this[offset + 3] = (value & 0xff);
+  } else {
+    objectWriteUInt32(this, value, offset, false);
+  }
+  return offset + 4
+};
+
+Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) {
+    var limit = Math.pow(2, 8 * byteLength - 1);
+
+    checkInt(this, value, offset, byteLength, limit - 1, -limit);
+  }
+
+  var i = 0;
+  var mul = 1;
+  var sub = 0;
+  this[offset] = value & 0xFF;
+  while (++i < byteLength && (mul *= 0x100)) {
+    if (value < 0 && sub === 0 && this[offset + i - 1] !== 0) {
+      sub = 1;
+    }
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF;
+  }
+
+  return offset + byteLength
+};
+
+Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) {
+    var limit = Math.pow(2, 8 * byteLength - 1);
+
+    checkInt(this, value, offset, byteLength, limit - 1, -limit);
+  }
+
+  var i = byteLength - 1;
+  var mul = 1;
+  var sub = 0;
+  this[offset + i] = value & 0xFF;
+  while (--i >= 0 && (mul *= 0x100)) {
+    if (value < 0 && sub === 0 && this[offset + i + 1] !== 0) {
+      sub = 1;
+    }
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF;
+  }
+
+  return offset + byteLength
+};
+
+Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80);
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value);
+  if (value < 0) value = 0xff + value + 1;
+  this[offset] = (value & 0xff);
+  return offset + 1
+};
+
+Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000);
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value & 0xff);
+    this[offset + 1] = (value >>> 8);
+  } else {
+    objectWriteUInt16(this, value, offset, true);
+  }
+  return offset + 2
+};
+
+Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000);
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8);
+    this[offset + 1] = (value & 0xff);
+  } else {
+    objectWriteUInt16(this, value, offset, false);
+  }
+  return offset + 2
+};
+
+Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000);
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value & 0xff);
+    this[offset + 1] = (value >>> 8);
+    this[offset + 2] = (value >>> 16);
+    this[offset + 3] = (value >>> 24);
+  } else {
+    objectWriteUInt32(this, value, offset, true);
+  }
+  return offset + 4
+};
+
+Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
+  value = +value;
+  offset = offset | 0;
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000);
+  if (value < 0) value = 0xffffffff + value + 1;
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24);
+    this[offset + 1] = (value >>> 16);
+    this[offset + 2] = (value >>> 8);
+    this[offset + 3] = (value & 0xff);
+  } else {
+    objectWriteUInt32(this, value, offset, false);
+  }
+  return offset + 4
+};
+
+function checkIEEE754 (buf, value, offset, ext, max, min) {
+  if (offset + ext > buf.length) throw new RangeError('Index out of range')
+  if (offset < 0) throw new RangeError('Index out of range')
+}
+
+function writeFloat (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 4);
+  }
+  write(buf, value, offset, littleEndian, 23, 4);
+  return offset + 4
+}
+
+Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, true, noAssert)
+};
+
+Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, false, noAssert)
+};
+
+function writeDouble (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 8);
+  }
+  write(buf, value, offset, littleEndian, 52, 8);
+  return offset + 8
+}
+
+Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, true, noAssert)
+};
+
+Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, false, noAssert)
+};
+
+// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
+Buffer.prototype.copy = function copy (target, targetStart, start, end) {
+  if (!start) start = 0;
+  if (!end && end !== 0) end = this.length;
+  if (targetStart >= target.length) targetStart = target.length;
+  if (!targetStart) targetStart = 0;
+  if (end > 0 && end < start) end = start;
+
+  // Copy 0 bytes; we're done
+  if (end === start) return 0
+  if (target.length === 0 || this.length === 0) return 0
+
+  // Fatal error conditions
+  if (targetStart < 0) {
+    throw new RangeError('targetStart out of bounds')
+  }
+  if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
+  if (end < 0) throw new RangeError('sourceEnd out of bounds')
+
+  // Are we oob?
+  if (end > this.length) end = this.length;
+  if (target.length - targetStart < end - start) {
+    end = target.length - targetStart + start;
+  }
+
+  var len = end - start;
+  var i;
+
+  if (this === target && start < targetStart && targetStart < end) {
+    // descending copy from end
+    for (i = len - 1; i >= 0; --i) {
+      target[i + targetStart] = this[i + start];
+    }
+  } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+    // ascending copy from start
+    for (i = 0; i < len; ++i) {
+      target[i + targetStart] = this[i + start];
+    }
+  } else {
+    Uint8Array.prototype.set.call(
+      target,
+      this.subarray(start, start + len),
+      targetStart
+    );
+  }
+
+  return len
+};
+
+// Usage:
+//    buffer.fill(number[, offset[, end]])
+//    buffer.fill(buffer[, offset[, end]])
+//    buffer.fill(string[, offset[, end]][, encoding])
+Buffer.prototype.fill = function fill (val, start, end, encoding) {
+  // Handle string cases:
+  if (typeof val === 'string') {
+    if (typeof start === 'string') {
+      encoding = start;
+      start = 0;
+      end = this.length;
+    } else if (typeof end === 'string') {
+      encoding = end;
+      end = this.length;
+    }
+    if (val.length === 1) {
+      var code = val.charCodeAt(0);
+      if (code < 256) {
+        val = code;
+      }
+    }
+    if (encoding !== undefined && typeof encoding !== 'string') {
+      throw new TypeError('encoding must be a string')
+    }
+    if (typeof encoding === 'string' && !Buffer.isEncoding(encoding)) {
+      throw new TypeError('Unknown encoding: ' + encoding)
+    }
+  } else if (typeof val === 'number') {
+    val = val & 255;
+  }
+
+  // Invalid ranges are not set to a default, so can range check early.
+  if (start < 0 || this.length < start || this.length < end) {
+    throw new RangeError('Out of range index')
+  }
+
+  if (end <= start) {
+    return this
+  }
+
+  start = start >>> 0;
+  end = end === undefined ? this.length : end >>> 0;
+
+  if (!val) val = 0;
+
+  var i;
+  if (typeof val === 'number') {
+    for (i = start; i < end; ++i) {
+      this[i] = val;
+    }
+  } else {
+    var bytes = internalIsBuffer(val)
+      ? val
+      : utf8ToBytes(new Buffer(val, encoding).toString());
+    var len = bytes.length;
+    for (i = 0; i < end - start; ++i) {
+      this[i + start] = bytes[i % len];
+    }
+  }
+
+  return this
+};
+
+// HELPER FUNCTIONS
+// ================
+
+var INVALID_BASE64_RE = /[^+\/0-9A-Za-z-_]/g;
+
+function base64clean (str) {
+  // Node strips out invalid characters like \n and \t from the string, base64-js does not
+  str = stringtrim(str).replace(INVALID_BASE64_RE, '');
+  // Node converts strings with length < 2 to ''
+  if (str.length < 2) return ''
+  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
+  while (str.length % 4 !== 0) {
+    str = str + '=';
+  }
+  return str
+}
+
+function stringtrim (str) {
+  if (str.trim) return str.trim()
+  return str.replace(/^\s+|\s+$/g, '')
+}
+
+function toHex (n) {
+  if (n < 16) return '0' + n.toString(16)
+  return n.toString(16)
+}
+
+function utf8ToBytes (string, units) {
+  units = units || Infinity;
+  var codePoint;
+  var length = string.length;
+  var leadSurrogate = null;
+  var bytes = [];
+
+  for (var i = 0; i < length; ++i) {
+    codePoint = string.charCodeAt(i);
+
+    // is surrogate component
+    if (codePoint > 0xD7FF && codePoint < 0xE000) {
+      // last char was a lead
+      if (!leadSurrogate) {
+        // no lead yet
+        if (codePoint > 0xDBFF) {
+          // unexpected trail
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+          continue
+        } else if (i + 1 === length) {
+          // unpaired lead
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+          continue
+        }
+
+        // valid lead
+        leadSurrogate = codePoint;
+
+        continue
+      }
+
+      // 2 leads in a row
+      if (codePoint < 0xDC00) {
+        if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+        leadSurrogate = codePoint;
+        continue
+      }
+
+      // valid surrogate pair
+      codePoint = (leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00) + 0x10000;
+    } else if (leadSurrogate) {
+      // valid bmp char, but last char was a lead
+      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD);
+    }
+
+    leadSurrogate = null;
+
+    // encode utf8
+    if (codePoint < 0x80) {
+      if ((units -= 1) < 0) break
+      bytes.push(codePoint);
+    } else if (codePoint < 0x800) {
+      if ((units -= 2) < 0) break
+      bytes.push(
+        codePoint >> 0x6 | 0xC0,
+        codePoint & 0x3F | 0x80
+      );
+    } else if (codePoint < 0x10000) {
+      if ((units -= 3) < 0) break
+      bytes.push(
+        codePoint >> 0xC | 0xE0,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      );
+    } else if (codePoint < 0x110000) {
+      if ((units -= 4) < 0) break
+      bytes.push(
+        codePoint >> 0x12 | 0xF0,
+        codePoint >> 0xC & 0x3F | 0x80,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      );
+    } else {
+      throw new Error('Invalid code point')
+    }
+  }
+
+  return bytes
+}
+
+function asciiToBytes (str) {
+  var byteArray = [];
+  for (var i = 0; i < str.length; ++i) {
+    // Node's code seems to be doing this and not & 0x7F..
+    byteArray.push(str.charCodeAt(i) & 0xFF);
+  }
+  return byteArray
+}
+
+function utf16leToBytes (str, units) {
+  var c, hi, lo;
+  var byteArray = [];
+  for (var i = 0; i < str.length; ++i) {
+    if ((units -= 2) < 0) break
+
+    c = str.charCodeAt(i);
+    hi = c >> 8;
+    lo = c % 256;
+    byteArray.push(lo);
+    byteArray.push(hi);
+  }
+
+  return byteArray
+}
+
+
+function base64ToBytes (str) {
+  return toByteArray(base64clean(str))
+}
+
+function blitBuffer (src, dst, offset, length) {
+  for (var i = 0; i < length; ++i) {
+    if ((i + offset >= dst.length) || (i >= src.length)) break
+    dst[i + offset] = src[i];
+  }
+  return i
+}
+
+function isnan (val) {
+  return val !== val // eslint-disable-line no-self-compare
+}
+
+
+// the following is from is-buffer, also by Feross Aboukhadijeh and with same lisence
+// The _isBuffer check is for Safari 5-7 support, because it's missing
+// Object.prototype.constructor. Remove this eventually
+function isBuffer(obj) {
+  return obj != null && (!!obj._isBuffer || isFastBuffer(obj) || isSlowBuffer(obj))
+}
+
+function isFastBuffer (obj) {
+  return !!obj.constructor && typeof obj.constructor.isBuffer === 'function' && obj.constructor.isBuffer(obj)
+}
+
+// For Node v0.10 support. Remove this eventually.
+function isSlowBuffer (obj) {
+  return typeof obj.readFloatLE === 'function' && typeof obj.slice === 'function' && isFastBuffer(obj.slice(0, 0))
+}
 
 /**
  * @license
@@ -5343,7 +7664,7 @@ function inferShape(val, dtype) {
         firstElem = firstElem[0];
     }
     if (Array.isArray(val) &&
-        env().getBool('TENSORLIKE_CHECK_SHAPE_CONSISTENCY')) {
+        env$1().getBool('TENSORLIKE_CHECK_SHAPE_CONSISTENCY')) {
         deepAssertShapeConsistency(val, shape, []);
     }
     return shape;
@@ -5378,7 +7699,7 @@ function assertDtype(expectedDtype, actualDType, argName, functionName) {
     }
 }
 function convertToTensor(x, argName, functionName, parseAsDtype = 'numeric') {
-    if (x instanceof Tensor) {
+    if (x instanceof getGlobalTensorClass()) {
         assertDtype(parseAsDtype, x.dtype, argName, functionName);
         return x;
     }
@@ -5751,28 +8072,29 @@ function makeTensor(values, shape, inferredShape, dtype) {
  * await tf.setBackend(savedBackend);
  * ```
  * @param values The values of the tensor. Can be nested array of numbers,
- *     or a flat array, or a `TypedArray`, or a `WebGLData` object, or a
- * `WebGPUData` object. If the values are strings, they will be encoded as utf-8
- * and kept as `Uint8Array[]`. If the values is a `WebGLData` object, the dtype
- * could only be 'float32' or 'int32' and the object has to have: 1. texture, a
- * `WebGLTexture`, the texture must share the same `WebGLRenderingContext` with
- * TFJS's WebGL backend (you could create a custom WebGL backend from your
- * texture's canvas) and the internal texture format for the input texture must
- * be floating point or normalized integer; 2. height, the height of the
- * texture; 3. width, the width of the texture; 4. channels, a non-empty subset
- * of 'RGBA', indicating the values of which channels will be passed to the
- * tensor, such as 'R' or 'BR' (The order of the channels affect the order of
- * tensor values. ). (If the values passed from texture is less than the tensor
- * size, zeros will be padded at the rear.). If the values is a `WebGPUData`
- * object, the dtype could only be 'float32' or 'int32 and the object has to
- * have: buffer, a `GPUBuffer`. The buffer must: 1. share the same `GPUDevice`
- * with TFJS's WebGPU backend; 2. buffer.usage should at least support
- * GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC; 3. buffer.size should not
- * be smaller than the byte size of tensor shape. WebGPUData optionally supports
- * zero copy by flag zeroCopy. When zeroCopy is false or undefined(default),
- * this passing GPUBuffer can be destroyed after tensor is created. When
- * zeroCopy is true, this GPUBuffer is bound directly by the tensor, so do not
- * destroy this GPUBuffer until all access is done.
+ * or a flat array, or a `TypedArray`(At the moment it supports Uint8Array,
+ * Uint8ClampedArray, Int32Array, Float32Array) data types, or a `WebGLData`
+ * object, or a `WebGPUData` object. If the values are strings, they will be
+ * encoded as utf-8 and kept as `Uint8Array[]`. If the values is a `WebGLData`
+ * object, the dtype could only be 'float32' or 'int32' and the object has to
+ * have: 1. texture, a `WebGLTexture`, the texture must share the same
+ * `WebGLRenderingContext` with TFJS's WebGL backend (you could create a custom
+ * WebGL backend from your texture's canvas) and the internal texture format
+ * for the input texture must be floating point or normalized integer; 2.
+ * height, the height of the texture; 3. width, the width of the texture; 4.
+ * channels, a non-empty subset of 'RGBA', indicating the values of which
+ * channels will be passed to the tensor, such as 'R' or 'BR' (The order of the
+ * channels affect the order of tensor values. ). (If the values passed from
+ * texture is less than the tensor size, zeros will be padded at the rear.). If
+ * the values is a `WebGPUData` object, the dtype could only be 'float32' or
+ * 'int32 and the object has to have: buffer, a `GPUBuffer`. The buffer must:
+ * 1. share the same `GPUDevice` with TFJS's WebGPU backend; 2. buffer.usage
+ * should at least support GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC; 3.
+ * buffer.size should not be smaller than the byte size of tensor shape.
+ * WebGPUData optionally supports zero copy by flag zeroCopy. When zeroCopy is
+ * false or undefined(default),this passing GPUBuffer can be destroyed after
+ * tensor is created. When zeroCopy is true, this GPUBuffer is bound directly
+ * by the tensor, so do not destroy this GPUBuffer until all access is done.
  * @param shape The shape of the tensor. Optional. If not provided,
  *   it is inferred from `values`.
  * @param dtype The data type.
@@ -5871,7 +8193,7 @@ class CompositeArrayBuffer {
             this.shards.push({ buffer, start, end });
             start = end;
         }
-        // Set the byteLenghth
+        // Set the byteLength
         if (this.shards.length === 0) {
             this.byteLength = 0;
         }
@@ -6004,6 +8326,339 @@ function search(sortedArray, compare) {
  * limitations under the License.
  * =============================================================================
  */
+/**
+ * Enables production mode which disables correctness checks in favor of
+ * performance.
+ *
+ * @doc {heading: 'Environment'}
+ */
+function enableProdMode() {
+    env$1().set('PROD', true);
+}
+/**
+ * Enables debug mode which will log information about all executed kernels:
+ * the elapsed time of the kernel execution, as well as the rank, shape, and
+ * size of the output tensor.
+ *
+ * Debug mode will significantly slow down your application as it will
+ * download the result of every operation to the CPU. This should not be used in
+ * production. Debug mode does not affect the timing information of the kernel
+ * execution as we do not measure download time in the kernel execution time.
+ *
+ * See also: `tf.profile`, `tf.memory`.
+ *
+ * @doc {heading: 'Environment'}
+ */
+function enableDebugMode() {
+    env$1().set('DEBUG', true);
+}
+/** Globally disables deprecation warnings */
+function disableDeprecationWarnings() {
+    env$1().set('DEPRECATION_WARNINGS_ENABLED', false);
+    console.warn(`TensorFlow.js deprecation warnings have been disabled.`);
+}
+/** Warn users about deprecated functionality. */
+function deprecationWarn(msg) {
+    if (env$1().getBool('DEPRECATION_WARNINGS_ENABLED')) {
+        console.warn(msg + ' You can disable deprecation warnings with ' +
+            'tf.disableDeprecationWarnings().');
+    }
+}
+setDeprecationWarningFn(deprecationWarn);
+/**
+ * Dispose all variables kept in backend engine.
+ *
+ * @doc {heading: 'Environment'}
+ */
+function disposeVariables() {
+    ENGINE.disposeVariables();
+}
+/**
+ * It returns the global engine that keeps track of all tensors and backends.
+ *
+ * @doc {heading: 'Environment'}
+ */
+function engine() {
+    return ENGINE;
+}
+/**
+ * Returns memory info at the current time in the program. The result is an
+ * object with the following properties:
+ *
+ * - `numBytes`: Number of bytes allocated (undisposed) at this time.
+ * - `numTensors`: Number of unique tensors allocated.
+ * - `numDataBuffers`: Number of unique data buffers allocated
+ *   (undisposed) at this time, which is ≤ the number of tensors
+ *   (e.g. `a.reshape(newShape)` makes a new Tensor that shares the same
+ *   data buffer with `a`).
+ * - `unreliable`: True if the memory usage is unreliable. See `reasons` when
+ *    `unreliable` is true.
+ * - `reasons`: `string[]`, reasons why the memory is unreliable, present if
+ *    `unreliable` is true.
+ *
+ * WebGL Properties:
+ * - `numBytesInGPU`: Number of bytes allocated (undisposed) in the GPU only at
+ *     this time.
+ *
+ * @doc {heading: 'Performance', subheading: 'Memory'}
+ */
+function memory() {
+    return ENGINE.memory();
+}
+/**
+ * Executes the provided function `f()` and returns a promise that resolves
+ * with information about the function's memory use:
+ * - `newBytes`: the number of new bytes allocated
+ * - `newTensors`: the number of new tensors created
+ * - `peakBytes`: the peak number of bytes allocated
+ * - `kernels`: an array of objects for each kernel involved that reports
+ * their input and output shapes, number of bytes used, and number of new
+ * tensors created.
+ * - `kernelNames`: an array of unique strings with just the names of the
+ * kernels in the `kernels` array.
+ *
+ * ```js
+ * const profile = await tf.profile(() => {
+ *   const x = tf.tensor1d([1, 2, 3]);
+ *   let x2 = x.square();
+ *   x2.dispose();
+ *   x2 = x.square();
+ *   x2.dispose();
+ *   return x;
+ * });
+ *
+ * console.log(`newBytes: ${profile.newBytes}`);
+ * console.log(`newTensors: ${profile.newTensors}`);
+ * console.log(`byte usage over all kernels: ${profile.kernels.map(k =>
+ * k.totalBytesSnapshot)}`);
+ * ```
+ *
+ *
+ * @doc {heading: 'Performance', subheading: 'Profile'}
+ */
+function profile(f) {
+    return ENGINE.profile(f);
+}
+/**
+ * Executes the provided function `fn` and after it is executed, cleans up all
+ * intermediate tensors allocated by `fn` except those returned by `fn`.
+ * `fn` must not return a Promise (async functions not allowed). The returned
+ * result can be a complex object.
+ *
+ * Using this method helps avoid memory leaks. In general, wrap calls to
+ * operations in `tf.tidy` for automatic memory cleanup.
+ *
+ * NOTE: Variables do *not* get cleaned up when inside a tidy(). If you want to
+ * dispose variables, please use `tf.disposeVariables` or call dispose()
+ * directly on variables.
+ *
+ * ```js
+ * // y = 2 ^ 2 + 1
+ * const y = tf.tidy(() => {
+ *   // a, b, and one will be cleaned up when the tidy ends.
+ *   const one = tf.scalar(1);
+ *   const a = tf.scalar(2);
+ *   const b = a.square();
+ *
+ *   console.log('numTensors (in tidy): ' + tf.memory().numTensors);
+ *
+ *   // The value returned inside the tidy function will return
+ *   // through the tidy, in this case to the variable y.
+ *   return b.add(one);
+ * });
+ *
+ * console.log('numTensors (outside tidy): ' + tf.memory().numTensors);
+ * y.print();
+ * ```
+ *
+ * @param nameOrFn The name of the closure, or the function to execute.
+ *     If a name is provided, the 2nd argument should be the function.
+ *     If debug mode is on, the timing and the memory usage of the function
+ *     will be tracked and displayed on the console using the provided name.
+ * @param fn The function to execute.
+ *
+ * @doc {heading: 'Performance', subheading: 'Memory'}
+ */
+function tidy(nameOrFn, fn) {
+    return ENGINE.tidy(nameOrFn, fn);
+}
+/**
+ * Disposes any `tf.Tensor`s found within the provided object.
+ *
+ * @param container an object that may be a `tf.Tensor` or may directly
+ *     contain `tf.Tensor`s, such as a `Tensor[]` or `{key: Tensor, ...}`. If
+ *     the object is not a `tf.Tensor` or does not contain `Tensors`, nothing
+ *     happens. In general it is safe to pass any object here, except that
+ *     `Promise`s are not supported.
+ *
+ * @doc {heading: 'Performance', subheading: 'Memory'}
+ */
+function dispose(container) {
+    const tensors = getTensorsInContainer(container);
+    tensors.forEach(tensor => tensor.dispose());
+}
+/**
+ * Keeps a `tf.Tensor` generated inside a `tf.tidy` from being disposed
+ * automatically.
+ *
+ * ```js
+ * let b;
+ * const y = tf.tidy(() => {
+ *   const one = tf.scalar(1);
+ *   const a = tf.scalar(2);
+ *
+ *   // b will not be cleaned up by the tidy. a and one will be cleaned up
+ *   // when the tidy ends.
+ *   b = tf.keep(a.square());
+ *
+ *   console.log('numTensors (in tidy): ' + tf.memory().numTensors);
+ *
+ *   // The value returned inside the tidy function will return
+ *   // through the tidy, in this case to the variable y.
+ *   return b.add(one);
+ * });
+ *
+ * console.log('numTensors (outside tidy): ' + tf.memory().numTensors);
+ * console.log('y:');
+ * y.print();
+ * console.log('b:');
+ * b.print();
+ * ```
+ *
+ * @param result The tensor to keep from being disposed.
+ *
+ * @doc {heading: 'Performance', subheading: 'Memory'}
+ */
+function keep(result) {
+    return ENGINE.keep(result);
+}
+/**
+ * Executes `f()` and returns a promise that resolves with timing
+ * information.
+ *
+ * The result is an object with the following properties:
+ *
+ * - `wallMs`: Wall execution time.
+ * - `kernelMs`: Kernel execution time, ignoring data transfer. If using the
+ * WebGL backend and the query timer extension is not available, this will
+ * return an error object.
+ * - On `WebGL` The following additional properties exist:
+ *   - `uploadWaitMs`: CPU blocking time on texture uploads.
+ *   - `downloadWaitMs`: CPU blocking time on texture downloads (readPixels).
+ *
+ * ```js
+ * const x = tf.randomNormal([20, 20]);
+ * const time = await tf.time(() => x.matMul(x));
+ *
+ * console.log(`kernelMs: ${time.kernelMs}, wallTimeMs: ${time.wallMs}`);
+ * ```
+ *
+ * @param f The function to execute and time.
+ *
+ * @doc {heading: 'Performance', subheading: 'Timing'}
+ */
+function time(f) {
+    return ENGINE.time(f);
+}
+/**
+ * Sets the backend (cpu, webgl, wasm, etc) responsible for creating tensors and
+ * executing operations on those tensors. Returns a promise that resolves
+ * to a boolean if the backend initialization was successful.
+ *
+ * Note this disposes the current backend, if any, as well as any tensors
+ * associated with it. A new backend is initialized, even if it is of the
+ * same type as the previous one.
+ *
+ * @param backendName The name of the backend. Currently supports
+ *     `'webgl'|'cpu'` in the browser, `'tensorflow'` under node.js
+ *     (requires tfjs-node), and `'wasm'` (requires tfjs-backend-wasm).
+ *
+ * @doc {heading: 'Backends'}
+ */
+function setBackend$1(backendName) {
+    return ENGINE.setBackend(backendName);
+}
+/**
+ * Returns a promise that resolves when the currently selected backend (or the
+ * highest priority one) has initialized. Await this promise when you are using
+ * a backend that has async initialization.
+ *
+ * @doc {heading: 'Backends'}
+ */
+function ready() {
+    return ENGINE.ready();
+}
+/**
+ * Returns the current backend name (cpu, webgl, etc). The backend is
+ * responsible for creating tensors and executing operations on those tensors.
+ *
+ * @doc {heading: 'Backends'}
+ */
+function getBackend$1() {
+    return ENGINE.backendName;
+}
+/**
+ * Removes a backend and the registered factory.
+ *
+ * @doc {heading: 'Backends'}
+ */
+function removeBackend(name) {
+    ENGINE.removeBackend(name);
+}
+/**
+ * Finds the backend registered under the provided name. Returns null if the
+ * name is not in the registry, or the registration hasn't finished yet.
+ */
+function findBackend(name) {
+    return ENGINE.findBackend(name);
+}
+/**
+ * Finds the backend factory registered under the provided name. Returns a
+ * function that produces a new backend when called. Returns null if the name
+ * is not in the registry.
+ */
+function findBackendFactory(name) {
+    return ENGINE.findBackendFactory(name);
+}
+/**
+ * Registers a global backend. The registration should happen when importing
+ * a module file (e.g. when importing `backend_webgl.ts`), and is used for
+ * modular builds (e.g. custom tfjs bundle with only webgl support).
+ *
+ * @param factory The backend factory function. When called, it should
+ * return a backend instance, or a promise of an instance.
+ * @param priority The priority of the backend (higher = more important).
+ *     In case multiple backends are registered, the priority is used to find
+ *     the best backend. Defaults to 1.
+ * @return False if there is already a registered backend under this name, true
+ *     if not.
+ *
+ * @doc {heading: 'Backends'}
+ */
+function registerBackend(name, factory, priority = 1) {
+    return ENGINE.registerBackend(name, factory, priority);
+}
+/**
+ * Gets the current backend. If no backends have been initialized, this will
+ * attempt to initialize the best backend. Will throw an error if the highest
+ * priority backend has async initialization, in which case you should call
+ * 'await tf.ready()' before running other code.
+ *
+ * @doc {heading: 'Backends'}
+ */
+function backend$1() {
+    return ENGINE.backend;
+}
+/**
+ * Sets the global platform.
+ *
+ * @param platformName The name of this platform.
+ * @param platform A platform implementation.
+ */
+function setPlatform(platformName, platform) {
+    env$1().setPlatform(platformName, platform);
+}
+
 /** Number of bytes reserved for the length of the string. (32bit integer). */
 const NUM_BYTES_STRING_LENGTH = 4;
 /**
@@ -6088,121 +8743,209 @@ function decodeWeights(weightData, specs) {
     // TODO(adarob, cais): Support quantization.
     const compositeBuffer = new CompositeArrayBuffer(weightData);
     const out = {};
-    let float16Decode;
     let offset = 0;
     for (const spec of specs) {
-        const name = spec.name;
-        const dtype = spec.dtype;
-        const shape = spec.shape;
-        const size = sizeFromShape(shape);
-        let values;
-        if ('quantization' in spec) {
-            const quantization = spec.quantization;
-            if (quantization.dtype === 'uint8' || quantization.dtype === 'uint16') {
-                if (!('min' in quantization && 'scale' in quantization)) {
-                    throw new Error(`Weight ${spec.name} with quantization ${quantization.dtype} ` +
-                        `doesn't have corresponding metadata min and scale.`);
-                }
-            }
-            else if (quantization.dtype === 'float16') {
-                if (dtype !== 'float32') {
-                    throw new Error(`Weight ${spec.name} is quantized with ${quantization.dtype} ` +
-                        `which only supports weights of type float32 not ${dtype}.`);
-                }
-            }
-            else {
-                throw new Error(`Weight ${spec.name} has unknown ` +
-                    `quantization dtype ${quantization.dtype}. ` +
-                    `Supported quantization dtypes are: ` +
-                    `'uint8', 'uint16', and 'float16'.`);
-            }
-            const quantizationSizeFactor = DTYPE_VALUE_SIZE_MAP[quantization.dtype];
-            const byteBuffer = compositeBuffer.slice(offset, offset + size * quantizationSizeFactor);
-            const quantizedArray = (quantization.dtype === 'uint8') ?
-                new Uint8Array(byteBuffer) :
-                new Uint16Array(byteBuffer);
-            if (dtype === 'float32') {
-                if (quantization.dtype === 'uint8' || quantization.dtype === 'uint16') {
-                    values = new Float32Array(quantizedArray.length);
-                    for (let i = 0; i < quantizedArray.length; i++) {
-                        const v = quantizedArray[i];
-                        values[i] = v * quantization.scale + quantization.min;
-                    }
-                }
-                else if (quantization.dtype === 'float16') {
-                    if (float16Decode === undefined) {
-                        float16Decode = getFloat16Decoder();
-                    }
-                    values = float16Decode(quantizedArray);
-                }
-                else {
-                    throw new Error(`Unsupported quantization type ${quantization.dtype} ` +
-                        `for weight type float32.`);
-                }
-            }
-            else if (dtype === 'int32') {
-                if (quantization.dtype !== 'uint8' && quantization.dtype !== 'uint16') {
-                    throw new Error(`Unsupported quantization type ${quantization.dtype} ` +
-                        `for weight type int32.`);
-                }
-                values = new Int32Array(quantizedArray.length);
-                for (let i = 0; i < quantizedArray.length; i++) {
-                    const v = quantizedArray[i];
-                    values[i] = Math.round(v * quantization.scale + quantization.min);
-                }
-            }
-            else {
-                throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
-            }
-            offset += size * quantizationSizeFactor;
+        const byteLength = getWeightBytelength(spec, (start, end) => {
+            return compositeBuffer.slice(offset + start, offset + end);
+        });
+        out[spec.name] = decodeWeight(spec, compositeBuffer
+            .slice(offset, offset + byteLength));
+        offset += byteLength;
+    }
+    return out;
+}
+function getWeightBytelength(spec, slice) {
+    const size = sizeFromShape(spec.shape);
+    let bytesPerValue;
+    if ('quantization' in spec) {
+        const quantization = spec.quantization;
+        bytesPerValue = DTYPE_VALUE_SIZE_MAP[quantization.dtype];
+    }
+    else if (spec.dtype === 'string') {
+        // Can not statically determine string length.
+        let byteLength = 0;
+        for (let i = 0; i < size; i++) {
+            byteLength += NUM_BYTES_STRING_LENGTH + new Uint32Array(slice(byteLength, byteLength + NUM_BYTES_STRING_LENGTH))[0];
         }
-        else if (dtype === 'string') {
-            const size = sizeFromShape(spec.shape);
-            values = [];
-            for (let i = 0; i < size; i++) {
-                const byteLength = new Uint32Array(compositeBuffer.slice(offset, offset + NUM_BYTES_STRING_LENGTH))[0];
-                offset += NUM_BYTES_STRING_LENGTH;
-                const bytes = new Uint8Array(compositeBuffer.slice(offset, offset + byteLength));
-                values.push(bytes);
-                offset += byteLength;
+        return byteLength;
+    }
+    else {
+        bytesPerValue = DTYPE_VALUE_SIZE_MAP[spec.dtype];
+    }
+    return size * bytesPerValue;
+}
+async function getWeightBytelengthAsync(spec, slice) {
+    const size = sizeFromShape(spec.shape);
+    let bytesPerValue;
+    if ('quantization' in spec) {
+        const quantization = spec.quantization;
+        bytesPerValue = DTYPE_VALUE_SIZE_MAP[quantization.dtype];
+    }
+    else if (spec.dtype === 'string') {
+        // Can not statically determine string length.
+        let byteLength = 0;
+        for (let i = 0; i < size; i++) {
+            byteLength += NUM_BYTES_STRING_LENGTH + new Uint32Array(await slice(byteLength, byteLength + NUM_BYTES_STRING_LENGTH))[0];
+        }
+        return byteLength;
+    }
+    else {
+        bytesPerValue = DTYPE_VALUE_SIZE_MAP[spec.dtype];
+    }
+    return size * bytesPerValue;
+}
+function decodeWeight(spec, byteBuffer) {
+    const name = spec.name;
+    const dtype = spec.dtype;
+    const shape = spec.shape;
+    const size = sizeFromShape(shape);
+    let values;
+    let offset = 0;
+    if ('quantization' in spec) {
+        const quantization = spec.quantization;
+        if (quantization.dtype === 'uint8' || quantization.dtype === 'uint16') {
+            if (!('min' in quantization && 'scale' in quantization)) {
+                throw new Error(`Weight ${spec.name} with quantization ${quantization.dtype} ` +
+                    `doesn't have corresponding metadata min and scale.`);
+            }
+        }
+        else if (quantization.dtype === 'float16') {
+            if (dtype !== 'float32') {
+                throw new Error(`Weight ${spec.name} is quantized with ${quantization.dtype} ` +
+                    `which only supports weights of type float32 not ${dtype}.`);
             }
         }
         else {
-            const dtypeFactor = DTYPE_VALUE_SIZE_MAP[dtype];
-            const byteBuffer = compositeBuffer.slice(offset, offset + size * dtypeFactor);
-            if (dtype === 'float32') {
-                values = new Float32Array(byteBuffer);
-            }
-            else if (dtype === 'int32') {
-                values = new Int32Array(byteBuffer);
-            }
-            else if (dtype === 'bool') {
-                values = new Uint8Array(byteBuffer);
-            }
-            else if (dtype === 'complex64') {
-                values = new Float32Array(byteBuffer);
-                const real = new Float32Array(values.length / 2);
-                const image = new Float32Array(values.length / 2);
-                for (let i = 0; i < real.length; i++) {
-                    real[i] = values[i * 2];
-                    image[i] = values[i * 2 + 1];
+            throw new Error(`Weight ${spec.name} has unknown ` +
+                `quantization dtype ${quantization.dtype}. ` +
+                `Supported quantization dtypes are: ` +
+                `'uint8', 'uint16', and 'float16'.`);
+        }
+        const quantizationSizeFactor = DTYPE_VALUE_SIZE_MAP[quantization.dtype];
+        const quantizedArray = (quantization.dtype === 'uint8') ?
+            new Uint8Array(byteBuffer) :
+            new Uint16Array(byteBuffer);
+        if (dtype === 'float32') {
+            if (quantization.dtype === 'uint8' || quantization.dtype === 'uint16') {
+                values = new Float32Array(quantizedArray.length);
+                for (let i = 0; i < quantizedArray.length; i++) {
+                    const v = quantizedArray[i];
+                    values[i] = v * quantization.scale + quantization.min;
                 }
-                const realTensor = tensor(real, shape, 'float32');
-                const imageTensor = tensor(image, shape, 'float32');
-                out[name] = complex$2(realTensor, imageTensor);
-                realTensor.dispose();
-                imageTensor.dispose();
+            }
+            else if (quantization.dtype === 'float16') {
+                // TODO: This is inefficient. Make getFloat16Decoder efficient.
+                const float16Decode = getFloat16Decoder();
+                values = float16Decode(quantizedArray);
             }
             else {
-                throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
+                throw new Error(`Unsupported quantization type ${quantization.dtype} ` +
+                    `for weight type float32.`);
             }
-            offset += size * dtypeFactor;
         }
-        if (dtype !== 'complex64') {
-            out[name] = tensor(values, shape, dtype);
+        else if (dtype === 'int32') {
+            if (quantization.dtype !== 'uint8' && quantization.dtype !== 'uint16') {
+                throw new Error(`Unsupported quantization type ${quantization.dtype} ` +
+                    `for weight type int32.`);
+            }
+            values = new Int32Array(quantizedArray.length);
+            for (let i = 0; i < quantizedArray.length; i++) {
+                const v = quantizedArray[i];
+                values[i] = Math.round(v * quantization.scale + quantization.min);
+            }
+        }
+        else {
+            throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
+        }
+        offset += size * quantizationSizeFactor;
+    }
+    else if (dtype === 'string') {
+        const size = sizeFromShape(spec.shape);
+        values = [];
+        for (let i = 0; i < size; i++) {
+            const byteLength = new Uint32Array(byteBuffer.slice(offset, offset + NUM_BYTES_STRING_LENGTH))[0];
+            offset += NUM_BYTES_STRING_LENGTH;
+            const bytes = new Uint8Array(byteBuffer.slice(offset, offset + byteLength));
+            values.push(bytes);
+            offset += byteLength;
         }
     }
-    return out;
+    else {
+        const dtypeFactor = DTYPE_VALUE_SIZE_MAP[dtype];
+        if (dtype === 'float32') {
+            values = new Float32Array(byteBuffer);
+        }
+        else if (dtype === 'int32') {
+            values = new Int32Array(byteBuffer);
+        }
+        else if (dtype === 'bool') {
+            values = new Uint8Array(byteBuffer);
+        }
+        else if (dtype === 'complex64') {
+            values = new Float32Array(byteBuffer);
+            const real = new Float32Array(values.length / 2);
+            const image = new Float32Array(values.length / 2);
+            for (let i = 0; i < real.length; i++) {
+                real[i] = values[i * 2];
+                image[i] = values[i * 2 + 1];
+            }
+            const realTensor = tensor(real, shape, 'float32');
+            const imageTensor = tensor(image, shape, 'float32');
+            const complexTensor = complex$2(realTensor, imageTensor);
+            realTensor.dispose();
+            imageTensor.dispose();
+            return complexTensor;
+        }
+        else {
+            throw new Error(`Unsupported dtype in weight '${name}': ${dtype}`);
+        }
+        offset += size * dtypeFactor;
+    }
+    return tensor(values, shape, dtype);
+}
+async function readToLength(reader, initialData, length) {
+    let data = new Uint8Array(initialData);
+    while (data.byteLength < length) {
+        const { done, value } = await reader.read();
+        if (done && value == null) {
+            const missing = length - data.byteLength;
+            throw new Error(`Reader is done but ${missing} bytes are still expected`);
+        }
+        // TODO: Don't create a new array every loop.
+        const newData = new Uint8Array(data.length + value.byteLength);
+        newData.set(data, 0);
+        newData.set(new Uint8Array(value), data.length);
+        data = newData;
+    }
+    return data.buffer;
+}
+async function decodeWeightsStream(weightStream, specs) {
+    const tensors = {};
+    const reader = weightStream.getReader();
+    let data = new ArrayBuffer(0);
+    for (const spec of specs) {
+        const byteLength = await getWeightBytelengthAsync(spec, async (start, end) => {
+            data = await readToLength(reader, data, end);
+            return data.slice(start, end);
+        });
+        data = await readToLength(reader, data, byteLength);
+        // Slice the tensor out
+        const tensorData = data.slice(0, byteLength);
+        data = data.slice(byteLength);
+        const weightTensor = decodeWeight(spec, tensorData);
+        tensors[spec.name] = weightTensor;
+        // TODO(mattsoulanille): Better way to call uploadToGPU.
+        // TODO(mattsoulanille): Make this work for webgl too.
+        if (getBackend$1() === 'webgpu') {
+            const b = backend$1();
+            if ('uploadToGPU' in b &&
+                sizeFromShape(weightTensor.shape) >= env$1()
+                    .get('WEBGPU_CPU_HANDOFF_SIZE_THRESHOLD')) {
+                b.uploadToGPU(weightTensor.dataId);
+            }
+        }
+    }
+    return tensors;
 }
 /**
  * Concatenate TypedArrays into an ArrayBuffer.
@@ -6668,7 +9411,7 @@ async function deleteDatabase() {
     });
 }
 function getIndexedDBFactory() {
-    if (!env().getBool('IS_BROWSER')) {
+    if (!env$1().getBool('IS_BROWSER')) {
         // TODO(cais): Add more info about what IOHandler subtypes are available.
         //   Maybe point to a doc page on the web and/or automatically determine
         //   the available IOHandlers and print them in the error message.
@@ -6827,7 +9570,7 @@ class BrowserIndexedDB {
 }
 BrowserIndexedDB.URL_SCHEME = 'indexeddb://';
 const indexedDBRouter = (url) => {
-    if (!env().getBool('IS_BROWSER')) {
+    if (!env$1().getBool('IS_BROWSER')) {
         return null;
     }
     else {
@@ -6855,7 +9598,7 @@ IORouterRegistry.registerLoadRouter(indexedDBRouter);
  *
  * @param modelPath A unique identifier for the model to be saved. Must be a
  *   non-empty string.
- * @returns An instance of `BrowserIndexedDB` (sublcass of `IOHandler`),
+ * @returns An instance of `BrowserIndexedDB` (subclass of `IOHandler`),
  *   which can be used with, e.g., `tf.Model.save`.
  */
 function browserIndexedDB(modelPath) {
@@ -6988,7 +9731,7 @@ const MODEL_METADATA_SUFFIX = 'model_metadata';
  * @returns Paths of the models purged.
  */
 function purgeLocalStorageArtifacts() {
-    if (!env().getBool('IS_BROWSER') || typeof window === 'undefined' ||
+    if (!env$1().getBool('IS_BROWSER') || typeof window === 'undefined' ||
         typeof window.localStorage === 'undefined') {
         throw new Error('purgeLocalStorageModels() cannot proceed because local storage is ' +
             'unavailable in the current environment.');
@@ -7048,7 +9791,7 @@ function maybeStripScheme(key) {
  */
 class BrowserLocalStorage {
     constructor(modelPath) {
-        if (!env().getBool('IS_BROWSER') || typeof window === 'undefined' ||
+        if (!env$1().getBool('IS_BROWSER') || typeof window === 'undefined' ||
             typeof window.localStorage === 'undefined') {
             // TODO(cais): Add more info about what IOHandler subtypes are
             // available.
@@ -7193,7 +9936,7 @@ class BrowserLocalStorage {
 }
 BrowserLocalStorage.URL_SCHEME = 'localstorage://';
 const localStorageRouter = (url) => {
-    if (!env().getBool('IS_BROWSER')) {
+    if (!env$1().getBool('IS_BROWSER')) {
         return null;
     }
     else {
@@ -7236,7 +9979,7 @@ function browserLocalStorage(modelPath) {
 }
 class BrowserLocalStorageManager {
     constructor() {
-        assert$1(env().getBool('IS_BROWSER'), () => 'Current environment is not a web browser');
+        assert$1(env$1().getBool('IS_BROWSER'), () => 'Current environment is not a web browser');
         assert$1(typeof window === 'undefined' ||
             typeof window.localStorage !== 'undefined', () => 'Current browser does not appear to support localStorage');
         this.LS = window.localStorage;
@@ -7281,6 +10024,16 @@ class BrowserLocalStorageManager {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * =============================================================================
+ */
+/**
+ * Classes and functions for model management across multiple storage mediums.
+ *
+ * Supported client actions:
+ * - Listing models on all registered storage mediums.
+ * - Remove model by URL from any registered storage mediums, by using URL
+ *   string.
+ * - Moving or copying model from one path to another in the same medium or from
+ *   one medium to another, by using URL strings.
  */
 const URL_SCHEME_SUFFIX = '://';
 class ModelStoreManagerRegistry {
@@ -7608,7 +10361,7 @@ class PlatformBrowser {
     // avoid the clamp.
     setTimeoutCustom(functionRef, delay) {
         if (typeof window === 'undefined' ||
-            !env().getBool('USE_SETTIMEOUTCUSTOM')) {
+            !env$1().getBool('USE_SETTIMEOUTCUSTOM')) {
             setTimeout(functionRef, delay);
             return;
         }
@@ -7636,8 +10389,8 @@ class PlatformBrowser {
         return isTypedArrayBrowser(a);
     }
 }
-if (env().get('IS_BROWSER')) {
-    env().setPlatform('browser', new PlatformBrowser());
+if (env$1().get('IS_BROWSER')) {
+    env$1().setPlatform('browser', new PlatformBrowser());
     // Register LocalStorage IOHandler
     try {
         ModelStoreManagerRegistry.registerManager(BrowserLocalStorage.URL_SCHEME, new BrowserLocalStorageManager());
@@ -7652,22 +10405,6 @@ if (env().get('IS_BROWSER')) {
     }
 }
 
-/**
- * @license
- * Copyright 2019 Google LLC. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * =============================================================================
- */
 // We are wrapping this within an object so it can be stubbed by Jasmine.
 const getNodeFetch = {
     // tslint:disable-next-line:no-require-imports
@@ -7694,8 +10431,8 @@ class PlatformNode {
         this.textEncoder = new this.util.TextEncoder();
     }
     fetch(path, requestInits) {
-        if (env().global.fetch != null) {
-            return env().global.fetch(path, requestInits);
+        if (env$1().global.fetch != null) {
+            return env$1().global.fetch(path, requestInits);
         }
         if (systemFetch == null) {
             systemFetch = getNodeFetch.importFetch();
@@ -7703,7 +10440,7 @@ class PlatformNode {
         return systemFetch(path, requestInits);
     }
     now() {
-        const time = process.hrtime();
+        const time = browser$1$1.hrtime();
         return time[0] * 1000 + time[1] / 1000000;
     }
     encode(text, encoding) {
@@ -7725,8 +10462,8 @@ class PlatformNode {
             || this.util.types.isUint8ClampedArray(a);
     }
 }
-if (env().get('IS_NODE') && !env().get('IS_BROWSER')) {
-    env().setPlatform('node', new PlatformNode());
+if (env$1().get('IS_NODE') && !env$1().get('IS_BROWSER')) {
+    env$1().setPlatform('node', new PlatformNode());
 }
 
 /**
@@ -7909,6 +10646,8 @@ function print(x, verbose = false) {
  * limitations under the License.
  * =============================================================================
  */
+// Required side effectful code for tfjs-core
+// Set up Engine and ENV
 getOrMakeEngine();
 const opHandler = {
     buffer,
@@ -7917,355 +10656,6 @@ const opHandler = {
     print
 };
 setOpHandler(opHandler);
-
-/**
- * @license
- * Copyright 2018 Google LLC. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * =============================================================================
- */
-/**
- * Enables production mode which disables correctness checks in favor of
- * performance.
- *
- * @doc {heading: 'Environment'}
- */
-function enableProdMode() {
-    env().set('PROD', true);
-}
-/**
- * Enables debug mode which will log information about all executed kernels:
- * the elapsed time of the kernel execution, as well as the rank, shape, and
- * size of the output tensor.
- *
- * Debug mode will significantly slow down your application as it will
- * download the result of every operation to the CPU. This should not be used in
- * production. Debug mode does not affect the timing information of the kernel
- * execution as we do not measure download time in the kernel execution time.
- *
- * See also: `tf.profile`, `tf.memory`.
- *
- * @doc {heading: 'Environment'}
- */
-function enableDebugMode() {
-    env().set('DEBUG', true);
-}
-/** Globally disables deprecation warnings */
-function disableDeprecationWarnings() {
-    env().set('DEPRECATION_WARNINGS_ENABLED', false);
-    console.warn(`TensorFlow.js deprecation warnings have been disabled.`);
-}
-/** Warn users about deprecated functionality. */
-function deprecationWarn(msg) {
-    if (env().getBool('DEPRECATION_WARNINGS_ENABLED')) {
-        console.warn(msg + ' You can disable deprecation warnings with ' +
-            'tf.disableDeprecationWarnings().');
-    }
-}
-setDeprecationWarningFn(deprecationWarn);
-/**
- * Dispose all variables kept in backend engine.
- *
- * @doc {heading: 'Environment'}
- */
-function disposeVariables() {
-    ENGINE.disposeVariables();
-}
-/**
- * It returns the global engine that keeps track of all tensors and backends.
- *
- * @doc {heading: 'Environment'}
- */
-function engine() {
-    return ENGINE;
-}
-/**
- * Returns memory info at the current time in the program. The result is an
- * object with the following properties:
- *
- * - `numBytes`: Number of bytes allocated (undisposed) at this time.
- * - `numTensors`: Number of unique tensors allocated.
- * - `numDataBuffers`: Number of unique data buffers allocated
- *   (undisposed) at this time, which is ≤ the number of tensors
- *   (e.g. `a.reshape(newShape)` makes a new Tensor that shares the same
- *   data buffer with `a`).
- * - `unreliable`: True if the memory usage is unreliable. See `reasons` when
- *    `unreliable` is true.
- * - `reasons`: `string[]`, reasons why the memory is unreliable, present if
- *    `unreliable` is true.
- *
- * WebGL Properties:
- * - `numBytesInGPU`: Number of bytes allocated (undisposed) in the GPU only at
- *     this time.
- *
- * @doc {heading: 'Performance', subheading: 'Memory'}
- */
-function memory() {
-    return ENGINE.memory();
-}
-/**
- * Executes the provided function `f()` and returns a promise that resolves
- * with information about the function's memory use:
- * - `newBytes`: the number of new bytes allocated
- * - `newTensors`: the number of new tensors created
- * - `peakBytes`: the peak number of bytes allocated
- * - `kernels`: an array of objects for each kernel involved that reports
- * their input and output shapes, number of bytes used, and number of new
- * tensors created.
- * - `kernelNames`: an array of unique strings with just the names of the
- * kernels in the `kernels` array.
- *
- * ```js
- * const profile = await tf.profile(() => {
- *   const x = tf.tensor1d([1, 2, 3]);
- *   let x2 = x.square();
- *   x2.dispose();
- *   x2 = x.square();
- *   x2.dispose();
- *   return x;
- * });
- *
- * console.log(`newBytes: ${profile.newBytes}`);
- * console.log(`newTensors: ${profile.newTensors}`);
- * console.log(`byte usage over all kernels: ${profile.kernels.map(k =>
- * k.totalBytesSnapshot)}`);
- * ```
- *
- *
- * @doc {heading: 'Performance', subheading: 'Profile'}
- */
-function profile(f) {
-    return ENGINE.profile(f);
-}
-/**
- * Executes the provided function `fn` and after it is executed, cleans up all
- * intermediate tensors allocated by `fn` except those returned by `fn`.
- * `fn` must not return a Promise (async functions not allowed). The returned
- * result can be a complex object.
- *
- * Using this method helps avoid memory leaks. In general, wrap calls to
- * operations in `tf.tidy` for automatic memory cleanup.
- *
- * NOTE: Variables do *not* get cleaned up when inside a tidy(). If you want to
- * dispose variables, please use `tf.disposeVariables` or call dispose()
- * directly on variables.
- *
- * ```js
- * // y = 2 ^ 2 + 1
- * const y = tf.tidy(() => {
- *   // a, b, and one will be cleaned up when the tidy ends.
- *   const one = tf.scalar(1);
- *   const a = tf.scalar(2);
- *   const b = a.square();
- *
- *   console.log('numTensors (in tidy): ' + tf.memory().numTensors);
- *
- *   // The value returned inside the tidy function will return
- *   // through the tidy, in this case to the variable y.
- *   return b.add(one);
- * });
- *
- * console.log('numTensors (outside tidy): ' + tf.memory().numTensors);
- * y.print();
- * ```
- *
- * @param nameOrFn The name of the closure, or the function to execute.
- *     If a name is provided, the 2nd argument should be the function.
- *     If debug mode is on, the timing and the memory usage of the function
- *     will be tracked and displayed on the console using the provided name.
- * @param fn The function to execute.
- *
- * @doc {heading: 'Performance', subheading: 'Memory'}
- */
-function tidy(nameOrFn, fn) {
-    return ENGINE.tidy(nameOrFn, fn);
-}
-/**
- * Disposes any `tf.Tensor`s found within the provided object.
- *
- * @param container an object that may be a `tf.Tensor` or may directly
- *     contain `tf.Tensor`s, such as a `Tensor[]` or `{key: Tensor, ...}`. If
- *     the object is not a `tf.Tensor` or does not contain `Tensors`, nothing
- *     happens. In general it is safe to pass any object here, except that
- *     `Promise`s are not supported.
- *
- * @doc {heading: 'Performance', subheading: 'Memory'}
- */
-function dispose(container) {
-    const tensors = getTensorsInContainer(container);
-    tensors.forEach(tensor => tensor.dispose());
-}
-/**
- * Keeps a `tf.Tensor` generated inside a `tf.tidy` from being disposed
- * automatically.
- *
- * ```js
- * let b;
- * const y = tf.tidy(() => {
- *   const one = tf.scalar(1);
- *   const a = tf.scalar(2);
- *
- *   // b will not be cleaned up by the tidy. a and one will be cleaned up
- *   // when the tidy ends.
- *   b = tf.keep(a.square());
- *
- *   console.log('numTensors (in tidy): ' + tf.memory().numTensors);
- *
- *   // The value returned inside the tidy function will return
- *   // through the tidy, in this case to the variable y.
- *   return b.add(one);
- * });
- *
- * console.log('numTensors (outside tidy): ' + tf.memory().numTensors);
- * console.log('y:');
- * y.print();
- * console.log('b:');
- * b.print();
- * ```
- *
- * @param result The tensor to keep from being disposed.
- *
- * @doc {heading: 'Performance', subheading: 'Memory'}
- */
-function keep(result) {
-    return ENGINE.keep(result);
-}
-/**
- * Executes `f()` and returns a promise that resolves with timing
- * information.
- *
- * The result is an object with the following properties:
- *
- * - `wallMs`: Wall execution time.
- * - `kernelMs`: Kernel execution time, ignoring data transfer. If using the
- * WebGL backend and the query timer extension is not available, this will
- * return an error object.
- * - On `WebGL` The following additional properties exist:
- *   - `uploadWaitMs`: CPU blocking time on texture uploads.
- *   - `downloadWaitMs`: CPU blocking time on texture downloads (readPixels).
- *
- * ```js
- * const x = tf.randomNormal([20, 20]);
- * const time = await tf.time(() => x.matMul(x));
- *
- * console.log(`kernelMs: ${time.kernelMs}, wallTimeMs: ${time.wallMs}`);
- * ```
- *
- * @param f The function to execute and time.
- *
- * @doc {heading: 'Performance', subheading: 'Timing'}
- */
-function time(f) {
-    return ENGINE.time(f);
-}
-/**
- * Sets the backend (cpu, webgl, wasm, etc) responsible for creating tensors and
- * executing operations on those tensors. Returns a promise that resolves
- * to a boolean if the backend initialization was successful.
- *
- * Note this disposes the current backend, if any, as well as any tensors
- * associated with it. A new backend is initialized, even if it is of the
- * same type as the previous one.
- *
- * @param backendName The name of the backend. Currently supports
- *     `'webgl'|'cpu'` in the browser, `'tensorflow'` under node.js
- *     (requires tfjs-node), and `'wasm'` (requires tfjs-backend-wasm).
- *
- * @doc {heading: 'Backends'}
- */
-function setBackend$1(backendName) {
-    return ENGINE.setBackend(backendName);
-}
-/**
- * Returns a promise that resolves when the currently selected backend (or the
- * highest priority one) has initialized. Await this promise when you are using
- * a backend that has async initialization.
- *
- * @doc {heading: 'Backends'}
- */
-function ready() {
-    return ENGINE.ready();
-}
-/**
- * Returns the current backend name (cpu, webgl, etc). The backend is
- * responsible for creating tensors and executing operations on those tensors.
- *
- * @doc {heading: 'Backends'}
- */
-function getBackend$1() {
-    return ENGINE.backendName;
-}
-/**
- * Removes a backend and the registered factory.
- *
- * @doc {heading: 'Backends'}
- */
-function removeBackend(name) {
-    ENGINE.removeBackend(name);
-}
-/**
- * Finds the backend registered under the provided name. Returns null if the
- * name is not in the registry, or the registration hasn't finished yet.
- */
-function findBackend(name) {
-    return ENGINE.findBackend(name);
-}
-/**
- * Finds the backend factory registered under the provided name. Returns a
- * function that produces a new backend when called. Returns null if the name
- * is not in the registry.
- */
-function findBackendFactory(name) {
-    return ENGINE.findBackendFactory(name);
-}
-/**
- * Registers a global backend. The registration should happen when importing
- * a module file (e.g. when importing `backend_webgl.ts`), and is used for
- * modular builds (e.g. custom tfjs bundle with only webgl support).
- *
- * @param factory The backend factory function. When called, it should
- * return a backend instance, or a promise of an instance.
- * @param priority The priority of the backend (higher = more important).
- *     In case multiple backends are registered, the priority is used to find
- *     the best backend. Defaults to 1.
- * @return False if there is already a registered backend under this name, true
- *     if not.
- *
- * @doc {heading: 'Backends'}
- */
-function registerBackend(name, factory, priority = 1) {
-    return ENGINE.registerBackend(name, factory, priority);
-}
-/**
- * Gets the current backend. If no backends have been initialized, this will
- * attempt to initialize the best backend. Will throw an error if the highest
- * priority backend has async initialization, in which case you should call
- * 'await tf.ready()' before running other code.
- *
- * @doc {heading: 'Backends'}
- */
-function backend$1() {
-    return ENGINE.backend;
-}
-/**
- * Sets the global platform.
- *
- * @param platformName The name of this platform.
- * @param platform A platform implementation.
- */
-function setPlatform(platformName, platform) {
-    env().setPlatform(platformName, platform);
-}
 
 /**
  * @license
@@ -11655,6 +14045,13 @@ function assertAndGetBroadcastShape(shapeA, shapeB) {
     }
     return result;
 }
+
+var broadcast_util = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    assertAndGetBroadcastShape: assertAndGetBroadcastShape,
+    getBroadcastDims: getBroadcastDims$1,
+    getReductionAxes: getReductionAxes
+});
 
 /**
  * @license
@@ -15970,7 +18367,7 @@ const raggedRange$2 = /* @__PURE__ */ op({ raggedRange_ });
  *     "ROW_SPLITS": the row_splits tensor from the ragged tensor.
  *     "VALUE_ROWIDS": the value_rowids tensor from the ragged tensor.
  *     "FIRST_DIM_SIZE": if value_rowids is used for the first dimension, then
- *         it is preceeded by "FIRST_DIM_SIZE". The tensors are in the order of
+ *         it is preceded by "FIRST_DIM_SIZE". The tensors are in the order of
  *         the dimensions.
  * @return A Tensor. Has the same type as values.
  * @doc {heading: 'Operations', subheading: 'Ragged'}
@@ -16041,695 +18438,719 @@ function rand_(shape, randFunction, dtype) {
 }
 const rand = /* @__PURE__ */ op({ rand_ });
 
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+var alea$1 = {exports: {}};
 
-function getDefaultExportFromCjs (x) {
-	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-}
+var alea = alea$1.exports;
 
-function createCommonjsModule(fn, basedir, module) {
-	return module = {
-		path: basedir,
-		exports: {},
-		require: function (path, base) {
-			return commonjsRequire(path, (base === undefined || base === null) ? module.path : base);
+var hasRequiredAlea;
+
+function requireAlea () {
+	if (hasRequiredAlea) return alea$1.exports;
+	hasRequiredAlea = 1;
+	(function (module) {
+		// A port of an algorithm by Johannes Baagøe <baagoe@baagoe.com>, 2010
+		// http://baagoe.com/en/RandomMusings/javascript/
+		// https://github.com/nquinlan/better-random-numbers-for-javascript-mirror
+		// Original work is under MIT license -
+
+		// Copyright (C) 2010 by Johannes Baagøe <baagoe@baagoe.org>
+		//
+		// Permission is hereby granted, free of charge, to any person obtaining a copy
+		// of this software and associated documentation files (the "Software"), to deal
+		// in the Software without restriction, including without limitation the rights
+		// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+		// copies of the Software, and to permit persons to whom the Software is
+		// furnished to do so, subject to the following conditions:
+		//
+		// The above copyright notice and this permission notice shall be included in
+		// all copies or substantial portions of the Software.
+		//
+		// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+		// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+		// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+		// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+		// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+		// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+		// THE SOFTWARE.
+
+
+
+		(function(global, module, define) {
+
+		function Alea(seed) {
+		  var me = this, mash = Mash();
+
+		  me.next = function() {
+		    var t = 2091639 * me.s0 + me.c * 2.3283064365386963e-10; // 2^-32
+		    me.s0 = me.s1;
+		    me.s1 = me.s2;
+		    return me.s2 = t - (me.c = t | 0);
+		  };
+
+		  // Apply the seeding algorithm from Baagoe.
+		  me.c = 1;
+		  me.s0 = mash(' ');
+		  me.s1 = mash(' ');
+		  me.s2 = mash(' ');
+		  me.s0 -= mash(seed);
+		  if (me.s0 < 0) { me.s0 += 1; }
+		  me.s1 -= mash(seed);
+		  if (me.s1 < 0) { me.s1 += 1; }
+		  me.s2 -= mash(seed);
+		  if (me.s2 < 0) { me.s2 += 1; }
+		  mash = null;
 		}
-	}, fn(module, module.exports), module.exports;
+
+		function copy(f, t) {
+		  t.c = f.c;
+		  t.s0 = f.s0;
+		  t.s1 = f.s1;
+		  t.s2 = f.s2;
+		  return t;
+		}
+
+		function impl(seed, opts) {
+		  var xg = new Alea(seed),
+		      state = opts && opts.state,
+		      prng = xg.next;
+		  prng.int32 = function() { return (xg.next() * 0x100000000) | 0; };
+		  prng.double = function() {
+		    return prng() + (prng() * 0x200000 | 0) * 1.1102230246251565e-16; // 2^-53
+		  };
+		  prng.quick = prng;
+		  if (state) {
+		    if (typeof(state) == 'object') copy(state, xg);
+		    prng.state = function() { return copy(xg, {}); };
+		  }
+		  return prng;
+		}
+
+		function Mash() {
+		  var n = 0xefc8249d;
+
+		  var mash = function(data) {
+		    data = String(data);
+		    for (var i = 0; i < data.length; i++) {
+		      n += data.charCodeAt(i);
+		      var h = 0.02519603282416938 * n;
+		      n = h >>> 0;
+		      h -= n;
+		      h *= n;
+		      n = h >>> 0;
+		      h -= n;
+		      n += h * 0x100000000; // 2^32
+		    }
+		    return (n >>> 0) * 2.3283064365386963e-10; // 2^-32
+		  };
+
+		  return mash;
+		}
+
+
+		if (module && module.exports) {
+		  module.exports = impl;
+		} else if (define && define.amd) {
+		  define(function() { return impl; });
+		} else {
+		  this.alea = impl;
+		}
+
+		})(
+		  alea,
+		  ('object') == 'object' && module,    // present in node.js
+		  (typeof undefined) == 'function' && undefined   // present with an AMD loader
+		); 
+	} (alea$1));
+	return alea$1.exports;
 }
 
-function getDefaultExportFromNamespaceIfPresent (n) {
-	return n && Object.prototype.hasOwnProperty.call(n, 'default') ? n['default'] : n;
+var xor128$1 = {exports: {}};
+
+var xor128 = xor128$1.exports;
+
+var hasRequiredXor128;
+
+function requireXor128 () {
+	if (hasRequiredXor128) return xor128$1.exports;
+	hasRequiredXor128 = 1;
+	(function (module) {
+		// A Javascript implementaion of the "xor128" prng algorithm by
+		// George Marsaglia.  See http://www.jstatsoft.org/v08/i14/paper
+
+		(function(global, module, define) {
+
+		function XorGen(seed) {
+		  var me = this, strseed = '';
+
+		  me.x = 0;
+		  me.y = 0;
+		  me.z = 0;
+		  me.w = 0;
+
+		  // Set up generator function.
+		  me.next = function() {
+		    var t = me.x ^ (me.x << 11);
+		    me.x = me.y;
+		    me.y = me.z;
+		    me.z = me.w;
+		    return me.w ^= (me.w >>> 19) ^ t ^ (t >>> 8);
+		  };
+
+		  if (seed === (seed | 0)) {
+		    // Integer seed.
+		    me.x = seed;
+		  } else {
+		    // String seed.
+		    strseed += seed;
+		  }
+
+		  // Mix in string seed, then discard an initial batch of 64 values.
+		  for (var k = 0; k < strseed.length + 64; k++) {
+		    me.x ^= strseed.charCodeAt(k) | 0;
+		    me.next();
+		  }
+		}
+
+		function copy(f, t) {
+		  t.x = f.x;
+		  t.y = f.y;
+		  t.z = f.z;
+		  t.w = f.w;
+		  return t;
+		}
+
+		function impl(seed, opts) {
+		  var xg = new XorGen(seed),
+		      state = opts && opts.state,
+		      prng = function() { return (xg.next() >>> 0) / 0x100000000; };
+		  prng.double = function() {
+		    do {
+		      var top = xg.next() >>> 11,
+		          bot = (xg.next() >>> 0) / 0x100000000,
+		          result = (top + bot) / (1 << 21);
+		    } while (result === 0);
+		    return result;
+		  };
+		  prng.int32 = xg.next;
+		  prng.quick = prng;
+		  if (state) {
+		    if (typeof(state) == 'object') copy(state, xg);
+		    prng.state = function() { return copy(xg, {}); };
+		  }
+		  return prng;
+		}
+
+		if (module && module.exports) {
+		  module.exports = impl;
+		} else if (define && define.amd) {
+		  define(function() { return impl; });
+		} else {
+		  this.xor128 = impl;
+		}
+
+		})(
+		  xor128,
+		  ('object') == 'object' && module,    // present in node.js
+		  (typeof undefined) == 'function' && undefined   // present with an AMD loader
+		); 
+	} (xor128$1));
+	return xor128$1.exports;
 }
 
-function getDefaultExportFromNamespaceIfNotNamed (n) {
-	return n && Object.prototype.hasOwnProperty.call(n, 'default') && Object.keys(n).length === 1 ? n['default'] : n;
+var xorwow$1 = {exports: {}};
+
+var xorwow = xorwow$1.exports;
+
+var hasRequiredXorwow;
+
+function requireXorwow () {
+	if (hasRequiredXorwow) return xorwow$1.exports;
+	hasRequiredXorwow = 1;
+	(function (module) {
+		// A Javascript implementaion of the "xorwow" prng algorithm by
+		// George Marsaglia.  See http://www.jstatsoft.org/v08/i14/paper
+
+		(function(global, module, define) {
+
+		function XorGen(seed) {
+		  var me = this, strseed = '';
+
+		  // Set up generator function.
+		  me.next = function() {
+		    var t = (me.x ^ (me.x >>> 2));
+		    me.x = me.y; me.y = me.z; me.z = me.w; me.w = me.v;
+		    return (me.d = (me.d + 362437 | 0)) +
+		       (me.v = (me.v ^ (me.v << 4)) ^ (t ^ (t << 1))) | 0;
+		  };
+
+		  me.x = 0;
+		  me.y = 0;
+		  me.z = 0;
+		  me.w = 0;
+		  me.v = 0;
+
+		  if (seed === (seed | 0)) {
+		    // Integer seed.
+		    me.x = seed;
+		  } else {
+		    // String seed.
+		    strseed += seed;
+		  }
+
+		  // Mix in string seed, then discard an initial batch of 64 values.
+		  for (var k = 0; k < strseed.length + 64; k++) {
+		    me.x ^= strseed.charCodeAt(k) | 0;
+		    if (k == strseed.length) {
+		      me.d = me.x << 10 ^ me.x >>> 4;
+		    }
+		    me.next();
+		  }
+		}
+
+		function copy(f, t) {
+		  t.x = f.x;
+		  t.y = f.y;
+		  t.z = f.z;
+		  t.w = f.w;
+		  t.v = f.v;
+		  t.d = f.d;
+		  return t;
+		}
+
+		function impl(seed, opts) {
+		  var xg = new XorGen(seed),
+		      state = opts && opts.state,
+		      prng = function() { return (xg.next() >>> 0) / 0x100000000; };
+		  prng.double = function() {
+		    do {
+		      var top = xg.next() >>> 11,
+		          bot = (xg.next() >>> 0) / 0x100000000,
+		          result = (top + bot) / (1 << 21);
+		    } while (result === 0);
+		    return result;
+		  };
+		  prng.int32 = xg.next;
+		  prng.quick = prng;
+		  if (state) {
+		    if (typeof(state) == 'object') copy(state, xg);
+		    prng.state = function() { return copy(xg, {}); };
+		  }
+		  return prng;
+		}
+
+		if (module && module.exports) {
+		  module.exports = impl;
+		} else if (define && define.amd) {
+		  define(function() { return impl; });
+		} else {
+		  this.xorwow = impl;
+		}
+
+		})(
+		  xorwow,
+		  ('object') == 'object' && module,    // present in node.js
+		  (typeof undefined) == 'function' && undefined   // present with an AMD loader
+		); 
+	} (xorwow$1));
+	return xorwow$1.exports;
 }
 
-function getAugmentedNamespace(n) {
-	if (n.__esModule) return n;
-	var a = Object.defineProperty({}, '__esModule', {value: true});
-	Object.keys(n).forEach(function (k) {
-		var d = Object.getOwnPropertyDescriptor(n, k);
-		Object.defineProperty(a, k, d.get ? d : {
-			enumerable: true,
-			get: function () {
-				return n[k];
-			}
-		});
-	});
-	return a;
+var xorshift7$1 = {exports: {}};
+
+var xorshift7 = xorshift7$1.exports;
+
+var hasRequiredXorshift7;
+
+function requireXorshift7 () {
+	if (hasRequiredXorshift7) return xorshift7$1.exports;
+	hasRequiredXorshift7 = 1;
+	(function (module) {
+		// A Javascript implementaion of the "xorshift7" algorithm by
+		// François Panneton and Pierre L'ecuyer:
+		// "On the Xorgshift Random Number Generators"
+		// http://saluc.engr.uconn.edu/refs/crypto/rng/panneton05onthexorshift.pdf
+
+		(function(global, module, define) {
+
+		function XorGen(seed) {
+		  var me = this;
+
+		  // Set up generator function.
+		  me.next = function() {
+		    // Update xor generator.
+		    var X = me.x, i = me.i, t, v, w;
+		    t = X[i]; t ^= (t >>> 7); v = t ^ (t << 24);
+		    t = X[(i + 1) & 7]; v ^= t ^ (t >>> 10);
+		    t = X[(i + 3) & 7]; v ^= t ^ (t >>> 3);
+		    t = X[(i + 4) & 7]; v ^= t ^ (t << 7);
+		    t = X[(i + 7) & 7]; t = t ^ (t << 13); v ^= t ^ (t << 9);
+		    X[i] = v;
+		    me.i = (i + 1) & 7;
+		    return v;
+		  };
+
+		  function init(me, seed) {
+		    var j, w, X = [];
+
+		    if (seed === (seed | 0)) {
+		      // Seed state array using a 32-bit integer.
+		      w = X[0] = seed;
+		    } else {
+		      // Seed state using a string.
+		      seed = '' + seed;
+		      for (j = 0; j < seed.length; ++j) {
+		        X[j & 7] = (X[j & 7] << 15) ^
+		            (seed.charCodeAt(j) + X[(j + 1) & 7] << 13);
+		      }
+		    }
+		    // Enforce an array length of 8, not all zeroes.
+		    while (X.length < 8) X.push(0);
+		    for (j = 0; j < 8 && X[j] === 0; ++j);
+		    if (j == 8) w = X[7] = -1; else w = X[j];
+
+		    me.x = X;
+		    me.i = 0;
+
+		    // Discard an initial 256 values.
+		    for (j = 256; j > 0; --j) {
+		      me.next();
+		    }
+		  }
+
+		  init(me, seed);
+		}
+
+		function copy(f, t) {
+		  t.x = f.x.slice();
+		  t.i = f.i;
+		  return t;
+		}
+
+		function impl(seed, opts) {
+		  if (seed == null) seed = +(new Date);
+		  var xg = new XorGen(seed),
+		      state = opts && opts.state,
+		      prng = function() { return (xg.next() >>> 0) / 0x100000000; };
+		  prng.double = function() {
+		    do {
+		      var top = xg.next() >>> 11,
+		          bot = (xg.next() >>> 0) / 0x100000000,
+		          result = (top + bot) / (1 << 21);
+		    } while (result === 0);
+		    return result;
+		  };
+		  prng.int32 = xg.next;
+		  prng.quick = prng;
+		  if (state) {
+		    if (state.x) copy(state, xg);
+		    prng.state = function() { return copy(xg, {}); };
+		  }
+		  return prng;
+		}
+
+		if (module && module.exports) {
+		  module.exports = impl;
+		} else if (define && define.amd) {
+		  define(function() { return impl; });
+		} else {
+		  this.xorshift7 = impl;
+		}
+
+		})(
+		  xorshift7,
+		  ('object') == 'object' && module,    // present in node.js
+		  (typeof undefined) == 'function' && undefined   // present with an AMD loader
+		); 
+	} (xorshift7$1));
+	return xorshift7$1.exports;
 }
 
-function commonjsRequire () {
-	throw new Error('Dynamic requires are not currently supported by @rollup/plugin-commonjs');
+var xor4096$1 = {exports: {}};
+
+var xor4096 = xor4096$1.exports;
+
+var hasRequiredXor4096;
+
+function requireXor4096 () {
+	if (hasRequiredXor4096) return xor4096$1.exports;
+	hasRequiredXor4096 = 1;
+	(function (module) {
+		// A Javascript implementaion of Richard Brent's Xorgens xor4096 algorithm.
+		//
+		// This fast non-cryptographic random number generator is designed for
+		// use in Monte-Carlo algorithms. It combines a long-period xorshift
+		// generator with a Weyl generator, and it passes all common batteries
+		// of stasticial tests for randomness while consuming only a few nanoseconds
+		// for each prng generated.  For background on the generator, see Brent's
+		// paper: "Some long-period random number generators using shifts and xors."
+		// http://arxiv.org/pdf/1004.3115v1.pdf
+		//
+		// Usage:
+		//
+		// var xor4096 = require('xor4096');
+		// random = xor4096(1);                        // Seed with int32 or string.
+		// assert.equal(random(), 0.1520436450538547); // (0, 1) range, 53 bits.
+		// assert.equal(random.int32(), 1806534897);   // signed int32, 32 bits.
+		//
+		// For nonzero numeric keys, this impelementation provides a sequence
+		// identical to that by Brent's xorgens 3 implementaion in C.  This
+		// implementation also provides for initalizing the generator with
+		// string seeds, or for saving and restoring the state of the generator.
+		//
+		// On Chrome, this prng benchmarks about 2.1 times slower than
+		// Javascript's built-in Math.random().
+
+		(function(global, module, define) {
+
+		function XorGen(seed) {
+		  var me = this;
+
+		  // Set up generator function.
+		  me.next = function() {
+		    var w = me.w,
+		        X = me.X, i = me.i, t, v;
+		    // Update Weyl generator.
+		    me.w = w = (w + 0x61c88647) | 0;
+		    // Update xor generator.
+		    v = X[(i + 34) & 127];
+		    t = X[i = ((i + 1) & 127)];
+		    v ^= v << 13;
+		    t ^= t << 17;
+		    v ^= v >>> 15;
+		    t ^= t >>> 12;
+		    // Update Xor generator array state.
+		    v = X[i] = v ^ t;
+		    me.i = i;
+		    // Result is the combination.
+		    return (v + (w ^ (w >>> 16))) | 0;
+		  };
+
+		  function init(me, seed) {
+		    var t, v, i, j, w, X = [], limit = 128;
+		    if (seed === (seed | 0)) {
+		      // Numeric seeds initialize v, which is used to generates X.
+		      v = seed;
+		      seed = null;
+		    } else {
+		      // String seeds are mixed into v and X one character at a time.
+		      seed = seed + '\0';
+		      v = 0;
+		      limit = Math.max(limit, seed.length);
+		    }
+		    // Initialize circular array and weyl value.
+		    for (i = 0, j = -32; j < limit; ++j) {
+		      // Put the unicode characters into the array, and shuffle them.
+		      if (seed) v ^= seed.charCodeAt((j + 32) % seed.length);
+		      // After 32 shuffles, take v as the starting w value.
+		      if (j === 0) w = v;
+		      v ^= v << 10;
+		      v ^= v >>> 15;
+		      v ^= v << 4;
+		      v ^= v >>> 13;
+		      if (j >= 0) {
+		        w = (w + 0x61c88647) | 0;     // Weyl.
+		        t = (X[j & 127] ^= (v + w));  // Combine xor and weyl to init array.
+		        i = (0 == t) ? i + 1 : 0;     // Count zeroes.
+		      }
+		    }
+		    // We have detected all zeroes; make the key nonzero.
+		    if (i >= 128) {
+		      X[(seed && seed.length || 0) & 127] = -1;
+		    }
+		    // Run the generator 512 times to further mix the state before using it.
+		    // Factoring this as a function slows the main generator, so it is just
+		    // unrolled here.  The weyl generator is not advanced while warming up.
+		    i = 127;
+		    for (j = 4 * 128; j > 0; --j) {
+		      v = X[(i + 34) & 127];
+		      t = X[i = ((i + 1) & 127)];
+		      v ^= v << 13;
+		      t ^= t << 17;
+		      v ^= v >>> 15;
+		      t ^= t >>> 12;
+		      X[i] = v ^ t;
+		    }
+		    // Storing state as object members is faster than using closure variables.
+		    me.w = w;
+		    me.X = X;
+		    me.i = i;
+		  }
+
+		  init(me, seed);
+		}
+
+		function copy(f, t) {
+		  t.i = f.i;
+		  t.w = f.w;
+		  t.X = f.X.slice();
+		  return t;
+		};
+
+		function impl(seed, opts) {
+		  if (seed == null) seed = +(new Date);
+		  var xg = new XorGen(seed),
+		      state = opts && opts.state,
+		      prng = function() { return (xg.next() >>> 0) / 0x100000000; };
+		  prng.double = function() {
+		    do {
+		      var top = xg.next() >>> 11,
+		          bot = (xg.next() >>> 0) / 0x100000000,
+		          result = (top + bot) / (1 << 21);
+		    } while (result === 0);
+		    return result;
+		  };
+		  prng.int32 = xg.next;
+		  prng.quick = prng;
+		  if (state) {
+		    if (state.X) copy(state, xg);
+		    prng.state = function() { return copy(xg, {}); };
+		  }
+		  return prng;
+		}
+
+		if (module && module.exports) {
+		  module.exports = impl;
+		} else if (define && define.amd) {
+		  define(function() { return impl; });
+		} else {
+		  this.xor4096 = impl;
+		}
+
+		})(
+		  xor4096,                                     // window object or global
+		  ('object') == 'object' && module,    // present in node.js
+		  (typeof undefined) == 'function' && undefined   // present with an AMD loader
+		); 
+	} (xor4096$1));
+	return xor4096$1.exports;
 }
 
-var alea = createCommonjsModule(function (module) {
-// A port of an algorithm by Johannes Baagøe <baagoe@baagoe.com>, 2010
-// http://baagoe.com/en/RandomMusings/javascript/
-// https://github.com/nquinlan/better-random-numbers-for-javascript-mirror
-// Original work is under MIT license -
+var tychei$1 = {exports: {}};
 
-// Copyright (C) 2010 by Johannes Baagøe <baagoe@baagoe.org>
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+var tychei = tychei$1.exports;
 
+var hasRequiredTychei;
 
+function requireTychei () {
+	if (hasRequiredTychei) return tychei$1.exports;
+	hasRequiredTychei = 1;
+	(function (module) {
+		// A Javascript implementaion of the "Tyche-i" prng algorithm by
+		// Samuel Neves and Filipe Araujo.
+		// See https://eden.dei.uc.pt/~sneves/pubs/2011-snfa2.pdf
 
-(function(global, module, define) {
+		(function(global, module, define) {
 
-function Alea(seed) {
-  var me = this, mash = Mash();
+		function XorGen(seed) {
+		  var me = this, strseed = '';
 
-  me.next = function() {
-    var t = 2091639 * me.s0 + me.c * 2.3283064365386963e-10; // 2^-32
-    me.s0 = me.s1;
-    me.s1 = me.s2;
-    return me.s2 = t - (me.c = t | 0);
-  };
+		  // Set up generator function.
+		  me.next = function() {
+		    var b = me.b, c = me.c, d = me.d, a = me.a;
+		    b = (b << 25) ^ (b >>> 7) ^ c;
+		    c = (c - d) | 0;
+		    d = (d << 24) ^ (d >>> 8) ^ a;
+		    a = (a - b) | 0;
+		    me.b = b = (b << 20) ^ (b >>> 12) ^ c;
+		    me.c = c = (c - d) | 0;
+		    me.d = (d << 16) ^ (c >>> 16) ^ a;
+		    return me.a = (a - b) | 0;
+		  };
 
-  // Apply the seeding algorithm from Baagoe.
-  me.c = 1;
-  me.s0 = mash(' ');
-  me.s1 = mash(' ');
-  me.s2 = mash(' ');
-  me.s0 -= mash(seed);
-  if (me.s0 < 0) { me.s0 += 1; }
-  me.s1 -= mash(seed);
-  if (me.s1 < 0) { me.s1 += 1; }
-  me.s2 -= mash(seed);
-  if (me.s2 < 0) { me.s2 += 1; }
-  mash = null;
+		  /* The following is non-inverted tyche, which has better internal
+		   * bit diffusion, but which is about 25% slower than tyche-i in JS.
+		  me.next = function() {
+		    var a = me.a, b = me.b, c = me.c, d = me.d;
+		    a = (me.a + me.b | 0) >>> 0;
+		    d = me.d ^ a; d = d << 16 ^ d >>> 16;
+		    c = me.c + d | 0;
+		    b = me.b ^ c; b = b << 12 ^ d >>> 20;
+		    me.a = a = a + b | 0;
+		    d = d ^ a; me.d = d = d << 8 ^ d >>> 24;
+		    me.c = c = c + d | 0;
+		    b = b ^ c;
+		    return me.b = (b << 7 ^ b >>> 25);
+		  }
+		  */
+
+		  me.a = 0;
+		  me.b = 0;
+		  me.c = 2654435769 | 0;
+		  me.d = 1367130551;
+
+		  if (seed === Math.floor(seed)) {
+		    // Integer seed.
+		    me.a = (seed / 0x100000000) | 0;
+		    me.b = seed | 0;
+		  } else {
+		    // String seed.
+		    strseed += seed;
+		  }
+
+		  // Mix in string seed, then discard an initial batch of 64 values.
+		  for (var k = 0; k < strseed.length + 20; k++) {
+		    me.b ^= strseed.charCodeAt(k) | 0;
+		    me.next();
+		  }
+		}
+
+		function copy(f, t) {
+		  t.a = f.a;
+		  t.b = f.b;
+		  t.c = f.c;
+		  t.d = f.d;
+		  return t;
+		};
+
+		function impl(seed, opts) {
+		  var xg = new XorGen(seed),
+		      state = opts && opts.state,
+		      prng = function() { return (xg.next() >>> 0) / 0x100000000; };
+		  prng.double = function() {
+		    do {
+		      var top = xg.next() >>> 11,
+		          bot = (xg.next() >>> 0) / 0x100000000,
+		          result = (top + bot) / (1 << 21);
+		    } while (result === 0);
+		    return result;
+		  };
+		  prng.int32 = xg.next;
+		  prng.quick = prng;
+		  if (state) {
+		    if (typeof(state) == 'object') copy(state, xg);
+		    prng.state = function() { return copy(xg, {}); };
+		  }
+		  return prng;
+		}
+
+		if (module && module.exports) {
+		  module.exports = impl;
+		} else if (define && define.amd) {
+		  define(function() { return impl; });
+		} else {
+		  this.tychei = impl;
+		}
+
+		})(
+		  tychei,
+		  ('object') == 'object' && module,    // present in node.js
+		  (typeof undefined) == 'function' && undefined   // present with an AMD loader
+		); 
+	} (tychei$1));
+	return tychei$1.exports;
 }
 
-function copy(f, t) {
-  t.c = f.c;
-  t.s0 = f.s0;
-  t.s1 = f.s1;
-  t.s2 = f.s2;
-  return t;
-}
+var seedrandom$2 = {exports: {}};
 
-function impl(seed, opts) {
-  var xg = new Alea(seed),
-      state = opts && opts.state,
-      prng = xg.next;
-  prng.int32 = function() { return (xg.next() * 0x100000000) | 0; };
-  prng.double = function() {
-    return prng() + (prng() * 0x200000 | 0) * 1.1102230246251565e-16; // 2^-53
-  };
-  prng.quick = prng;
-  if (state) {
-    if (typeof(state) == 'object') copy(state, xg);
-    prng.state = function() { return copy(xg, {}); };
-  }
-  return prng;
-}
+var empty = {};
 
-function Mash() {
-  var n = 0xefc8249d;
-
-  var mash = function(data) {
-    data = String(data);
-    for (var i = 0; i < data.length; i++) {
-      n += data.charCodeAt(i);
-      var h = 0.02519603282416938 * n;
-      n = h >>> 0;
-      h -= n;
-      h *= n;
-      n = h >>> 0;
-      h -= n;
-      n += h * 0x100000000; // 2^32
-    }
-    return (n >>> 0) * 2.3283064365386963e-10; // 2^-32
-  };
-
-  return mash;
-}
-
-
-if (module && module.exports) {
-  module.exports = impl;
-} else if (define && define.amd) {
-  define(function() { return impl; });
-} else {
-  this.alea = impl;
-}
-
-})(
-  commonjsGlobal,
-  ('object') == 'object' && module,    // present in node.js
-  (typeof undefined) == 'function' && undefined   // present with an AMD loader
-);
-});
-
-var xor128 = createCommonjsModule(function (module) {
-// A Javascript implementaion of the "xor128" prng algorithm by
-// George Marsaglia.  See http://www.jstatsoft.org/v08/i14/paper
-
-(function(global, module, define) {
-
-function XorGen(seed) {
-  var me = this, strseed = '';
-
-  me.x = 0;
-  me.y = 0;
-  me.z = 0;
-  me.w = 0;
-
-  // Set up generator function.
-  me.next = function() {
-    var t = me.x ^ (me.x << 11);
-    me.x = me.y;
-    me.y = me.z;
-    me.z = me.w;
-    return me.w ^= (me.w >>> 19) ^ t ^ (t >>> 8);
-  };
-
-  if (seed === (seed | 0)) {
-    // Integer seed.
-    me.x = seed;
-  } else {
-    // String seed.
-    strseed += seed;
-  }
-
-  // Mix in string seed, then discard an initial batch of 64 values.
-  for (var k = 0; k < strseed.length + 64; k++) {
-    me.x ^= strseed.charCodeAt(k) | 0;
-    me.next();
-  }
-}
-
-function copy(f, t) {
-  t.x = f.x;
-  t.y = f.y;
-  t.z = f.z;
-  t.w = f.w;
-  return t;
-}
-
-function impl(seed, opts) {
-  var xg = new XorGen(seed),
-      state = opts && opts.state,
-      prng = function() { return (xg.next() >>> 0) / 0x100000000; };
-  prng.double = function() {
-    do {
-      var top = xg.next() >>> 11,
-          bot = (xg.next() >>> 0) / 0x100000000,
-          result = (top + bot) / (1 << 21);
-    } while (result === 0);
-    return result;
-  };
-  prng.int32 = xg.next;
-  prng.quick = prng;
-  if (state) {
-    if (typeof(state) == 'object') copy(state, xg);
-    prng.state = function() { return copy(xg, {}); };
-  }
-  return prng;
-}
-
-if (module && module.exports) {
-  module.exports = impl;
-} else if (define && define.amd) {
-  define(function() { return impl; });
-} else {
-  this.xor128 = impl;
-}
-
-})(
-  commonjsGlobal,
-  ('object') == 'object' && module,    // present in node.js
-  (typeof undefined) == 'function' && undefined   // present with an AMD loader
-);
-});
-
-var xorwow = createCommonjsModule(function (module) {
-// A Javascript implementaion of the "xorwow" prng algorithm by
-// George Marsaglia.  See http://www.jstatsoft.org/v08/i14/paper
-
-(function(global, module, define) {
-
-function XorGen(seed) {
-  var me = this, strseed = '';
-
-  // Set up generator function.
-  me.next = function() {
-    var t = (me.x ^ (me.x >>> 2));
-    me.x = me.y; me.y = me.z; me.z = me.w; me.w = me.v;
-    return (me.d = (me.d + 362437 | 0)) +
-       (me.v = (me.v ^ (me.v << 4)) ^ (t ^ (t << 1))) | 0;
-  };
-
-  me.x = 0;
-  me.y = 0;
-  me.z = 0;
-  me.w = 0;
-  me.v = 0;
-
-  if (seed === (seed | 0)) {
-    // Integer seed.
-    me.x = seed;
-  } else {
-    // String seed.
-    strseed += seed;
-  }
-
-  // Mix in string seed, then discard an initial batch of 64 values.
-  for (var k = 0; k < strseed.length + 64; k++) {
-    me.x ^= strseed.charCodeAt(k) | 0;
-    if (k == strseed.length) {
-      me.d = me.x << 10 ^ me.x >>> 4;
-    }
-    me.next();
-  }
-}
-
-function copy(f, t) {
-  t.x = f.x;
-  t.y = f.y;
-  t.z = f.z;
-  t.w = f.w;
-  t.v = f.v;
-  t.d = f.d;
-  return t;
-}
-
-function impl(seed, opts) {
-  var xg = new XorGen(seed),
-      state = opts && opts.state,
-      prng = function() { return (xg.next() >>> 0) / 0x100000000; };
-  prng.double = function() {
-    do {
-      var top = xg.next() >>> 11,
-          bot = (xg.next() >>> 0) / 0x100000000,
-          result = (top + bot) / (1 << 21);
-    } while (result === 0);
-    return result;
-  };
-  prng.int32 = xg.next;
-  prng.quick = prng;
-  if (state) {
-    if (typeof(state) == 'object') copy(state, xg);
-    prng.state = function() { return copy(xg, {}); };
-  }
-  return prng;
-}
-
-if (module && module.exports) {
-  module.exports = impl;
-} else if (define && define.amd) {
-  define(function() { return impl; });
-} else {
-  this.xorwow = impl;
-}
-
-})(
-  commonjsGlobal,
-  ('object') == 'object' && module,    // present in node.js
-  (typeof undefined) == 'function' && undefined   // present with an AMD loader
-);
-});
-
-var xorshift7 = createCommonjsModule(function (module) {
-// A Javascript implementaion of the "xorshift7" algorithm by
-// François Panneton and Pierre L'ecuyer:
-// "On the Xorgshift Random Number Generators"
-// http://saluc.engr.uconn.edu/refs/crypto/rng/panneton05onthexorshift.pdf
-
-(function(global, module, define) {
-
-function XorGen(seed) {
-  var me = this;
-
-  // Set up generator function.
-  me.next = function() {
-    // Update xor generator.
-    var X = me.x, i = me.i, t, v, w;
-    t = X[i]; t ^= (t >>> 7); v = t ^ (t << 24);
-    t = X[(i + 1) & 7]; v ^= t ^ (t >>> 10);
-    t = X[(i + 3) & 7]; v ^= t ^ (t >>> 3);
-    t = X[(i + 4) & 7]; v ^= t ^ (t << 7);
-    t = X[(i + 7) & 7]; t = t ^ (t << 13); v ^= t ^ (t << 9);
-    X[i] = v;
-    me.i = (i + 1) & 7;
-    return v;
-  };
-
-  function init(me, seed) {
-    var j, w, X = [];
-
-    if (seed === (seed | 0)) {
-      // Seed state array using a 32-bit integer.
-      w = X[0] = seed;
-    } else {
-      // Seed state using a string.
-      seed = '' + seed;
-      for (j = 0; j < seed.length; ++j) {
-        X[j & 7] = (X[j & 7] << 15) ^
-            (seed.charCodeAt(j) + X[(j + 1) & 7] << 13);
-      }
-    }
-    // Enforce an array length of 8, not all zeroes.
-    while (X.length < 8) X.push(0);
-    for (j = 0; j < 8 && X[j] === 0; ++j);
-    if (j == 8) w = X[7] = -1; else w = X[j];
-
-    me.x = X;
-    me.i = 0;
-
-    // Discard an initial 256 values.
-    for (j = 256; j > 0; --j) {
-      me.next();
-    }
-  }
-
-  init(me, seed);
-}
-
-function copy(f, t) {
-  t.x = f.x.slice();
-  t.i = f.i;
-  return t;
-}
-
-function impl(seed, opts) {
-  if (seed == null) seed = +(new Date);
-  var xg = new XorGen(seed),
-      state = opts && opts.state,
-      prng = function() { return (xg.next() >>> 0) / 0x100000000; };
-  prng.double = function() {
-    do {
-      var top = xg.next() >>> 11,
-          bot = (xg.next() >>> 0) / 0x100000000,
-          result = (top + bot) / (1 << 21);
-    } while (result === 0);
-    return result;
-  };
-  prng.int32 = xg.next;
-  prng.quick = prng;
-  if (state) {
-    if (state.x) copy(state, xg);
-    prng.state = function() { return copy(xg, {}); };
-  }
-  return prng;
-}
-
-if (module && module.exports) {
-  module.exports = impl;
-} else if (define && define.amd) {
-  define(function() { return impl; });
-} else {
-  this.xorshift7 = impl;
-}
-
-})(
-  commonjsGlobal,
-  ('object') == 'object' && module,    // present in node.js
-  (typeof undefined) == 'function' && undefined   // present with an AMD loader
-);
-});
-
-var xor4096 = createCommonjsModule(function (module) {
-// A Javascript implementaion of Richard Brent's Xorgens xor4096 algorithm.
-//
-// This fast non-cryptographic random number generator is designed for
-// use in Monte-Carlo algorithms. It combines a long-period xorshift
-// generator with a Weyl generator, and it passes all common batteries
-// of stasticial tests for randomness while consuming only a few nanoseconds
-// for each prng generated.  For background on the generator, see Brent's
-// paper: "Some long-period random number generators using shifts and xors."
-// http://arxiv.org/pdf/1004.3115v1.pdf
-//
-// Usage:
-//
-// var xor4096 = require('xor4096');
-// random = xor4096(1);                        // Seed with int32 or string.
-// assert.equal(random(), 0.1520436450538547); // (0, 1) range, 53 bits.
-// assert.equal(random.int32(), 1806534897);   // signed int32, 32 bits.
-//
-// For nonzero numeric keys, this impelementation provides a sequence
-// identical to that by Brent's xorgens 3 implementaion in C.  This
-// implementation also provides for initalizing the generator with
-// string seeds, or for saving and restoring the state of the generator.
-//
-// On Chrome, this prng benchmarks about 2.1 times slower than
-// Javascript's built-in Math.random().
-
-(function(global, module, define) {
-
-function XorGen(seed) {
-  var me = this;
-
-  // Set up generator function.
-  me.next = function() {
-    var w = me.w,
-        X = me.X, i = me.i, t, v;
-    // Update Weyl generator.
-    me.w = w = (w + 0x61c88647) | 0;
-    // Update xor generator.
-    v = X[(i + 34) & 127];
-    t = X[i = ((i + 1) & 127)];
-    v ^= v << 13;
-    t ^= t << 17;
-    v ^= v >>> 15;
-    t ^= t >>> 12;
-    // Update Xor generator array state.
-    v = X[i] = v ^ t;
-    me.i = i;
-    // Result is the combination.
-    return (v + (w ^ (w >>> 16))) | 0;
-  };
-
-  function init(me, seed) {
-    var t, v, i, j, w, X = [], limit = 128;
-    if (seed === (seed | 0)) {
-      // Numeric seeds initialize v, which is used to generates X.
-      v = seed;
-      seed = null;
-    } else {
-      // String seeds are mixed into v and X one character at a time.
-      seed = seed + '\0';
-      v = 0;
-      limit = Math.max(limit, seed.length);
-    }
-    // Initialize circular array and weyl value.
-    for (i = 0, j = -32; j < limit; ++j) {
-      // Put the unicode characters into the array, and shuffle them.
-      if (seed) v ^= seed.charCodeAt((j + 32) % seed.length);
-      // After 32 shuffles, take v as the starting w value.
-      if (j === 0) w = v;
-      v ^= v << 10;
-      v ^= v >>> 15;
-      v ^= v << 4;
-      v ^= v >>> 13;
-      if (j >= 0) {
-        w = (w + 0x61c88647) | 0;     // Weyl.
-        t = (X[j & 127] ^= (v + w));  // Combine xor and weyl to init array.
-        i = (0 == t) ? i + 1 : 0;     // Count zeroes.
-      }
-    }
-    // We have detected all zeroes; make the key nonzero.
-    if (i >= 128) {
-      X[(seed && seed.length || 0) & 127] = -1;
-    }
-    // Run the generator 512 times to further mix the state before using it.
-    // Factoring this as a function slows the main generator, so it is just
-    // unrolled here.  The weyl generator is not advanced while warming up.
-    i = 127;
-    for (j = 4 * 128; j > 0; --j) {
-      v = X[(i + 34) & 127];
-      t = X[i = ((i + 1) & 127)];
-      v ^= v << 13;
-      t ^= t << 17;
-      v ^= v >>> 15;
-      t ^= t >>> 12;
-      X[i] = v ^ t;
-    }
-    // Storing state as object members is faster than using closure variables.
-    me.w = w;
-    me.X = X;
-    me.i = i;
-  }
-
-  init(me, seed);
-}
-
-function copy(f, t) {
-  t.i = f.i;
-  t.w = f.w;
-  t.X = f.X.slice();
-  return t;
-};
-
-function impl(seed, opts) {
-  if (seed == null) seed = +(new Date);
-  var xg = new XorGen(seed),
-      state = opts && opts.state,
-      prng = function() { return (xg.next() >>> 0) / 0x100000000; };
-  prng.double = function() {
-    do {
-      var top = xg.next() >>> 11,
-          bot = (xg.next() >>> 0) / 0x100000000,
-          result = (top + bot) / (1 << 21);
-    } while (result === 0);
-    return result;
-  };
-  prng.int32 = xg.next;
-  prng.quick = prng;
-  if (state) {
-    if (state.X) copy(state, xg);
-    prng.state = function() { return copy(xg, {}); };
-  }
-  return prng;
-}
-
-if (module && module.exports) {
-  module.exports = impl;
-} else if (define && define.amd) {
-  define(function() { return impl; });
-} else {
-  this.xor4096 = impl;
-}
-
-})(
-  commonjsGlobal,                                     // window object or global
-  ('object') == 'object' && module,    // present in node.js
-  (typeof undefined) == 'function' && undefined   // present with an AMD loader
-);
-});
-
-var tychei = createCommonjsModule(function (module) {
-// A Javascript implementaion of the "Tyche-i" prng algorithm by
-// Samuel Neves and Filipe Araujo.
-// See https://eden.dei.uc.pt/~sneves/pubs/2011-snfa2.pdf
-
-(function(global, module, define) {
-
-function XorGen(seed) {
-  var me = this, strseed = '';
-
-  // Set up generator function.
-  me.next = function() {
-    var b = me.b, c = me.c, d = me.d, a = me.a;
-    b = (b << 25) ^ (b >>> 7) ^ c;
-    c = (c - d) | 0;
-    d = (d << 24) ^ (d >>> 8) ^ a;
-    a = (a - b) | 0;
-    me.b = b = (b << 20) ^ (b >>> 12) ^ c;
-    me.c = c = (c - d) | 0;
-    me.d = (d << 16) ^ (c >>> 16) ^ a;
-    return me.a = (a - b) | 0;
-  };
-
-  /* The following is non-inverted tyche, which has better internal
-   * bit diffusion, but which is about 25% slower than tyche-i in JS.
-  me.next = function() {
-    var a = me.a, b = me.b, c = me.c, d = me.d;
-    a = (me.a + me.b | 0) >>> 0;
-    d = me.d ^ a; d = d << 16 ^ d >>> 16;
-    c = me.c + d | 0;
-    b = me.b ^ c; b = b << 12 ^ d >>> 20;
-    me.a = a = a + b | 0;
-    d = d ^ a; me.d = d = d << 8 ^ d >>> 24;
-    me.c = c = c + d | 0;
-    b = b ^ c;
-    return me.b = (b << 7 ^ b >>> 25);
-  }
-  */
-
-  me.a = 0;
-  me.b = 0;
-  me.c = 2654435769 | 0;
-  me.d = 1367130551;
-
-  if (seed === Math.floor(seed)) {
-    // Integer seed.
-    me.a = (seed / 0x100000000) | 0;
-    me.b = seed | 0;
-  } else {
-    // String seed.
-    strseed += seed;
-  }
-
-  // Mix in string seed, then discard an initial batch of 64 values.
-  for (var k = 0; k < strseed.length + 20; k++) {
-    me.b ^= strseed.charCodeAt(k) | 0;
-    me.next();
-  }
-}
-
-function copy(f, t) {
-  t.a = f.a;
-  t.b = f.b;
-  t.c = f.c;
-  t.d = f.d;
-  return t;
-};
-
-function impl(seed, opts) {
-  var xg = new XorGen(seed),
-      state = opts && opts.state,
-      prng = function() { return (xg.next() >>> 0) / 0x100000000; };
-  prng.double = function() {
-    do {
-      var top = xg.next() >>> 11,
-          bot = (xg.next() >>> 0) / 0x100000000,
-          result = (top + bot) / (1 << 21);
-    } while (result === 0);
-    return result;
-  };
-  prng.int32 = xg.next;
-  prng.quick = prng;
-  if (state) {
-    if (typeof(state) == 'object') copy(state, xg);
-    prng.state = function() { return copy(xg, {}); };
-  }
-  return prng;
-}
-
-if (module && module.exports) {
-  module.exports = impl;
-} else if (define && define.amd) {
-  define(function() { return impl; });
-} else {
-  this.tychei = impl;
-}
-
-})(
-  commonjsGlobal,
-  ('object') == 'object' && module,    // present in node.js
-  (typeof undefined) == 'function' && undefined   // present with an AMD loader
-);
-});
-
-const _nodeResolve_empty = {};
-
-const _nodeResolve_empty$1 = /*#__PURE__*/Object.freeze({
+var empty$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    'default': _nodeResolve_empty
+    default: empty
 });
 
-const require$$0 = /*@__PURE__*/getAugmentedNamespace(_nodeResolve_empty$1);
+var require$$0 = /*@__PURE__*/getAugmentedNamespace(empty$1);
 
-var seedrandom$1 = createCommonjsModule(function (module) {
 /*
 Copyright 2019 David Bau.
 
@@ -16753,298 +19174,318 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 */
+var seedrandom$1 = seedrandom$2.exports;
 
-(function (global, pool, math) {
-//
-// The following constants are related to IEEE 754 limits.
-//
+var hasRequiredSeedrandom$1;
 
-var width = 256,        // each RC4 output is 0 <= x < 256
-    chunks = 6,         // at least six RC4 outputs for each double
-    digits = 52,        // there are 52 significant digits in a double
-    rngname = 'random', // rngname: name for Math.random and Math.seedrandom
-    startdenom = math.pow(width, chunks),
-    significance = math.pow(2, digits),
-    overflow = significance * 2,
-    mask = width - 1,
-    nodecrypto;         // node.js crypto module, initialized at the bottom.
+function requireSeedrandom$1 () {
+	if (hasRequiredSeedrandom$1) return seedrandom$2.exports;
+	hasRequiredSeedrandom$1 = 1;
+	(function (module) {
+		(function (global, pool, math) {
+		//
+		// The following constants are related to IEEE 754 limits.
+		//
 
-//
-// seedrandom()
-// This is the seedrandom function described above.
-//
-function seedrandom(seed, options, callback) {
-  var key = [];
-  options = (options == true) ? { entropy: true } : (options || {});
+		var width = 256,        // each RC4 output is 0 <= x < 256
+		    chunks = 6,         // at least six RC4 outputs for each double
+		    digits = 52,        // there are 52 significant digits in a double
+		    rngname = 'random', // rngname: name for Math.random and Math.seedrandom
+		    startdenom = math.pow(width, chunks),
+		    significance = math.pow(2, digits),
+		    overflow = significance * 2,
+		    mask = width - 1,
+		    nodecrypto;         // node.js crypto module, initialized at the bottom.
 
-  // Flatten the seed string or build one from local entropy if needed.
-  var shortseed = mixkey(flatten(
-    options.entropy ? [seed, tostring(pool)] :
-    (seed == null) ? autoseed() : seed, 3), key);
+		//
+		// seedrandom()
+		// This is the seedrandom function described above.
+		//
+		function seedrandom(seed, options, callback) {
+		  var key = [];
+		  options = (options == true) ? { entropy: true } : (options || {});
 
-  // Use the seed to initialize an ARC4 generator.
-  var arc4 = new ARC4(key);
+		  // Flatten the seed string or build one from local entropy if needed.
+		  var shortseed = mixkey(flatten(
+		    options.entropy ? [seed, tostring(pool)] :
+		    (seed == null) ? autoseed() : seed, 3), key);
 
-  // This function returns a random double in [0, 1) that contains
-  // randomness in every bit of the mantissa of the IEEE 754 value.
-  var prng = function() {
-    var n = arc4.g(chunks),             // Start with a numerator n < 2 ^ 48
-        d = startdenom,                 //   and denominator d = 2 ^ 48.
-        x = 0;                          //   and no 'extra last byte'.
-    while (n < significance) {          // Fill up all significant digits by
-      n = (n + x) * width;              //   shifting numerator and
-      d *= width;                       //   denominator and generating a
-      x = arc4.g(1);                    //   new least-significant-byte.
-    }
-    while (n >= overflow) {             // To avoid rounding up, before adding
-      n /= 2;                           //   last byte, shift everything
-      d /= 2;                           //   right using integer math until
-      x >>>= 1;                         //   we have exactly the desired bits.
-    }
-    return (n + x) / d;                 // Form the number within [0, 1).
-  };
+		  // Use the seed to initialize an ARC4 generator.
+		  var arc4 = new ARC4(key);
 
-  prng.int32 = function() { return arc4.g(4) | 0; };
-  prng.quick = function() { return arc4.g(4) / 0x100000000; };
-  prng.double = prng;
+		  // This function returns a random double in [0, 1) that contains
+		  // randomness in every bit of the mantissa of the IEEE 754 value.
+		  var prng = function() {
+		    var n = arc4.g(chunks),             // Start with a numerator n < 2 ^ 48
+		        d = startdenom,                 //   and denominator d = 2 ^ 48.
+		        x = 0;                          //   and no 'extra last byte'.
+		    while (n < significance) {          // Fill up all significant digits by
+		      n = (n + x) * width;              //   shifting numerator and
+		      d *= width;                       //   denominator and generating a
+		      x = arc4.g(1);                    //   new least-significant-byte.
+		    }
+		    while (n >= overflow) {             // To avoid rounding up, before adding
+		      n /= 2;                           //   last byte, shift everything
+		      d /= 2;                           //   right using integer math until
+		      x >>>= 1;                         //   we have exactly the desired bits.
+		    }
+		    return (n + x) / d;                 // Form the number within [0, 1).
+		  };
 
-  // Mix the randomness into accumulated entropy.
-  mixkey(tostring(arc4.S), pool);
+		  prng.int32 = function() { return arc4.g(4) | 0; };
+		  prng.quick = function() { return arc4.g(4) / 0x100000000; };
+		  prng.double = prng;
 
-  // Calling convention: what to return as a function of prng, seed, is_math.
-  return (options.pass || callback ||
-      function(prng, seed, is_math_call, state) {
-        if (state) {
-          // Load the arc4 state from the given state if it has an S array.
-          if (state.S) { copy(state, arc4); }
-          // Only provide the .state method if requested via options.state.
-          prng.state = function() { return copy(arc4, {}); };
-        }
+		  // Mix the randomness into accumulated entropy.
+		  mixkey(tostring(arc4.S), pool);
 
-        // If called as a method of Math (Math.seedrandom()), mutate
-        // Math.random because that is how seedrandom.js has worked since v1.0.
-        if (is_math_call) { math[rngname] = prng; return seed; }
+		  // Calling convention: what to return as a function of prng, seed, is_math.
+		  return (options.pass || callback ||
+		      function(prng, seed, is_math_call, state) {
+		        if (state) {
+		          // Load the arc4 state from the given state if it has an S array.
+		          if (state.S) { copy(state, arc4); }
+		          // Only provide the .state method if requested via options.state.
+		          prng.state = function() { return copy(arc4, {}); };
+		        }
 
-        // Otherwise, it is a newer calling convention, so return the
-        // prng directly.
-        else return prng;
-      })(
-  prng,
-  shortseed,
-  'global' in options ? options.global : (this == math),
-  options.state);
+		        // If called as a method of Math (Math.seedrandom()), mutate
+		        // Math.random because that is how seedrandom.js has worked since v1.0.
+		        if (is_math_call) { math[rngname] = prng; return seed; }
+
+		        // Otherwise, it is a newer calling convention, so return the
+		        // prng directly.
+		        else return prng;
+		      })(
+		  prng,
+		  shortseed,
+		  'global' in options ? options.global : (this == math),
+		  options.state);
+		}
+
+		//
+		// ARC4
+		//
+		// An ARC4 implementation.  The constructor takes a key in the form of
+		// an array of at most (width) integers that should be 0 <= x < (width).
+		//
+		// The g(count) method returns a pseudorandom integer that concatenates
+		// the next (count) outputs from ARC4.  Its return value is a number x
+		// that is in the range 0 <= x < (width ^ count).
+		//
+		function ARC4(key) {
+		  var t, keylen = key.length,
+		      me = this, i = 0, j = me.i = me.j = 0, s = me.S = [];
+
+		  // The empty key [] is treated as [0].
+		  if (!keylen) { key = [keylen++]; }
+
+		  // Set up S using the standard key scheduling algorithm.
+		  while (i < width) {
+		    s[i] = i++;
+		  }
+		  for (i = 0; i < width; i++) {
+		    s[i] = s[j = mask & (j + key[i % keylen] + (t = s[i]))];
+		    s[j] = t;
+		  }
+
+		  // The "g" method returns the next (count) outputs as one number.
+		  (me.g = function(count) {
+		    // Using instance members instead of closure state nearly doubles speed.
+		    var t, r = 0,
+		        i = me.i, j = me.j, s = me.S;
+		    while (count--) {
+		      t = s[i = mask & (i + 1)];
+		      r = r * width + s[mask & ((s[i] = s[j = mask & (j + t)]) + (s[j] = t))];
+		    }
+		    me.i = i; me.j = j;
+		    return r;
+		    // For robust unpredictability, the function call below automatically
+		    // discards an initial batch of values.  This is called RC4-drop[256].
+		    // See http://google.com/search?q=rsa+fluhrer+response&btnI
+		  })(width);
+		}
+
+		//
+		// copy()
+		// Copies internal state of ARC4 to or from a plain object.
+		//
+		function copy(f, t) {
+		  t.i = f.i;
+		  t.j = f.j;
+		  t.S = f.S.slice();
+		  return t;
+		};
+
+		//
+		// flatten()
+		// Converts an object tree to nested arrays of strings.
+		//
+		function flatten(obj, depth) {
+		  var result = [], typ = (typeof obj), prop;
+		  if (depth && typ == 'object') {
+		    for (prop in obj) {
+		      try { result.push(flatten(obj[prop], depth - 1)); } catch (e) {}
+		    }
+		  }
+		  return (result.length ? result : typ == 'string' ? obj : obj + '\0');
+		}
+
+		//
+		// mixkey()
+		// Mixes a string seed into a key that is an array of integers, and
+		// returns a shortened string seed that is equivalent to the result key.
+		//
+		function mixkey(seed, key) {
+		  var stringseed = seed + '', smear, j = 0;
+		  while (j < stringseed.length) {
+		    key[mask & j] =
+		      mask & ((smear ^= key[mask & j] * 19) + stringseed.charCodeAt(j++));
+		  }
+		  return tostring(key);
+		}
+
+		//
+		// autoseed()
+		// Returns an object for autoseeding, using window.crypto and Node crypto
+		// module if available.
+		//
+		function autoseed() {
+		  try {
+		    var out;
+		    if (nodecrypto && (out = nodecrypto.randomBytes)) {
+		      // The use of 'out' to remember randomBytes makes tight minified code.
+		      out = out(width);
+		    } else {
+		      out = new Uint8Array(width);
+		      (global.crypto || global.msCrypto).getRandomValues(out);
+		    }
+		    return tostring(out);
+		  } catch (e) {
+		    var browser = global.navigator,
+		        plugins = browser && browser.plugins;
+		    return [+new Date, global, plugins, global.screen, tostring(pool)];
+		  }
+		}
+
+		//
+		// tostring()
+		// Converts an array of charcodes to a string
+		//
+		function tostring(a) {
+		  return String.fromCharCode.apply(0, a);
+		}
+
+		//
+		// When seedrandom.js is loaded, we immediately mix a few bits
+		// from the built-in RNG into the entropy pool.  Because we do
+		// not want to interfere with deterministic PRNG state later,
+		// seedrandom will not call math.random on its own again after
+		// initialization.
+		//
+		mixkey(math.random(), pool);
+
+		//
+		// Nodejs and AMD support: export the implementation as a module using
+		// either convention.
+		//
+		if (('object') == 'object' && module.exports) {
+		  module.exports = seedrandom;
+		  // When in node.js, try using crypto package for autoseeding.
+		  try {
+		    nodecrypto = require$$0;
+		  } catch (ex) {}
+		} else if ((typeof undefined) == 'function' && undefined.amd) {
+		  undefined(function() { return seedrandom; });
+		} else {
+		  // When included as a plain script, set up Math.seedrandom global.
+		  math['seed' + rngname] = seedrandom;
+		}
+
+
+		// End anonymous scope, and pass initial values.
+		})(
+		  // global: `self` in browsers (including strict mode and web workers),
+		  // otherwise `this` in Node and other environments
+		  (typeof self !== 'undefined') ? self : seedrandom$1,
+		  [],     // pool: entropy pool starts empty
+		  Math    // math: package containing random, pow, and seedrandom
+		); 
+	} (seedrandom$2));
+	return seedrandom$2.exports;
 }
 
-//
-// ARC4
-//
-// An ARC4 implementation.  The constructor takes a key in the form of
-// an array of at most (width) integers that should be 0 <= x < (width).
-//
-// The g(count) method returns a pseudorandom integer that concatenates
-// the next (count) outputs from ARC4.  Its return value is a number x
-// that is in the range 0 <= x < (width ^ count).
-//
-function ARC4(key) {
-  var t, keylen = key.length,
-      me = this, i = 0, j = me.i = me.j = 0, s = me.S = [];
+var seedrandom;
+var hasRequiredSeedrandom;
 
-  // The empty key [] is treated as [0].
-  if (!keylen) { key = [keylen++]; }
+function requireSeedrandom () {
+	if (hasRequiredSeedrandom) return seedrandom;
+	hasRequiredSeedrandom = 1;
+	// A library of seedable RNGs implemented in Javascript.
+	//
+	// Usage:
+	//
+	// var seedrandom = require('seedrandom');
+	// var random = seedrandom(1); // or any seed.
+	// var x = random();       // 0 <= x < 1.  Every bit is random.
+	// var x = random.quick(); // 0 <= x < 1.  32 bits of randomness.
 
-  // Set up S using the standard key scheduling algorithm.
-  while (i < width) {
-    s[i] = i++;
-  }
-  for (i = 0; i < width; i++) {
-    s[i] = s[j = mask & (j + key[i % keylen] + (t = s[i]))];
-    s[j] = t;
-  }
+	// alea, a 53-bit multiply-with-carry generator by Johannes Baagøe.
+	// Period: ~2^116
+	// Reported to pass all BigCrush tests.
+	var alea = requireAlea();
 
-  // The "g" method returns the next (count) outputs as one number.
-  (me.g = function(count) {
-    // Using instance members instead of closure state nearly doubles speed.
-    var t, r = 0,
-        i = me.i, j = me.j, s = me.S;
-    while (count--) {
-      t = s[i = mask & (i + 1)];
-      r = r * width + s[mask & ((s[i] = s[j = mask & (j + t)]) + (s[j] = t))];
-    }
-    me.i = i; me.j = j;
-    return r;
-    // For robust unpredictability, the function call below automatically
-    // discards an initial batch of values.  This is called RC4-drop[256].
-    // See http://google.com/search?q=rsa+fluhrer+response&btnI
-  })(width);
+	// xor128, a pure xor-shift generator by George Marsaglia.
+	// Period: 2^128-1.
+	// Reported to fail: MatrixRank and LinearComp.
+	var xor128 = requireXor128();
+
+	// xorwow, George Marsaglia's 160-bit xor-shift combined plus weyl.
+	// Period: 2^192-2^32
+	// Reported to fail: CollisionOver, SimpPoker, and LinearComp.
+	var xorwow = requireXorwow();
+
+	// xorshift7, by François Panneton and Pierre L'ecuyer, takes
+	// a different approach: it adds robustness by allowing more shifts
+	// than Marsaglia's original three.  It is a 7-shift generator
+	// with 256 bits, that passes BigCrush with no systmatic failures.
+	// Period 2^256-1.
+	// No systematic BigCrush failures reported.
+	var xorshift7 = requireXorshift7();
+
+	// xor4096, by Richard Brent, is a 4096-bit xor-shift with a
+	// very long period that also adds a Weyl generator. It also passes
+	// BigCrush with no systematic failures.  Its long period may
+	// be useful if you have many generators and need to avoid
+	// collisions.
+	// Period: 2^4128-2^32.
+	// No systematic BigCrush failures reported.
+	var xor4096 = requireXor4096();
+
+	// Tyche-i, by Samuel Neves and Filipe Araujo, is a bit-shifting random
+	// number generator derived from ChaCha, a modern stream cipher.
+	// https://eden.dei.uc.pt/~sneves/pubs/2011-snfa2.pdf
+	// Period: ~2^127
+	// No systematic BigCrush failures reported.
+	var tychei = requireTychei();
+
+	// The original ARC4-based prng included in this library.
+	// Period: ~2^1600
+	var sr = requireSeedrandom$1();
+
+	sr.alea = alea;
+	sr.xor128 = xor128;
+	sr.xorwow = xorwow;
+	sr.xorshift7 = xorshift7;
+	sr.xor4096 = xor4096;
+	sr.tychei = tychei;
+
+	seedrandom = sr;
+	return seedrandom;
 }
 
-//
-// copy()
-// Copies internal state of ARC4 to or from a plain object.
-//
-function copy(f, t) {
-  t.i = f.i;
-  t.j = f.j;
-  t.S = f.S.slice();
-  return t;
-};
-
-//
-// flatten()
-// Converts an object tree to nested arrays of strings.
-//
-function flatten(obj, depth) {
-  var result = [], typ = (typeof obj), prop;
-  if (depth && typ == 'object') {
-    for (prop in obj) {
-      try { result.push(flatten(obj[prop], depth - 1)); } catch (e) {}
-    }
-  }
-  return (result.length ? result : typ == 'string' ? obj : obj + '\0');
-}
-
-//
-// mixkey()
-// Mixes a string seed into a key that is an array of integers, and
-// returns a shortened string seed that is equivalent to the result key.
-//
-function mixkey(seed, key) {
-  var stringseed = seed + '', smear, j = 0;
-  while (j < stringseed.length) {
-    key[mask & j] =
-      mask & ((smear ^= key[mask & j] * 19) + stringseed.charCodeAt(j++));
-  }
-  return tostring(key);
-}
-
-//
-// autoseed()
-// Returns an object for autoseeding, using window.crypto and Node crypto
-// module if available.
-//
-function autoseed() {
-  try {
-    var out;
-    if (nodecrypto && (out = nodecrypto.randomBytes)) {
-      // The use of 'out' to remember randomBytes makes tight minified code.
-      out = out(width);
-    } else {
-      out = new Uint8Array(width);
-      (global.crypto || global.msCrypto).getRandomValues(out);
-    }
-    return tostring(out);
-  } catch (e) {
-    var browser = global.navigator,
-        plugins = browser && browser.plugins;
-    return [+new Date, global, plugins, global.screen, tostring(pool)];
-  }
-}
-
-//
-// tostring()
-// Converts an array of charcodes to a string
-//
-function tostring(a) {
-  return String.fromCharCode.apply(0, a);
-}
-
-//
-// When seedrandom.js is loaded, we immediately mix a few bits
-// from the built-in RNG into the entropy pool.  Because we do
-// not want to interfere with deterministic PRNG state later,
-// seedrandom will not call math.random on its own again after
-// initialization.
-//
-mixkey(math.random(), pool);
-
-//
-// Nodejs and AMD support: export the implementation as a module using
-// either convention.
-//
-if (('object') == 'object' && module.exports) {
-  module.exports = seedrandom;
-  // When in node.js, try using crypto package for autoseeding.
-  try {
-    nodecrypto = require$$0;
-  } catch (ex) {}
-} else if ((typeof undefined) == 'function' && undefined.amd) {
-  undefined(function() { return seedrandom; });
-} else {
-  // When included as a plain script, set up Math.seedrandom global.
-  math['seed' + rngname] = seedrandom;
-}
-
-
-// End anonymous scope, and pass initial values.
-})(
-  // global: `self` in browsers (including strict mode and web workers),
-  // otherwise `this` in Node and other environments
-  (typeof self !== 'undefined') ? self : commonjsGlobal,
-  [],     // pool: entropy pool starts empty
-  Math    // math: package containing random, pow, and seedrandom
-);
-});
-
-// A library of seedable RNGs implemented in Javascript.
-//
-// Usage:
-//
-// var seedrandom = require('seedrandom');
-// var random = seedrandom(1); // or any seed.
-// var x = random();       // 0 <= x < 1.  Every bit is random.
-// var x = random.quick(); // 0 <= x < 1.  32 bits of randomness.
-
-// alea, a 53-bit multiply-with-carry generator by Johannes Baagøe.
-// Period: ~2^116
-// Reported to pass all BigCrush tests.
-
-
-// xor128, a pure xor-shift generator by George Marsaglia.
-// Period: 2^128-1.
-// Reported to fail: MatrixRank and LinearComp.
-
-
-// xorwow, George Marsaglia's 160-bit xor-shift combined plus weyl.
-// Period: 2^192-2^32
-// Reported to fail: CollisionOver, SimpPoker, and LinearComp.
-
-
-// xorshift7, by François Panneton and Pierre L'ecuyer, takes
-// a different approach: it adds robustness by allowing more shifts
-// than Marsaglia's original three.  It is a 7-shift generator
-// with 256 bits, that passes BigCrush with no systmatic failures.
-// Period 2^256-1.
-// No systematic BigCrush failures reported.
-
-
-// xor4096, by Richard Brent, is a 4096-bit xor-shift with a
-// very long period that also adds a Weyl generator. It also passes
-// BigCrush with no systematic failures.  Its long period may
-// be useful if you have many generators and need to avoid
-// collisions.
-// Period: 2^4128-2^32.
-// No systematic BigCrush failures reported.
-
-
-// Tyche-i, by Samuel Neves and Filipe Araujo, is a bit-shifting random
-// number generator derived from ChaCha, a modern stream cipher.
-// https://eden.dei.uc.pt/~sneves/pubs/2011-snfa2.pdf
-// Period: ~2^127
-// No systematic BigCrush failures reported.
-
-
-// The original ARC4-based prng included in this library.
-// Period: ~2^1600
-
-
-seedrandom$1.alea = alea;
-seedrandom$1.xor128 = xor128;
-seedrandom$1.xorwow = xorwow;
-seedrandom$1.xorshift7 = xorshift7;
-seedrandom$1.xor4096 = xor4096;
-seedrandom$1.tychei = tychei;
-
-var seedrandom = seedrandom$1;
+var seedrandomExports = requireSeedrandom();
+var index$1 = /*@__PURE__*/getDefaultExportFromCjs(seedrandomExports);
 
 /**
  * @license
@@ -17224,6 +19665,21 @@ async function play(video) {
     }
 }
 
+var test_util = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    TEST_EPSILON_FLOAT16: TEST_EPSILON_FLOAT16,
+    createVideoElement: createVideoElement,
+    encodeStrings: encodeStrings,
+    expectArrayBuffersEqual: expectArrayBuffersEqual,
+    expectArraysClose: expectArraysClose,
+    expectArraysEqual: expectArraysEqual,
+    expectNumbersClose: expectNumbersClose,
+    expectPromiseToFail: expectPromiseToFail,
+    expectValuesInRange: expectValuesInRange,
+    play: play,
+    testEpsilon: testEpsilon
+});
+
 /**
  * @license
  * Copyright 2018 Google LLC. All Rights Reserved.
@@ -17253,7 +19709,7 @@ class MPRandGauss {
             this.lower = this.mean - this.stdDev * 2;
         }
         const seedValue = seed ? seed : Math.random();
-        this.random = seedrandom.alea(seedValue.toString());
+        this.random = seedrandomExports.alea(seedValue.toString());
     }
     /** Returns next sample from a Gaussian distribution. */
     nextValue() {
@@ -17303,7 +19759,7 @@ class RandGamma {
         this.beta = 1 / beta; // convert rate to scale parameter
         this.dtype = dtype;
         const seedValue = seed ? seed : Math.random();
-        this.randu = seedrandom.alea(seedValue.toString());
+        this.randu = seedrandomExports.alea(seedValue.toString());
         this.randn = new MPRandGauss(0, 1, dtype, false, this.randu());
         if (alpha < 1) {
             this.d = alpha + (2 / 3);
@@ -17360,7 +19816,7 @@ class UniformRandom {
         if (!this.canReturnFloat() && this.range <= 1) {
             throw new Error(`The difference between ${min} - ${max} <= 1 and dtype is not float`);
         }
-        this.random = seedrandom.alea(seed);
+        this.random = seedrandomExports.alea(seed);
     }
     convertValue(value) {
         if (this.canReturnFloat()) {
@@ -19518,6 +21974,13 @@ function calculateShapes(updates, indices, shape) {
     return { sliceRank, numUpdates, sliceSize, strides, outputSize };
 }
 
+var scatter_nd_util = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    calculateShapes: calculateShapes,
+    validateInput: validateInput$1,
+    validateUpdateShape: validateUpdateShape
+});
+
 /**
  * @license
  * Copyright 2022 Google LLC. All Rights Reserved.
@@ -19958,6 +22421,7 @@ function variable$1(initialValue, trainable = true, name, dtype) {
  * limitations under the License.
  * =============================================================================
  */
+/** An implementation of the Where kernel shared between cpu and webgl */
 function whereImpl$2(condShape, condVals) {
     const indices = [];
     for (let i = 0; i < condVals.length; i++) {
@@ -21391,7 +23855,7 @@ const matMul = /* @__PURE__ */ op({ fusedMatMul_ });
  * =============================================================================
  */
 
-const fused_ops = /*#__PURE__*/Object.freeze({
+var fused_ops = /*#__PURE__*/Object.freeze({
     __proto__: null,
     conv2d: conv2d$3,
     depthwiseConv2d: depthwiseConv2d$2,
@@ -22096,7 +24560,7 @@ function intersectionOverUnion(boxes, i, j) {
 }
 // A Gaussian penalty function, this method always returns values in [0, 1].
 // The weight is a function of similarity, the more overlap two boxes are, the
-// smaller the weight is, meaning highly overlapping boxe will be significantly
+// smaller the weight is,meaning highly overlapping boxes will be significantly
 // penalized. On the other hand, a non-overlapping box will not be penalized.
 function suppressWeight(iouThreshold, scale, iou) {
     const weight = Math.exp(scale * iou * iou);
@@ -24140,6 +26604,7 @@ const staticRegexReplace$2 = /* @__PURE__ */ op({ staticRegexReplace_ });
  * limitations under the License.
  * =============================================================================
  */
+// Modularized ops.
 const spectral$1 = {
     fft: fft$2,
     ifft: ifft$2,
@@ -24365,7 +26830,7 @@ class SerializationMap {
  *
  * @param cls The class to be registered. It must have a public static member
  *   called `className` defined and the value must be a non-empty string.
- * @param pkg The pakcage name that this class belongs to. This used to define
+ * @param pkg The package name that this class belongs to. This used to define
  *     the key in GlobalCustomObject. If not defined, it defaults to `Custom`.
  * @param name The name that user specified. It defaults to the actual name of
  *     the class as specified by its static `className` property.
@@ -24407,6 +26872,14 @@ function getRegisteredName(cls) {
         return cls.className;
     }
 }
+
+var serialization = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    Serializable: Serializable,
+    SerializationMap: SerializationMap,
+    getRegisteredName: getRegisteredName,
+    registerClass: registerClass
+});
 
 /**
  * @license
@@ -25375,6 +27848,10 @@ function registerOptimizers() {
  * limitations under the License.
  * =============================================================================
  */
+/**
+ * IOHandlers related to files, such as browser-triggered file downloads,
+ * user-selected files in browser.
+ */
 const DEFAULT_FILE_NAME_PREFIX = 'model';
 const DEFAULT_JSON_EXTENSION_NAME = '.json';
 const DEFAULT_WEIGHT_DATA_EXTENSION_NAME = '.weights.bin';
@@ -25383,7 +27860,7 @@ function defer(f) {
 }
 class BrowserDownloads {
     constructor(fileNamePrefix) {
-        if (!env().getBool('IS_BROWSER')) {
+        if (!env$1().getBool('IS_BROWSER')) {
             // TODO(cais): Provide info on what IOHandlers are available under the
             //   current environment.
             throw new Error('browserDownloads() cannot proceed because the current environment ' +
@@ -25536,7 +28013,7 @@ class BrowserFiles {
     }
 }
 const browserDownloadsRouter = (url) => {
-    if (!env().getBool('IS_BROWSER')) {
+    if (!env$1().getBool('IS_BROWSER')) {
         return null;
     }
     else {
@@ -25721,7 +28198,7 @@ async function loadWeightsAsArrayBuffer(fetchURLs, loadOptions) {
     if (loadOptions == null) {
         loadOptions = {};
     }
-    const fetchFunc = loadOptions.fetchFunc == null ? env().platform.fetch :
+    const fetchFunc = loadOptions.fetchFunc == null ? env$1().platform.fetch :
         loadOptions.fetchFunc;
     // Create the requests for all of the weights in parallel.
     const requests = fetchURLs.map(fetchURL => fetchFunc(fetchURL, loadOptions.requestInit, { isBinary: true }));
@@ -25737,6 +28214,35 @@ async function loadWeightsAsArrayBuffer(fetchURLs, loadOptions) {
         await Promise.all(bufferPromises) :
         await monitorPromisesProgress(bufferPromises, loadOptions.onProgress, bufferStartFraction, bufferEndFraction);
     return buffers;
+}
+function streamWeights(fetchURLs, loadOptions) {
+    var _a;
+    const fetchFunc = loadOptions.fetchFunc == null ? env$1().platform.fetch :
+        loadOptions.fetchFunc;
+    let fetchIndex = 0;
+    let chunkReader;
+    (_a = loadOptions.onProgress) === null || _a === void 0 ? void 0 : _a.call(loadOptions, 0);
+    return new ReadableStream({
+        pull: async (controller) => {
+            var _a;
+            while (fetchIndex < fetchURLs.length) {
+                if (!chunkReader) {
+                    const body = (await fetchFunc(fetchURLs[fetchIndex], loadOptions.requestInit, { isBinary: true })).body;
+                    chunkReader = body.getReader();
+                }
+                const { done, value } = await chunkReader.read();
+                if (done) {
+                    fetchIndex++;
+                    chunkReader = undefined;
+                    (_a = loadOptions.onProgress) === null || _a === void 0 ? void 0 : _a.call(loadOptions, fetchIndex / fetchURLs.length);
+                    continue;
+                }
+                controller.enqueue(value);
+                return;
+            }
+            controller.close();
+        },
+    });
 }
 /**
  * Reads a weights manifest JSON configuration, fetches the weights and
@@ -25882,6 +28388,11 @@ function weightsLoaderFactory(fetchWeightsFunction) {
  * limitations under the License.
  * =============================================================================
  */
+/**
+ * IOHandler implementations based on HTTP requests in the web browser.
+ *
+ * Uses [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).
+ */
 const OCTET_STREAM_MIME_TYPE = 'application/octet-stream';
 const JSON_TYPE = 'application/json';
 class HTTPRequest {
@@ -25891,7 +28402,6 @@ class HTTPRequest {
             loadOptions = {};
         }
         this.weightPathPrefix = loadOptions.weightPathPrefix;
-        this.onProgress = loadOptions.onProgress;
         this.weightUrlConverter = loadOptions.weightUrlConverter;
         if (loadOptions.fetchFunc != null) {
             assert$1(typeof loadOptions.fetchFunc === 'function', () => 'Must pass a function that matches the signature of ' +
@@ -25900,7 +28410,7 @@ class HTTPRequest {
             this.fetch = loadOptions.fetchFunc;
         }
         else {
-            this.fetch = env().platform.fetch;
+            this.fetch = env$1().platform.fetch;
         }
         assert$1(path != null && path.length > 0, () => 'URL path for http must not be null, undefined or ' +
             'empty.');
@@ -25914,6 +28424,7 @@ class HTTPRequest {
             throw new Error('requestInit is expected to have no pre-existing body, but has one.');
         }
         this.requestInit = loadOptions.requestInit || {};
+        this.loadOptions = loadOptions;
     }
     async save(modelArtifacts) {
         if (modelArtifacts.modelTopology instanceof ArrayBuffer) {
@@ -25946,15 +28457,7 @@ class HTTPRequest {
                 `${response.status}.`);
         }
     }
-    /**
-     * Load model artifacts via HTTP request(s).
-     *
-     * See the documentation to `tf.io.http` for details on the saved
-     * artifacts.
-     *
-     * @returns The loaded model artifacts (if loading succeeds).
-     */
-    async load() {
+    async loadModelJSON() {
         const modelConfigRequest = await this.fetch(this.path, this.requestInit);
         if (!modelConfigRequest.ok) {
             throw new Error(`Request to ${this.path} failed with status code ` +
@@ -25990,13 +28493,34 @@ class HTTPRequest {
             throw new Error(`The JSON from HTTP path ${this.path} contains neither model ` +
                 `topology or manifest for weights.`);
         }
+        return modelJSON;
+    }
+    /**
+     * Load model artifacts via HTTP request(s).
+     *
+     * See the documentation to `tf.io.http` for details on the saved
+     * artifacts.
+     *
+     * @returns The loaded model artifacts (if loading succeeds).
+     */
+    async load() {
+        if (this.loadOptions.streamWeights) {
+            return this.loadStream();
+        }
+        const modelJSON = await this.loadModelJSON();
         return getModelArtifactsForJSON(modelJSON, (weightsManifest) => this.loadWeights(weightsManifest));
     }
-    async loadWeights(weightsManifest) {
+    async loadStream() {
+        const modelJSON = await this.loadModelJSON();
+        const fetchURLs = await this.getWeightUrls(modelJSON.weightsManifest);
+        const weightSpecs = getWeightSpecs(modelJSON.weightsManifest);
+        const stream = () => streamWeights(fetchURLs, this.loadOptions);
+        return Object.assign(Object.assign({}, modelJSON), { weightSpecs, getWeightStream: stream });
+    }
+    async getWeightUrls(weightsManifest) {
         const weightPath = Array.isArray(this.path) ? this.path[1] : this.path;
         const [prefix, suffix] = parseUrl(weightPath);
         const pathPrefix = this.weightPathPrefix || prefix;
-        const weightSpecs = getWeightSpecs(weightsManifest);
         const fetchURLs = [];
         const urlPromises = [];
         for (const weightsGroup of weightsManifest) {
@@ -26012,11 +28536,12 @@ class HTTPRequest {
         if (this.weightUrlConverter) {
             fetchURLs.push(...await Promise.all(urlPromises));
         }
-        const buffers = await loadWeightsAsArrayBuffer(fetchURLs, {
-            requestInit: this.requestInit,
-            fetchFunc: this.fetch,
-            onProgress: this.onProgress
-        });
+        return fetchURLs;
+    }
+    async loadWeights(weightsManifest) {
+        const fetchURLs = await this.getWeightUrls(weightsManifest);
+        const weightSpecs = getWeightSpecs(weightsManifest);
+        const buffers = await loadWeightsAsArrayBuffer(fetchURLs, this.loadOptions);
         return [weightSpecs, buffers];
     }
 }
@@ -26101,7 +28626,7 @@ IORouterRegistry.registerLoadRouter(httpRouter);
  * The following GitHub Gist
  * https://gist.github.com/dsmilkov/1b6046fd6132d7408d5257b0976f7864
  * implements a server based on [flask](https://github.com/pallets/flask) that
- * can receive the request. Upon receiving the model artifacts via the requst,
+ * can receive the request. Upon receiving the model artifacts via the request,
  * this particular server reconstitutes instances of [Keras
  * Models](https://keras.io/models/model/) in memory.
  *
@@ -26321,14 +28846,18 @@ function withSaveHandlerSync(saveHandler) {
  * limitations under the License.
  * =============================================================================
  */
+// Importing local_storage and indexed_db is necessary for the routers to be
+// registered.
 
-const io = /*#__PURE__*/Object.freeze({
+var io = /*#__PURE__*/Object.freeze({
     __proto__: null,
+    CompositeArrayBuffer: CompositeArrayBuffer,
     browserFiles: browserFiles,
     browserHTTPRequest: browserHTTPRequest,
-    CompositeArrayBuffer: CompositeArrayBuffer,
     concatenateArrayBuffers: concatenateArrayBuffers,
+    copyModel: copyModel,
     decodeWeights: decodeWeights,
+    decodeWeightsStream: decodeWeightsStream,
     encodeWeights: encodeWeights,
     fromMemory: fromMemory,
     fromMemorySync: fromMemorySync,
@@ -26340,16 +28869,15 @@ const io = /*#__PURE__*/Object.freeze({
     getWeightSpecs: getWeightSpecs,
     http: http,
     isHTTPScheme: isHTTPScheme,
+    listModels: listModels,
     loadWeights: loadWeights,
+    moveModel: moveModel,
     registerLoadRouter: registerLoadRouter,
     registerSaveRouter: registerSaveRouter,
+    removeModel: removeModel,
     weightsLoaderFactory: weightsLoaderFactory,
     withSaveHandler: withSaveHandler,
-    withSaveHandlerSync: withSaveHandlerSync,
-    copyModel: copyModel,
-    listModels: listModels,
-    moveModel: moveModel,
-    removeModel: removeModel
+    withSaveHandlerSync: withSaveHandlerSync
 });
 
 /**
@@ -26436,6 +28964,14 @@ const confusionMatrix = /* @__PURE__ */ op({ confusionMatrix_ });
  * limitations under the License.
  * =============================================================================
  */
+/**
+ * Exports under the tf.math.* namespace.
+ */
+
+var math = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    confusionMatrix: confusionMatrix
+});
 
 /**
  * @license
@@ -26637,7 +29173,7 @@ async function fromPixelsAsync(pixels, numChannels = 3) {
     let inputs = null;
     // Check whether the backend needs to wrap |pixels| to imageBitmap and
     // whether |pixels| can be wrapped to imageBitmap.
-    if (env().getBool('WRAP_TO_IMAGEBITMAP') &&
+    if (env$1().getBool('WRAP_TO_IMAGEBITMAP') &&
         canWrapPixelsToImageBitmap(pixels)) {
         // Force the imageBitmap creation to not do any premultiply alpha
         // ops.
@@ -26812,6 +29348,14 @@ function draw$1(image, canvas, options) {
 }
 const fromPixels$1 = /* @__PURE__ */ op({ fromPixels_ });
 
+var browser = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    draw: draw$1,
+    fromPixels: fromPixels$1,
+    fromPixelsAsync: fromPixelsAsync,
+    toPixels: toPixels
+});
+
 /**
  * Validate gather nd inputs.
  *
@@ -26863,6 +29407,11 @@ function prepareAndValidate(tensor, indices) {
         1].slice(0, sliceRank);
     return [resultShape, nResult, sliceSize, strides];
 }
+
+var gather_nd_util = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    prepareAndValidate: prepareAndValidate
+});
 
 /**
  * @license
@@ -27435,27 +29984,27 @@ function canonical(x, c, strideI, dimI, masks, validRange) {
     }
 }
 
-const slice_util = /*#__PURE__*/Object.freeze({
+var slice_util = /*#__PURE__*/Object.freeze({
     __proto__: null,
     assertParamsValid: assertParamsValid,
-    maskToAxes: maskToAxes,
+    computeFlatOffset: computeFlatOffset,
     computeOutShape: computeOutShape$2,
-    stridesWithElidedDims: stridesWithElidedDims,
     getNormalizedAxes: getNormalizedAxes,
+    isSliceContinous: isSliceContinous,
+    maskToAxes: maskToAxes,
+    parseSliceParams: parseSliceParams,
+    sliceInfo: sliceInfo,
+    startForAxis: startForAxis,
     startIndicesWithElidedDims: startIndicesWithElidedDims,
+    stopForAxis: stopForAxis,
     stopIndicesWithElidedDims: stopIndicesWithElidedDims,
     stridesForAxis: stridesForAxis,
-    startForAxis: startForAxis,
-    stopForAxis: stopForAxis,
-    isSliceContinous: isSliceContinous,
-    computeFlatOffset: computeFlatOffset,
-    parseSliceParams: parseSliceParams,
-    sliceInfo: sliceInfo
+    stridesWithElidedDims: stridesWithElidedDims
 });
 
 /** @license See the LICENSE file. */
 // This code is auto-generated, do not modify this file!
-const version$7 = '4.11.0';
+const version$7 = '4.22.0';
 
 /**
  * @license
@@ -27867,6 +30416,10 @@ function validateDefaultValueShape(defaultValueShape, valueShape) {
  * limitations under the License.
  * =============================================================================
  */
+/**
+ * Inputs of size above this threshold will be parallelized by calling multiple
+ * shader programs.
+ */
 const PARALLELIZE_THRESHOLD = 30;
 function computeOptimalWindowSize(inSize) {
     if (inSize <= PARALLELIZE_THRESHOLD) {
@@ -28164,7 +30717,7 @@ function complexWithEvenIndex(complex) {
     return { real, imag };
 }
 /**
- * Extracts odd indexed comple values in the given array.
+ * Extracts odd indexed complete values in the given array.
  * @param complex The complex tensor values
  */
 function complexWithOddIndex(complex) {
@@ -28360,7 +30913,7 @@ function checkEinsumDimSizes(nDims, idDims, tensors) {
  *
  * @param summedDims indices to the dimensions being summed over.
  * @param idDims A look up table for the dimensions present in each input
- *     tensor. Each consituent array contains indices for the dimensions in the
+ *     tensor.Each constituent array contains indices for the dimensions in the
  *     corresponding input tensor.
  *
  * @return A map with two fields:
@@ -28698,11 +31251,11 @@ function collectGatherOpShapeInfo(x, indices, axis, batchDims) {
     return { batchSize, sliceSize, outerSize, dimSize, outputShape };
 }
 
-const segment_util = /*#__PURE__*/Object.freeze({
+var segment_util = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    segOpComputeOptimalWindowSize: segOpComputeOptimalWindowSize,
+    collectGatherOpShapeInfo: collectGatherOpShapeInfo,
     computeOutShape: computeOutShape,
-    collectGatherOpShapeInfo: collectGatherOpShapeInfo
+    segOpComputeOptimalWindowSize: segOpComputeOptimalWindowSize
 });
 
 /**
@@ -28734,94 +31287,94 @@ function fromStringArrayToUint8(strings) {
     return strings.map(s => encodeString(s));
 }
 
-const backend_util = /*#__PURE__*/Object.freeze({
+var backend_util = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    slice_util: slice_util,
-    segment_util: segment_util,
-    fromUint8ToStringArray: fromUint8ToStringArray,
-    fromStringArrayToUint8: fromStringArrayToUint8,
-    upcastType: upcastType,
-    axesAreInnerMostDims: axesAreInnerMostDims,
-    combineLocations: combineLocations,
-    computeOutAndReduceShapes: computeOutAndReduceShapes,
-    expandShapeToKeepDim: expandShapeToKeepDim,
-    assertAxesAreInnerMostDims: assertAxesAreInnerMostDims,
-    getAxesPermutation: getAxesPermutation,
-    getUndoAxesPermutation: getUndoAxesPermutation,
-    getInnerMostAxes: getInnerMostAxes,
-    getBroadcastDims: getBroadcastDims$1,
-    getReductionAxes: getReductionAxes,
-    assertAndGetBroadcastShape: assertAndGetBroadcastShape,
-    assertParamsConsistent: assertParamsConsistent,
-    computeOutShape: computeOutShape$1,
-    computeDilation2DInfo: computeDilation2DInfo,
-    computePool2DInfo: computePool2DInfo,
-    computePool3DInfo: computePool3DInfo,
-    computeConv2DInfo: computeConv2DInfo,
-    computeConv3DInfo: computeConv3DInfo,
-    computeDefaultPad: computeDefaultPad,
-    tupleValuesAreOne: tupleValuesAreOne,
-    eitherStridesOrDilationsAreOne: eitherStridesOrDilationsAreOne,
-    stridesOrDilationsArePositive: stridesOrDilationsArePositive,
-    convertConv2DDataFormat: convertConv2DDataFormat,
-    checkPadOnDimRoundingMode: checkPadOnDimRoundingMode,
-    getFusedDyActivation: getFusedDyActivation,
-    getFusedBiasGradient: getFusedBiasGradient,
-    applyActivation: applyActivation$1,
-    shouldFuse: shouldFuse,
-    get RowPartitionType () { return RowPartitionType$1; },
-    combineRaggedTensorToTensorShapes: combineRaggedTensorToTensorShapes,
-    getRowPartitionTypesHelper: getRowPartitionTypesHelper,
-    getRaggedRank: getRaggedRank,
-    validateDefaultValueShape: validateDefaultValueShape,
-    PARALLELIZE_THRESHOLD: PARALLELIZE_THRESHOLD,
-    computeOptimalWindowSize: computeOptimalWindowSize,
-    getImageCenter: getImageCenter,
-    getReshaped: getReshaped,
-    getPermuted: getPermuted,
-    getReshapedPermuted: getReshapedPermuted,
-    getSliceBeginCoords: getSliceBeginCoords,
-    getSliceSize: getSliceSize,
-    prepareAndValidate: prepareAndValidate,
-    validateUpdateShape: validateUpdateShape,
-    validateInput: validateInput$1,
-    calculateShapes: calculateShapes,
-    SELU_SCALEALPHA: SELU_SCALEALPHA,
-    SELU_SCALE: SELU_SCALE,
-    ERF_P: ERF_P,
     ERF_A1: ERF_A1,
     ERF_A2: ERF_A2,
     ERF_A3: ERF_A3,
     ERF_A4: ERF_A4,
     ERF_A5: ERF_A5,
-    warn: warn,
-    log: log$3,
-    mergeRealAndImagArrays: mergeRealAndImagArrays,
-    splitRealAndImagArrays: splitRealAndImagArrays,
+    ERF_P: ERF_P,
+    PARALLELIZE_THRESHOLD: PARALLELIZE_THRESHOLD,
+    get RowPartitionType () { return RowPartitionType$1; },
+    SELU_SCALE: SELU_SCALE,
+    SELU_SCALEALPHA: SELU_SCALEALPHA,
+    applyActivation: applyActivation$1,
+    assertAndGetBroadcastShape: assertAndGetBroadcastShape,
+    assertAxesAreInnerMostDims: assertAxesAreInnerMostDims,
+    assertParamsConsistent: assertParamsConsistent,
+    assignToTypedArray: assignToTypedArray,
+    axesAreInnerMostDims: axesAreInnerMostDims,
+    calculateShapes: calculateShapes,
+    checkEinsumDimSizes: checkEinsumDimSizes,
+    checkPadOnDimRoundingMode: checkPadOnDimRoundingMode,
+    combineLocations: combineLocations,
+    combineRaggedTensorToTensorShapes: combineRaggedTensorToTensorShapes,
     complexWithEvenIndex: complexWithEvenIndex,
     complexWithOddIndex: complexWithOddIndex,
-    getComplexWithIndex: getComplexWithIndex,
-    assignToTypedArray: assignToTypedArray,
-    exponents: exponents,
-    exponent: exponent,
+    computeConv2DInfo: computeConv2DInfo,
+    computeConv3DInfo: computeConv3DInfo,
+    computeDefaultPad: computeDefaultPad,
+    computeDilation2DInfo: computeDilation2DInfo,
+    computeOptimalWindowSize: computeOptimalWindowSize,
+    computeOutAndReduceShapes: computeOutAndReduceShapes,
+    computeOutShape: computeOutShape$1,
+    computePool2DInfo: computePool2DInfo,
+    computePool3DInfo: computePool3DInfo,
+    convertConv2DDataFormat: convertConv2DDataFormat,
     decodeEinsumEquation: decodeEinsumEquation,
-    getEinsumPermutation: getEinsumPermutation,
-    checkEinsumDimSizes: checkEinsumDimSizes,
+    eitherStridesOrDilationsAreOne: eitherStridesOrDilationsAreOne,
+    expandShapeToKeepDim: expandShapeToKeepDim,
+    exponent: exponent,
+    exponents: exponents,
+    fromStringArrayToUint8: fromStringArrayToUint8,
+    fromUint8ToStringArray: fromUint8ToStringArray,
+    getAxesPermutation: getAxesPermutation,
+    getBroadcastDims: getBroadcastDims$1,
+    getComplexWithIndex: getComplexWithIndex,
     getEinsumComputePath: getEinsumComputePath,
-    isIdentityPermutation: isIdentityPermutation,
-    prepareSplitSize: prepareSplitSize,
+    getEinsumPermutation: getEinsumPermutation,
+    getFusedBiasGradient: getFusedBiasGradient,
+    getFusedDyActivation: getFusedDyActivation,
+    getImageCenter: getImageCenter,
+    getInnerMostAxes: getInnerMostAxes,
+    getPermuted: getPermuted,
+    getRaggedRank: getRaggedRank,
+    getReductionAxes: getReductionAxes,
+    getReshaped: getReshaped,
+    getReshapedPermuted: getReshapedPermuted,
+    getRowPartitionTypesHelper: getRowPartitionTypesHelper,
+    getSliceBeginCoords: getSliceBeginCoords,
+    getSliceSize: getSliceSize,
     getSparseFillEmptyRowsIndicesDenseShapeMismatch: getSparseFillEmptyRowsIndicesDenseShapeMismatch,
     getSparseFillEmptyRowsNegativeIndexErrorMessage: getSparseFillEmptyRowsNegativeIndexErrorMessage,
     getSparseFillEmptyRowsOutOfRangeIndexErrorMessage: getSparseFillEmptyRowsOutOfRangeIndexErrorMessage,
+    getSparseReshapeEmptyTensorZeroOutputDimErrorMessage: getSparseReshapeEmptyTensorZeroOutputDimErrorMessage,
+    getSparseReshapeInputOutputMismatchErrorMessage: getSparseReshapeInputOutputMismatchErrorMessage,
+    getSparseReshapeInputOutputMultipleErrorMessage: getSparseReshapeInputOutputMultipleErrorMessage,
     getSparseReshapeMultipleNegativeOneOutputDimErrorMessage: getSparseReshapeMultipleNegativeOneOutputDimErrorMessage,
     getSparseReshapeNegativeOutputDimErrorMessage: getSparseReshapeNegativeOutputDimErrorMessage,
-    getSparseReshapeEmptyTensorZeroOutputDimErrorMessage: getSparseReshapeEmptyTensorZeroOutputDimErrorMessage,
-    getSparseReshapeInputOutputMultipleErrorMessage: getSparseReshapeInputOutputMultipleErrorMessage,
-    getSparseReshapeInputOutputMismatchErrorMessage: getSparseReshapeInputOutputMismatchErrorMessage,
+    getSparseSegmentReductionIndicesOutOfRangeErrorMessage: getSparseSegmentReductionIndicesOutOfRangeErrorMessage,
     getSparseSegmentReductionNegativeSegmentIdsErrorMessage: getSparseSegmentReductionNegativeSegmentIdsErrorMessage,
     getSparseSegmentReductionNonIncreasingSegmentIdsErrorMessage: getSparseSegmentReductionNonIncreasingSegmentIdsErrorMessage,
     getSparseSegmentReductionSegmentIdOutOfRangeErrorMessage: getSparseSegmentReductionSegmentIdOutOfRangeErrorMessage,
-    getSparseSegmentReductionIndicesOutOfRangeErrorMessage: getSparseSegmentReductionIndicesOutOfRangeErrorMessage
+    getUndoAxesPermutation: getUndoAxesPermutation,
+    isIdentityPermutation: isIdentityPermutation,
+    log: log$3,
+    mergeRealAndImagArrays: mergeRealAndImagArrays,
+    prepareAndValidate: prepareAndValidate,
+    prepareSplitSize: prepareSplitSize,
+    segment_util: segment_util,
+    shouldFuse: shouldFuse,
+    slice_util: slice_util,
+    splitRealAndImagArrays: splitRealAndImagArrays,
+    stridesOrDilationsArePositive: stridesOrDilationsArePositive,
+    tupleValuesAreOne: tupleValuesAreOne,
+    upcastType: upcastType,
+    validateDefaultValueShape: validateDefaultValueShape,
+    validateInput: validateInput$1,
+    validateUpdateShape: validateUpdateShape,
+    warn: warn
 });
 
 /**
@@ -28841,6 +31394,14 @@ const backend_util = /*#__PURE__*/Object.freeze({
  * =============================================================================
  */
 
+var kernel_impls = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    nonMaxSuppressionV3Impl: nonMaxSuppressionV3Impl$2,
+    nonMaxSuppressionV4Impl: nonMaxSuppressionV4Impl$2,
+    nonMaxSuppressionV5Impl: nonMaxSuppressionV5Impl$2,
+    whereImpl: whereImpl$2
+});
+
 /**
  * @license
  * Copyright 2020 Google Inc. All Rights Reserved.
@@ -28857,6 +31418,18 @@ const backend_util = /*#__PURE__*/Object.freeze({
  * limitations under the License.
  * =============================================================================
  */
+// base.ts is tfjs-core without auto registration of things like flags,
+// gradients, chained ops or the opHandler. See base_side_effects.ts for parts
+// tfjs core that are required side effects.
+/**
+ * @fileoverview
+ * @suppress {partialAlias} Optimization disabled due to passing the module
+ * object into a function below:
+ *
+ *   import * as ops from './ops/ops';
+ *   setOpHandler(ops);
+ */
+// Serialization.
 
 /**
  * @license
@@ -28874,6 +31447,7 @@ const backend_util = /*#__PURE__*/Object.freeze({
  * limitations under the License.
  * =============================================================================
  */
+// Required side effectful code.
 registerOptimizers();
 
 /**
@@ -32542,6 +35116,7 @@ for (const gradientConfig of gradConfigs) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.abs = function () {
     this.throwIfDisposed();
     return abs$2(this);
@@ -32563,6 +35138,7 @@ getGlobalTensorClass().prototype.abs = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.acos = function () {
     this.throwIfDisposed();
     return acos$2(this);
@@ -32584,6 +35160,7 @@ getGlobalTensorClass().prototype.acos = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.acosh = function () {
     this.throwIfDisposed();
     return acosh$2(this);
@@ -32736,6 +35313,7 @@ getGlobalTensorClass().prototype.asScalar = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 /**
  * Casts a `tf.Tensor` to a specified dtype.
  *
@@ -32908,6 +35486,7 @@ getGlobalTensorClass().prototype.as5D = function (rows, columns, depth, depth2, 
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.asin = function () {
     this.throwIfDisposed();
     return asin$2(this);
@@ -32929,6 +35508,7 @@ getGlobalTensorClass().prototype.asin = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.asinh = function () {
     this.throwIfDisposed();
     return asinh$2(this);
@@ -32950,6 +35530,7 @@ getGlobalTensorClass().prototype.asinh = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.atan = function () {
     this.throwIfDisposed();
     return atan$2(this);
@@ -32992,6 +35573,7 @@ getGlobalTensorClass().prototype.atan2 = function (b) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.atanh = function () {
     this.throwIfDisposed();
     return atanh$2(this);
@@ -33082,6 +35664,7 @@ getGlobalTensorClass().prototype.broadcastTo = function (shape) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.cast = function (dtype) {
     this.throwIfDisposed();
     return cast$3(this, dtype);
@@ -33103,6 +35686,7 @@ getGlobalTensorClass().prototype.cast = function (dtype) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.ceil = function () {
     this.throwIfDisposed();
     return ceil$2(this);
@@ -33124,6 +35708,7 @@ getGlobalTensorClass().prototype.ceil = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.clipByValue = function (min, max) {
     this.throwIfDisposed();
     return clipByValue$2(this, min, max);
@@ -33233,6 +35818,7 @@ getGlobalTensorClass().prototype.conv2d = function (filter, strides, pad, dataFo
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.cos = function () {
     this.throwIfDisposed();
     return cos$2(this);
@@ -33254,6 +35840,7 @@ getGlobalTensorClass().prototype.cos = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.cosh = function () {
     this.throwIfDisposed();
     return cosh$2(this);
@@ -33487,6 +36074,7 @@ getGlobalTensorClass().prototype.equal = function (b) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.erf = function () {
     this.throwIfDisposed();
     return erf$2(this);
@@ -33529,6 +36117,7 @@ getGlobalTensorClass().prototype.euclideanNorm = function (axis, keepDims) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.exp = function () {
     this.throwIfDisposed();
     return exp$2(this);
@@ -33571,6 +36160,7 @@ getGlobalTensorClass().prototype.expandDims = function (axis) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.expm1 = function () {
     this.throwIfDisposed();
     return expm1$2(this);
@@ -33592,6 +36182,7 @@ getGlobalTensorClass().prototype.expm1 = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.fft = function () {
     this.throwIfDisposed();
     return fft$2(this);
@@ -33638,6 +36229,7 @@ getGlobalTensorClass().prototype.flatten = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.floor = function () {
     this.throwIfDisposed();
     return floor$2(this);
@@ -33743,6 +36335,7 @@ getGlobalTensorClass().prototype.greater = function (b) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.ifft = function () {
     this.throwIfDisposed();
     return ifft$2(this);
@@ -33764,6 +36357,7 @@ getGlobalTensorClass().prototype.ifft = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.irfft = function () {
     this.throwIfDisposed();
     return irfft(this);
@@ -33785,6 +36379,7 @@ getGlobalTensorClass().prototype.irfft = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.isFinite = function () {
     this.throwIfDisposed();
     return isFinite$3(this);
@@ -33806,6 +36401,7 @@ getGlobalTensorClass().prototype.isFinite = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.isInf = function () {
     this.throwIfDisposed();
     return isInf$2(this);
@@ -33827,6 +36423,7 @@ getGlobalTensorClass().prototype.isInf = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.isNaN = function () {
     this.throwIfDisposed();
     return isNaN$3(this);
@@ -33933,6 +36530,7 @@ getGlobalTensorClass().prototype.localResponseNormalization =
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.logSigmoid = function () {
     this.throwIfDisposed();
     return logSigmoid(this);
@@ -33954,6 +36552,7 @@ getGlobalTensorClass().prototype.logSigmoid = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.logSoftmax = function (axis) {
     this.throwIfDisposed();
     return logSoftmax(this, axis);
@@ -33996,6 +36595,7 @@ getGlobalTensorClass().prototype.logSumExp = function (axis, keepDims) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.log = function () {
     this.throwIfDisposed();
     return log$2(this);
@@ -34017,6 +36617,7 @@ getGlobalTensorClass().prototype.log = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.log1p = function () {
     this.throwIfDisposed();
     return log1p$2(this);
@@ -34317,6 +36918,7 @@ getGlobalTensorClass().prototype.mul = function (b) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.neg = function () {
     this.throwIfDisposed();
     return neg$2(this);
@@ -34338,6 +36940,7 @@ getGlobalTensorClass().prototype.neg = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.norm = function (ord, axis, keepDims) {
     this.throwIfDisposed();
     return norm(this, ord, axis, keepDims);
@@ -34401,6 +37004,7 @@ getGlobalTensorClass().prototype.oneHot = function (depth, onValue = 1, offValue
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.onesLike = function () {
     this.throwIfDisposed();
     return onesLike$3(this);
@@ -34511,6 +37115,7 @@ getGlobalTensorClass().prototype.prod = function (axis, keepDims) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.reciprocal = function () {
     this.throwIfDisposed();
     return reciprocal$2(this);
@@ -34688,6 +37293,7 @@ getGlobalTensorClass().prototype.reverse = function (axis) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.rfft = function () {
     this.throwIfDisposed();
     return rfft(this);
@@ -34709,6 +37315,7 @@ getGlobalTensorClass().prototype.rfft = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.round = function () {
     this.throwIfDisposed();
     return round$2(this);
@@ -34730,6 +37337,7 @@ getGlobalTensorClass().prototype.round = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.rsqrt = function () {
     this.throwIfDisposed();
     return rsqrt$2(this);
@@ -34794,6 +37402,7 @@ getGlobalTensorClass().prototype.separableConv2d =
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.sigmoid = function () {
     this.throwIfDisposed();
     return sigmoid$2(this);
@@ -34815,6 +37424,7 @@ getGlobalTensorClass().prototype.sigmoid = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.sign = function () {
     this.throwIfDisposed();
     return sign$3(this);
@@ -34836,6 +37446,7 @@ getGlobalTensorClass().prototype.sign = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.sin = function () {
     this.throwIfDisposed();
     return sin$2(this);
@@ -34857,6 +37468,7 @@ getGlobalTensorClass().prototype.sin = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.sinh = function () {
     this.throwIfDisposed();
     return sinh$2(this);
@@ -34878,6 +37490,7 @@ getGlobalTensorClass().prototype.sinh = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.slice = function (begin, size) {
     this.throwIfDisposed();
     return slice$2(this, begin, size);
@@ -34899,6 +37512,7 @@ getGlobalTensorClass().prototype.slice = function (begin, size) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.softmax = function (dim) {
     this.throwIfDisposed();
     return softmax$3(this, dim);
@@ -34920,6 +37534,7 @@ getGlobalTensorClass().prototype.softmax = function (dim) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.softplus = function () {
     this.throwIfDisposed();
     return softplus$2(this);
@@ -34983,6 +37598,7 @@ getGlobalTensorClass().prototype.split = function (numOrSizeSplits, axis) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.sqrt = function () {
     this.throwIfDisposed();
     return sqrt$2(this);
@@ -35004,6 +37620,7 @@ getGlobalTensorClass().prototype.sqrt = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.square = function () {
     this.throwIfDisposed();
     return square$2(this);
@@ -35089,6 +37706,7 @@ getGlobalTensorClass().prototype.stack = function (x, axis) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.step = function (alpha) {
     this.throwIfDisposed();
     return step$2(this, alpha);
@@ -35110,6 +37728,7 @@ getGlobalTensorClass().prototype.step = function (alpha) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.stridedSlice = function (begin, end, strides, beginMask, endMask, ellipsisMask, newAxisMask, shrinkAxisMask) {
     this.throwIfDisposed();
     return stridedSlice$2(this, begin, end, strides, beginMask, endMask, ellipsisMask, newAxisMask, shrinkAxisMask);
@@ -35173,6 +37792,7 @@ getGlobalTensorClass().prototype.sum = function (axis, keepDims) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.tan = function () {
     this.throwIfDisposed();
     return tan$2(this);
@@ -35194,6 +37814,7 @@ getGlobalTensorClass().prototype.tan = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.tanh = function () {
     this.throwIfDisposed();
     return tanh$2(this);
@@ -35236,6 +37857,7 @@ getGlobalTensorClass().prototype.tile = function (reps) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 /**
  * Casts the array to type `bool`
  *
@@ -35262,6 +37884,7 @@ getGlobalTensorClass().prototype.toBool = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 /**
  * Casts the array to type `float32`
  *
@@ -35288,6 +37911,7 @@ getGlobalTensorClass().prototype.toFloat = function () {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 /**
  * Casts the array to type `int32`
  *
@@ -35441,6 +38065,7 @@ getGlobalTensorClass().prototype.where = function (condition, x) {
  * limitations under the License.
  * =============================================================================
  */
+// TODO update import path once op is modularized.
 getGlobalTensorClass().prototype.zerosLike = function () {
     this.throwIfDisposed();
     return zerosLike$3(this);
@@ -35620,6 +38245,7 @@ class LruCache {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* Original source: utils/generic_utils.py */
 // tslint:enable
 /**
  * If `value` is an Array, equivalent to Python's `value * numValues`.
@@ -36185,6 +38811,9 @@ const VALID_SAMPLE_WEIGHT_MODES = ['temporal'];
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/**
+ * Common functions for TensorFlow.js Layers.
+ */
 // A map from the requested scoped name of a Tensor to the number of Tensors
 // wanting that name so far.  This allows enforcing name uniqueness by appending
 // an incrementing index, e.g. scope/name, scope/name_1, scope/name_2, etc.
@@ -36288,6 +38917,16 @@ function isValidTensorName(name) {
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  * =============================================================================
+ */
+/**
+ * Math utility functions.
+ *
+ * This file contains some frequently used math function that operates on
+ * number[] or Float32Array and return a number. Many of these functions are
+ * not-so-thick wrappers around TF.js Core functions. But they offer the
+ * convenience of
+ * 1) not having to convert the inputs into Tensors,
+ * 2) not having to convert the returned Tensors to numbers.
  */
 /**
  * Determine if a number is an integer.
@@ -36462,6 +39101,9 @@ function imageDataFormat() {
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  * =============================================================================
+ */
+/**
+ * deeplearn.js backend.
  */
 // tslint:enable
 /* Setting and getting backend from deeplearn.js. */
@@ -38003,6 +40645,7 @@ function gradients(lossFn, variables) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* Original source: keras/engine/topology.py */
 /**
  * Specifies the ndim, dtype and shape of every input to a layer.
  *
@@ -39007,25 +41650,14 @@ class Layer extends Serializable {
             return;
         }
         const outputMasks = this.computeMask(inputs, previousMask);
-        if (outputs instanceof Array && outputMasks instanceof Array) {
-            if (outputs.length !== outputMasks.length) {
-                throw new Error(`${this.name} outputs ${outputs.length} tensors `
-                    + `but ${outputMasks.length} masks for those tensors`);
-            }
-            for (let i = 0; i < outputs.length; i++) {
-                outputs[i].kerasMask = outputMasks[i];
-            }
+        const outputsList = toList(outputs);
+        const outputMasksList = toList(outputMasks);
+        if (outputsList.length !== outputMasksList.length) {
+            throw new Error(`${this.name} outputs ${outputsList.length} tensors ` +
+                `but ${outputsList.length} masks for those tensors`);
         }
-        else if (outputMasks instanceof Array) {
-            throw new Error(`{this.name} outputs a single tensor `
-                + `but ${outputMasks.length} masks`);
-        }
-        else if (outputs instanceof Array) {
-            throw new Error(`{this.name} outputs ${outputs.length} tensors `
-                + `but only one mask`);
-        }
-        else {
-            outputs.kerasMask = outputMasks;
+        for (let i = 0; i < outputsList.length; i++) {
+            outputsList[i].kerasMask = outputMasksList[i];
         }
     }
     /**
@@ -39397,6 +42029,9 @@ function Input(config) {
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  * =============================================================================
+ */
+/**
+ * Executor: Evaluates SymbolicTensor based on feeds.
  */
 /**
  * Helper function to check the dtype and shape compatibility of a feed value.
@@ -39848,7 +42483,7 @@ function getNodeOutputs(fetch) {
  * limitations under the License.
  * =============================================================================
  */
-const ENV$2 = env();
+const ENV$2 = env$1();
 /** The max number of entries for the caches of layers' topological sort. */
 ENV$2.registerFlag('TOPOLOGICAL_SORT_CACHE_MAX_ENTRIES', () => 100, updateCacheMaxEntries);
 
@@ -39861,6 +42496,7 @@ ENV$2.registerFlag('TOPOLOGICAL_SORT_CACHE_MAX_ENTRIES', () => 100, updateCacheM
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* Original source: keras/contraints.py */
 /**
  * Helper function used by many of the Constraints to find the L2Norms.
  */
@@ -40003,6 +42639,7 @@ function getConstraint(identifier) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+// tslint:disable-next-line:max-line-length
 /**
  * MaxNorm weight constraint.
  *
@@ -40040,6 +42677,14 @@ function minMaxNorm(config) {
     return new MinMaxNorm(config);
 }
 
+var exports_constraints = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    maxNorm: maxNorm,
+    minMaxNorm: minMaxNorm,
+    nonNeg: nonNeg,
+    unitNorm: unitNorm
+});
+
 /**
  * @license
  * Copyright 2018 Google LLC
@@ -40049,6 +42694,7 @@ function minMaxNorm(config) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+// tslint:disable-next-line:max-line-length
 /**
  * Initializer that generates tensors initialized to 0.
  *
@@ -40234,6 +42880,25 @@ function orthogonal(args) {
     return new Orthogonal(args);
 }
 
+var exports_initializers = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    constant: constant,
+    glorotNormal: glorotNormal,
+    glorotUniform: glorotUniform,
+    heNormal: heNormal,
+    heUniform: heUniform,
+    identity: identity$2,
+    leCunNormal: leCunNormal,
+    leCunUniform: leCunUniform,
+    ones: ones,
+    orthogonal: orthogonal,
+    randomNormal: randomNormal,
+    randomUniform: randomUniform,
+    truncatedNormal: truncatedNormal,
+    varianceScaling: varianceScaling,
+    zeros: zeros$1
+});
+
 /**
  * @license
  * Copyright 2018 Google LLC
@@ -40300,6 +42965,7 @@ function disposeTensorsInLogs(logs) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* Original source: keras/callbacks.py */
 /** Verbosity logging level when fitting a model. */
 var ModelLoggingVerbosity;
 (function (ModelLoggingVerbosity) {
@@ -40785,6 +43451,7 @@ function configureCallbacks(callbacks, verbose, epochs, initialEpoch, numTrainSa
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* Original Source layers/__init__.py */
 /**
  * Instantiate a layer from a config dictionary.
  * @param config dict of the form {class_name: str, config: dict}
@@ -40809,6 +43476,7 @@ function deserialize(config, customObjects = {}, fastWeightInit = false) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* Original Source: losses.py */
 /**
  * Normalizes a tensor wrt the L2 norm alongside the specified axis.
  * @param x
@@ -41039,6 +43707,9 @@ function get$1(identifierOrFn) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/**
+ * Built-in metrics.
+ */
 function binaryAccuracy$1(yTrue, yPred) {
     return tidy(() => {
         const threshold = mul(.5, onesLike$3(yPred));
@@ -41098,6 +43769,13 @@ function topKCategoricalAccuracy(yTrue, yPred) {
 }
 function sparseTopKCategoricalAccuracy(yTrue, yPred) {
     throw new NotImplementedError();
+}
+function r2Score$1(yTrue, yPred) {
+    return tidy(() => {
+        const sumSquaresResiduals = yTrue.sub(yPred).square().sum();
+        const sumSquares = yTrue.sub(yTrue.mean()).square().sum();
+        return scalar(1).sub(sumSquaresResiduals.div(sumSquares));
+    });
 }
 // Aliases.
 const mse$1 = meanSquaredError$1;
@@ -41189,6 +43867,9 @@ function getLossOrMetricName(fn) {
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  * =============================================================================
+ */
+/**
+ * Optimizers.
  */
 // Add (de)serialize()
 // Porting note: This diverges from the PyKeras implementation and may need to
@@ -41652,7 +44333,7 @@ function convertTsToPythonic(tsConfig, key) {
 
 /** @license See the LICENSE file. */
 // This code is auto-generated, do not modify this file!
-const version$6 = '4.11.0';
+const version$6 = '4.22.0';
 
 /**
  * @license
@@ -41663,6 +44344,7 @@ const version$6 = '4.11.0';
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* Original source: keras/engine/topology.py */
 // get weights key from tensor map in order to check if it is from keras v3.
 // e.g. dense/0
 const isKerasSavedModelFormat = (weights) => {
@@ -42978,6 +45660,9 @@ function computeWeightedLoss(losses, sampleWeights) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/**
+ * Interfaces and methods for training models using TensorFlow.js datasets.
+ */
 // Default batch size used during tensor-based validation.
 const DEFAULT_VALIDATION_BATCH_SIZE = 32;
 /**
@@ -43319,6 +46004,9 @@ model, dataset, args) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/**
+ * Interfaces and methods for training models using tf.Tensor objects.
+ */
 function checkBatchSize(batchSize) {
     assert$1(batchSize > 0 && Number.isInteger(batchSize), () => `batchSize is required to be a positive integer, but got ${batchSize}`);
 }
@@ -43491,6 +46179,7 @@ function disposeNewTensors(tensors, refTensors) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* Original Source: engine/training.py */
 /**
  * Helper function for polymorphic input data: 1. singleton Tensor.
  */
@@ -45339,6 +48028,7 @@ registerClass(Functional);
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* Original source keras/models.py */
 /**
  * Parses a JSON model configuration file and returns a model instance.
  *
@@ -46274,6 +48964,9 @@ registerClass(Sequential);
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/**
+ * Exported functions.
+ */
 // TODO(cais): Add doc string to all the public static functions in this
 //   class; include exectuable JavaScript code snippets where applicable
 //   (b/74074458).
@@ -46423,6 +49116,7 @@ function registerCallbackConstructor(verbosityLevel, callbackConstructor) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+// Layer activation functions
 /**
  * Base class for Activations.
  *
@@ -46430,11 +49124,11 @@ function registerCallbackConstructor(verbosityLevel, callbackConstructor) {
  * static readonly className field in this family of classes must be set to
  * the initialLowerCamelCase name of the activation.
  */
-class Activation$1 extends Serializable {
+let Activation$1 = class Activation extends Serializable {
     getConfig() {
         return {};
     }
-}
+};
 /**
  * Exponential linear unit (ELU).
  * Reference: https://arxiv.org/abs/1511.07289
@@ -46558,7 +49252,7 @@ registerClass(Tanh);
 /**
  * Softmax activation function
  */
-class Softmax$1 extends Activation$1 {
+let Softmax$1 = class Softmax extends Activation$1 {
     /**
      * Calculate the activation function.
      *
@@ -46574,7 +49268,7 @@ class Softmax$1 extends Activation$1 {
     apply(x, axis = (-1)) {
         return softmax$3(x, axis);
     }
-}
+};
 /** @nocollapse */
 Softmax$1.className = 'softmax';
 registerClass(Softmax$1);
@@ -46603,23 +49297,49 @@ class LogSoftmax extends Activation$1 {
 LogSoftmax.className = 'logSoftmax';
 registerClass(LogSoftmax);
 /**
- * Swish activation function
+ * Gelu activation function
  */
-class Swish extends Activation$1 {
+class Gelu extends Activation$1 {
     /**
      * Calculate the activation function.
      *
      * @param x Tensor.
-     * @param alpha Scaling factor for the sigmoid function.
      * @returns a Tensor of the same shape as x
      */
-    apply(x, alpha = 1) {
-        return tidy(() => mul(sigmoid$2(mul(x, alpha)), x));
+    apply(x) {
+        return tidy(() => {
+            return tidy(() => {
+                const sqrtTwo = Math.sqrt(2);
+                // Compute Φ(x) using the erf function
+                const cdf = mul(0.5, add$3(1, erf$2(div$1(x, sqrtTwo))));
+                // Compute GELU(x) = x * Φ(x)
+                return mul(x, cdf);
+            });
+        });
     }
 }
 /** @nocollapse */
-Swish.className = 'swish';
-registerClass(Swish);
+Gelu.className = 'gelu';
+registerClass(Gelu);
+/**
+ * GeluNew activation function
+ */
+class GeluNew extends Activation$1 {
+    /**
+     * Calculate the activation function.
+     *
+     * @param x Tensor.
+     * @returns a Tensor of the same shape as x
+     */
+    apply(x) {
+        return tidy(() => {
+            return mul(0.5, mul(x, add$3(1, tanh$2(mul(sqrt$2(div$1(2, Math.PI)), add$3(x, mul(0.044715, pow$3(x, 3))))))));
+        });
+    }
+}
+/** @nocollapse */
+GeluNew.className = 'gelu_new';
+registerClass(GeluNew);
 /**
  * Mish activation function
  */
@@ -46637,6 +49357,24 @@ class Mish extends Activation$1 {
 /** @nocollapse */
 Mish.className = 'mish';
 registerClass(Mish);
+/**
+ * Swish activation function
+ */
+class Swish extends Activation$1 {
+    /**
+     * Calculate the activation function.
+     *
+     * @param x Tensor.
+     * @param alpha Scaling factor for the sigmoid function.
+     * @returns a Tensor of the same shape as x
+     */
+    apply(x, alpha = 1) {
+        return tidy(() => mul(sigmoid$2(mul(x, alpha)), x));
+    }
+}
+/** @nocollapse */
+Swish.className = 'swish';
+registerClass(Swish);
 function serializeActivation(activation) {
     return activation.getClassName();
 }
@@ -46673,6 +49411,7 @@ function getActivation(identifier) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* original source: keras/regularizers.py */
 function assertObjectArgs(args) {
     if (args != null && typeof args !== 'object') {
         throw new Error(`Argument to L1L2 regularizer's constructor is expected to be an ` +
@@ -46766,6 +49505,9 @@ function getRegularizer(identifier) {
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  * =============================================================================
+ */
+/**
+ *  Advanced activation layers.
  */
 class ReLU extends Layer {
     constructor(args) {
@@ -46889,7 +49631,7 @@ class PReLU extends Layer {
 /** @nocollapse */
 PReLU.className = 'PReLU';
 registerClass(PReLU);
-class ELU$3 extends Layer {
+let ELU$3 = class ELU extends Layer {
     constructor(args) {
         super(args == null ? {} : args);
         this.DEFAULT_ALPHA = 1.0;
@@ -46915,7 +49657,7 @@ class ELU$3 extends Layer {
         Object.assign(config, baseConfig);
         return config;
     }
-}
+};
 /** @nocollapse */
 ELU$3.className = 'ELU';
 registerClass(ELU$3);
@@ -47078,6 +49820,9 @@ function deconvLength(dimSize, strideSize, kernelSize, padding) {
  * =============================================================================
  */
 /**
+ * TensorFlow.js Layers: Convolutional Layers
+ */
+/**
  * Transpose and cast the input before the conv2d.
  * @param x Input image tensor.
  * @param dataFormat
@@ -47143,7 +49888,7 @@ function conv1dWithBias(x, kernel, bias, strides = 1, padding = 'valid', dataFor
         }
         if (bias != null && bias.shape.length !== 1) {
             throw new ValueError(`The bias for a conv1dWithBias operation should be 1, but is ` +
-                `${kernel.shape.length} instead`);
+                `${bias.shape.length} instead`);
         }
         // TODO(cais): Support CAUSAL padding mode.
         if (dataFormat === 'channelsFirst') {
@@ -48038,6 +50783,9 @@ registerClass(UpSampling2D);
  * =============================================================================
  */
 /**
+ * TensorFlow.js Layers: Depthwise Convolutional Layers
+ */
+/**
  * 2D convolution with separable filters.
  * @param x Input tensor.
  * @param depthwiseKernel Convolution kernel for depthwise convolution.
@@ -48160,6 +50908,9 @@ registerClass(DepthwiseConv2D);
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  * =============================================================================
+ */
+/**
+ * TensorFlow.js Layers: Recurrent Neural Network Layers.
  */
 /**
  * Standardize `apply()` args to a single list of tensor inputs.
@@ -48684,7 +51435,7 @@ class RNN extends Layer {
                 this.resetStates(states, training);
             }
             const output = this.returnSequences ? outputs : lastOutput;
-            // TODO(cais): Porperty set learning phase flag.
+            // TODO(cais): Property set learning phase flag.
             if (this.returnState) {
                 return [output].concat(states);
             }
@@ -49314,7 +52065,7 @@ class StackedRNNCells extends RNNCell {
     }
     get stateSize() {
         // States are a flat list in reverse order of the cell stack.
-        // This allows perserving the requirement `stack.statesize[0] ===
+        // This allows preserving the requirement `stack.statesize[0] ===
         // outputDim`. E.g., states of a 2-layer LSTM would be `[h2, c2, h1, c1]`,
         // assuming one LSTM has states `[h, c]`.
         const stateSize = [];
@@ -49819,6 +52570,9 @@ registerClass(ConvLSTM2D);
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/**
+ * TensorFlow.js Layers: Basic Layers.
+ */
 class Dropout extends Layer {
     constructor(args) {
         super(args);
@@ -50266,6 +53020,11 @@ registerClass(Masking);
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/**
+ * TensorFlow.js Layers: Embedding Layer.
+ *
+ * Original source: keras/constraints.py
+ */
 class Embedding extends Layer {
     constructor(args) {
         super(args);
@@ -50390,6 +53149,9 @@ registerClass(Embedding);
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  * =============================================================================
+ */
+/**
+ * TensorFlow.js Layers: Merge Layers.
  */
 /**
  * Generic Merge layer for element-wise merge functions.
@@ -51359,6 +54121,9 @@ registerClass(Dot);
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/**
+ * TensorFlow.js Layers: Noise Layers.
+ */
 class GaussianNoise extends Layer {
     constructor(args) {
         super(args);
@@ -51504,6 +54269,9 @@ registerClass(AlphaDropout);
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  * =============================================================================
+ */
+/**
+ * Normalization layers.
  */
 /**
  * Applies batch normalization on x given mean, var, beta and gamma.
@@ -51892,6 +54660,11 @@ registerClass(LayerNormalization);
  * =============================================================================
  */
 /**
+ * Padding Layers.
+ */
+// Porting Note: In Python Keras, the padding layers are in convolutional.py,
+//   but we decided to put them in a separate file (padding.ts) for clarity.
+/**
  * Pads the middle dimension of a 3D tensor.
  *
  * @param x Input `tf.Tensor` to be padded.
@@ -52063,6 +54836,9 @@ registerClass(ZeroPadding2D);
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  * =============================================================================
+ */
+/**
+ * TensorFlow.js Layers: Pooling Layers.
  */
 /**
  * 2D pooling.
@@ -52566,6 +55342,9 @@ registerClass(GlobalMaxPooling2D);
  * license that can be found in the LICENSE file or at
  * https://opensource.org/licenses/MIT.
  * =============================================================================
+ */
+/**
+ * Layers that augment the functionality of a base layer.
  */
 /**
  * Abstract wrapper base class.
@@ -53444,7 +56223,7 @@ const INTERPOLATION_METHODS = new Set(INTERPOLATION_KEYS);
  *
  * The input should be a 3D (unbatched) or
  * 4D (batched) tensor in the `"channels_last"` image data format. Input pixel
- * values can be of any range (e.g. `[0., 1.)` or `[0, 255]`) and of interger
+ * values can be of any range (e.g. `[0., 1.)` or `[0, 255]`) and of integer
  * or floating point dtype. By default, the layer will output floats.
  *
  * tf methods implemented in tfjs: 'bilinear', 'nearest',
@@ -55313,6 +58092,90 @@ function randomWidth(args) {
     return new RandomWidth(args);
 }
 
+var exports_layers = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    Layer: Layer,
+    RNN: RNN,
+    RNNCell: RNNCell,
+    activation: activation,
+    add: add$1,
+    alphaDropout: alphaDropout,
+    average: average,
+    averagePooling1d: averagePooling1d,
+    averagePooling2d: averagePooling2d,
+    averagePooling3d: averagePooling3d,
+    avgPool1d: avgPool1d,
+    avgPool2d: avgPool2d,
+    avgPool3d: avgPool3d,
+    avgPooling1d: avgPooling1d,
+    avgPooling2d: avgPooling2d,
+    avgPooling3d: avgPooling3d,
+    batchNormalization: batchNormalization,
+    bidirectional: bidirectional,
+    categoryEncoding: categoryEncoding,
+    centerCrop: centerCrop,
+    concatenate: concatenate,
+    conv1d: conv1d,
+    conv2d: conv2d$1,
+    conv2dTranspose: conv2dTranspose,
+    conv3d: conv3d,
+    conv3dTranspose: conv3dTranspose,
+    convLstm2d: convLstm2d,
+    convLstm2dCell: convLstm2dCell,
+    cropping2D: cropping2D,
+    dense: dense,
+    depthwiseConv2d: depthwiseConv2d,
+    dot: dot,
+    dropout: dropout,
+    elu: elu$2,
+    embedding: embedding,
+    flatten: flatten,
+    gaussianDropout: gaussianDropout,
+    gaussianNoise: gaussianNoise,
+    globalAveragePooling1d: globalAveragePooling1d,
+    globalAveragePooling2d: globalAveragePooling2d,
+    globalMaxPool1d: globalMaxPool1d,
+    globalMaxPool2d: globalMaxPool2d,
+    globalMaxPooling1d: globalMaxPooling1d,
+    globalMaxPooling2d: globalMaxPooling2d,
+    gru: gru,
+    gruCell: gruCell,
+    input: input,
+    inputLayer: inputLayer,
+    layerNormalization: layerNormalization,
+    leakyReLU: leakyReLU,
+    lstm: lstm,
+    lstmCell: lstmCell,
+    masking: masking,
+    maxPool1d: maxPool1d,
+    maxPool2d: maxPool2d,
+    maxPooling1d: maxPooling1d,
+    maxPooling2d: maxPooling2d,
+    maxPooling3d: maxPooling3d,
+    maximum: maximum$2,
+    minimum: minimum$2,
+    multiply: multiply$2,
+    permute: permute,
+    prelu: prelu$2,
+    randomWidth: randomWidth,
+    reLU: reLU,
+    repeatVector: repeatVector,
+    rescaling: rescaling,
+    reshape: reshape$2,
+    resizing: resizing,
+    rnn: rnn,
+    separableConv2d: separableConv2d,
+    simpleRNN: simpleRNN,
+    simpleRNNCell: simpleRNNCell,
+    softmax: softmax$2,
+    spatialDropout1d: spatialDropout1d,
+    stackedRNNCells: stackedRNNCells,
+    thresholdedReLU: thresholdedReLU,
+    timeDistributed: timeDistributed,
+    upSampling2d: upSampling2d,
+    zeroPadding2d: zeroPadding2d
+});
+
 /**
  * Binary accuracy metric function.
  *
@@ -55599,6 +58462,44 @@ function MSE(yTrue, yPred) {
 function mse(yTrue, yPred) {
     return meanSquaredError$1(yTrue, yPred);
 }
+/**
+ * Computes R2 score.
+ *
+ * ```js
+ * const yTrue = tf.tensor2d([[0, 1], [3, 4]]);
+ * const yPred = tf.tensor2d([[0, 1], [-3, -4]]);
+ * const r2Score = tf.metrics.r2Score(yTrue, yPred);
+ * r2Score.print();
+ * ```
+ * @param yTrue Truth Tensor.
+ * @param yPred Prediction Tensor.
+ * @return R2 score Tensor.
+ *
+ * @doc {heading: 'Metrics', namespace: 'metrics'}
+ */
+function r2Score(yTrue, yPred) {
+    return r2Score$1(yTrue, yPred);
+}
+
+var exports_metrics = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    MAPE: MAPE,
+    MSE: MSE,
+    binaryAccuracy: binaryAccuracy,
+    binaryCrossentropy: binaryCrossentropy,
+    categoricalAccuracy: categoricalAccuracy,
+    categoricalCrossentropy: categoricalCrossentropy,
+    cosineProximity: cosineProximity,
+    mape: mape,
+    meanAbsoluteError: meanAbsoluteError,
+    meanAbsolutePercentageError: meanAbsolutePercentageError,
+    meanSquaredError: meanSquaredError,
+    mse: mse,
+    precision: precision,
+    r2Score: r2Score,
+    recall: recall,
+    sparseCategoricalAccuracy: sparseCategoricalAccuracy
+});
 
 /**
  * @license
@@ -55609,6 +58510,11 @@ function mse(yTrue, yPred) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+
+var exports_models = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    modelFromJSON: modelFromJSON
+});
 
 /**
  * @license
@@ -55655,6 +58561,13 @@ function l2(config) {
     return l2$1(config);
 }
 
+var exports_regularizers = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    l1: l1,
+    l1l2: l1l2,
+    l2: l2
+});
+
 /**
  * @license
  * Copyright 2018 Google LLC
@@ -55664,6 +58577,7 @@ function l2(config) {
  * https://opensource.org/licenses/MIT.
  * =============================================================================
  */
+/* Original source: keras/callbacks.py */
 class Callback extends BaseCallback {
     constructor() {
         super(...arguments);
@@ -55847,7 +58761,7 @@ const callbacks = { earlyStopping };
  * limitations under the License.
  * =============================================================================
  */
-const ENV$1 = env();
+const ENV$1 = env$1();
 /** Whether to keep intermediate tensors. */
 ENV$1.registerFlag('KEEP_INTERMEDIATE_TENSORS', () => false, debugValue => {
     if (debugValue) {
@@ -55878,6 +58792,9 @@ ENV$1.registerFlag('KEEP_INTERMEDIATE_TENSORS', () => false, debugValue => {
 /** DataType enum. */
 var DataType;
 (function (DataType) {
+    // These properties must be quoted since they are used by parseDtypeParam
+    // in tfjs-converter/src/operations/operation_mapper.ts to look up dtypes
+    // by string name. If they are not quoted, Closure will mangle their names.
     // Not a legal value for DataType.  Used to indicate a DataType field
     // has not been set.
     DataType[DataType["DT_INVALID"] = 0] = "DT_INVALID";
@@ -56570,7 +59487,7 @@ const json$i = [
     }
 ];
 
-const arithmetic = /*#__PURE__*/Object.freeze({
+var arithmetic = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$i
 });
@@ -57473,7 +60390,7 @@ const json$h = [
     }
 ];
 
-const basicMath = /*#__PURE__*/Object.freeze({
+var basicMath = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$h
 });
@@ -58359,7 +61276,7 @@ const json$g = [
     }
 ];
 
-const control = /*#__PURE__*/Object.freeze({
+var control = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$g
 });
@@ -59070,7 +61987,7 @@ const json$f = [
     }
 ];
 
-const convolution = /*#__PURE__*/Object.freeze({
+var convolution = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$f
 });
@@ -59496,7 +62413,7 @@ const json$e = [
     }
 ];
 
-const creation = /*#__PURE__*/Object.freeze({
+var creation = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$e
 });
@@ -59706,7 +62623,7 @@ const json$d = [
     }
 ];
 
-const dynamic = /*#__PURE__*/Object.freeze({
+var dynamic = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$d
 });
@@ -59812,7 +62729,7 @@ const json$c = [
     }
 ];
 
-const evaluation = /*#__PURE__*/Object.freeze({
+var evaluation = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$c
 });
@@ -60032,7 +62949,7 @@ const json$b = [
     }
 ];
 
-const graph = /*#__PURE__*/Object.freeze({
+var graph = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$b
 });
@@ -60314,7 +63231,7 @@ const json$a = [
     }
 ];
 
-const hashTable = /*#__PURE__*/Object.freeze({
+var hashTable = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$a
 });
@@ -60482,7 +63399,7 @@ const json$9 = [
     }
 ];
 
-const image = /*#__PURE__*/Object.freeze({
+var image = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$9
 });
@@ -60791,7 +63708,7 @@ const json$8 = [
     }
 ];
 
-const logical = /*#__PURE__*/Object.freeze({
+var logical = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$8
 });
@@ -61063,7 +63980,7 @@ const json$7 = [
     }
 ];
 
-const matrices = /*#__PURE__*/Object.freeze({
+var matrices = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$7
 });
@@ -61305,7 +64222,7 @@ const json$6 = [
     }
 ];
 
-const normalization = /*#__PURE__*/Object.freeze({
+var normalization = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$6
 });
@@ -61633,7 +64550,7 @@ const json$5 = [
     }
 ];
 
-const reduction = /*#__PURE__*/Object.freeze({
+var reduction = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$5
 });
@@ -62074,7 +64991,7 @@ const json$4 = [
     }
 ];
 
-const sliceJoin = /*#__PURE__*/Object.freeze({
+var sliceJoin = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$4
 });
@@ -62195,7 +65112,7 @@ const json$3 = [
     }
 ];
 
-const sparse = /*#__PURE__*/Object.freeze({
+var sparse = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$3
 });
@@ -62275,7 +65192,7 @@ const json$2 = [
     }
 ];
 
-const spectral = /*#__PURE__*/Object.freeze({
+var spectral = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$2
 });
@@ -62425,7 +65342,7 @@ const json$1 = [
     }
 ];
 
-const string = /*#__PURE__*/Object.freeze({
+var string = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json$1
 });
@@ -62708,27 +65625,11 @@ const json = [
     }
 ];
 
-const transformation = /*#__PURE__*/Object.freeze({
+var transformation = /*#__PURE__*/Object.freeze({
     __proto__: null,
     json: json
 });
 
-/**
- * @license
- * Copyright 2018 Google LLC. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * =============================================================================
- */
 class OperationMapper {
     // Singleton instance for the mapper
     static get Instance() {
@@ -63046,7 +65947,7 @@ class OperationMapper {
     }
 }
 function decodeBase64(text) {
-    const global = env().global;
+    const global = env$1().global;
     if (typeof global.atob !== 'undefined') {
         return global.atob(text);
     }
@@ -63098,6 +65999,9 @@ function parseDtypeParam(value) {
             return 'float32';
         case DataType.DT_STRING:
             return 'string';
+        case DataType.DT_COMPLEX64:
+        case DataType.DT_COMPLEX128:
+            return 'complex64';
         default:
             // Unknown dtype error will happen at runtime (instead of parse time),
             // since these nodes might not be used by the actual subgraph execution.
@@ -63280,9 +66184,15 @@ class NodeValueImpl {
  * limitations under the License.
  * =============================================================================
  */
+/**
+ * This file exports ops used by the converters executors. By default it
+ * re-exports all ops. In a custom build this is aliased to a file that will
+ * only exports ops for a given model.json.
+ */
 
-const tfOps = /*#__PURE__*/Object.freeze({
+var tfOps = /*#__PURE__*/Object.freeze({
     __proto__: null,
+    OP_SCOPE_SUFFIX: OP_SCOPE_SUFFIX,
     abs: abs$2,
     acos: acos$2,
     acosh: acosh$2,
@@ -63300,13 +66210,14 @@ const tfOps = /*#__PURE__*/Object.freeze({
     avgPool: avgPool$2,
     avgPool3d: avgPool3d$1,
     basicLSTMCell: basicLSTMCell,
-    batchToSpaceND: batchToSpaceND$2,
     batchNorm: batchNorm$2,
     batchNorm2d: batchNorm2d,
     batchNorm3d: batchNorm3d,
     batchNorm4d: batchNorm4d,
+    batchToSpaceND: batchToSpaceND$2,
     bincount: bincount$2,
     bitwiseAnd: bitwiseAnd$2,
+    booleanMaskAsync: booleanMaskAsync,
     broadcastArgs: broadcastArgs$2,
     broadcastTo: broadcastTo,
     buffer: buffer,
@@ -63327,6 +66238,7 @@ const tfOps = /*#__PURE__*/Object.freeze({
     conv3dTranspose: conv3dTranspose$1,
     cos: cos$2,
     cosh: cosh$2,
+    cosineWindow: cosineWindow,
     cumprod: cumprod$2,
     cumsum: cumsum$2,
     denseBincount: denseBincount$2,
@@ -63337,8 +66249,10 @@ const tfOps = /*#__PURE__*/Object.freeze({
     div: div$1,
     divNoNan: divNoNan,
     dot: dot$2,
+    dropout: dropout$2,
     einsum: einsum$2,
     elu: elu$4,
+    enclosingPowerOfTwo: enclosingPowerOfTwo,
     ensureShape: ensureShape,
     equal: equal$2,
     erf: erf$2,
@@ -63347,19 +66261,27 @@ const tfOps = /*#__PURE__*/Object.freeze({
     expandDims: expandDims$3,
     expm1: expm1$2,
     eye: eye,
+    fft: fft$2,
     fill: fill$2,
     floor: floor$2,
     floorDiv: floorDiv$2,
+    fused: fused_ops,
     gather: gather$1,
+    gatherND: gatherND,
     greater: greater$3,
     greaterEqual: greaterEqual$2,
+    ifft: ifft$2,
     imag: imag$2,
+    image: image$1,
+    inTopKAsync: inTopKAsync,
+    irfft: irfft,
     isFinite: isFinite$3,
     isInf: isInf$2,
     isNaN: isNaN$3,
     leakyRelu: leakyRelu$2,
     less: less$3,
     lessEqual: lessEqual$2,
+    linalg: linalg,
     linspace: linspace,
     localResponseNormalization: localResponseNormalization,
     log: log$2,
@@ -63371,6 +66293,7 @@ const tfOps = /*#__PURE__*/Object.freeze({
     logicalNot: logicalNot$2,
     logicalOr: logicalOr$2,
     logicalXor: logicalXor,
+    losses: losses,
     lowerBound: lowerBound$1,
     matMul: matMul$1,
     max: max$3,
@@ -63385,14 +66308,17 @@ const tfOps = /*#__PURE__*/Object.freeze({
     mirrorPad: mirrorPad$1,
     mod: mod$2,
     moments: moments,
+    movingAverage: movingAverage,
     mul: mul,
     multiRNNCell: multiRNNCell,
     multinomial: multinomial$2,
     neg: neg$2,
+    norm: norm,
     notEqual: notEqual$2,
     oneHot: oneHot$3,
     ones: ones$1,
     onesLike: onesLike$3,
+    op: op,
     outerProduct: outerProduct,
     pad: pad,
     pad1d: pad1d,
@@ -63424,14 +66350,18 @@ const tfOps = /*#__PURE__*/Object.freeze({
     reverse2d: reverse2d,
     reverse3d: reverse3d,
     reverse4d: reverse4d,
+    rfft: rfft,
     round: round$2,
     rsqrt: rsqrt$2,
     scalar: scalar,
+    scatterND: scatterND,
+    searchSorted: searchSorted$2,
     selu: selu$2,
     separableConv2d: separableConv2d$1,
     setdiff1dAsync: setdiff1dAsync,
     sigmoid: sigmoid$2,
     sign: sign$3,
+    signal: signal,
     sin: sin$2,
     sinh: sinh$2,
     slice: slice$2,
@@ -63442,10 +66372,9 @@ const tfOps = /*#__PURE__*/Object.freeze({
     softmax: softmax$3,
     softplus: softplus$2,
     spaceToBatchND: spaceToBatchND$2,
-    fft: fft$2,
-    ifft: ifft$2,
-    irfft: irfft,
-    rfft: rfft,
+    sparse: sparse$1,
+    sparseToDense: sparseToDense$2,
+    spectral: spectral$1,
     split: split$3,
     sqrt: sqrt$2,
     square: square$2,
@@ -63454,6 +66383,7 @@ const tfOps = /*#__PURE__*/Object.freeze({
     stack: stack,
     step: step$2,
     stridedSlice: stridedSlice$2,
+    string: string$1,
     sub: sub$2,
     sum: sum$3,
     tan: tan$2,
@@ -63468,6 +66398,7 @@ const tfOps = /*#__PURE__*/Object.freeze({
     tensorScatterUpdate: tensorScatterUpdate$2,
     tile: tile$3,
     topk: topk,
+    transpose: transpose$2,
     truncatedNormal: truncatedNormal$1,
     unique: unique$3,
     unsortedSegmentSum: unsortedSegmentSum$2,
@@ -63477,29 +66408,7 @@ const tfOps = /*#__PURE__*/Object.freeze({
     where: where,
     whereAsync: whereAsync,
     zeros: zeros$2,
-    zerosLike: zerosLike$3,
-    op: op,
-    OP_SCOPE_SUFFIX: OP_SCOPE_SUFFIX,
-    booleanMaskAsync: booleanMaskAsync,
-    transpose: transpose$2,
-    norm: norm,
-    movingAverage: movingAverage,
-    scatterND: scatterND,
-    searchSorted: searchSorted$2,
-    sparseToDense: sparseToDense$2,
-    gatherND: gatherND,
-    dropout: dropout$2,
-    enclosingPowerOfTwo: enclosingPowerOfTwo,
-    cosineWindow: cosineWindow,
-    inTopKAsync: inTopKAsync,
-    image: image$1,
-    linalg: linalg,
-    losses: losses,
-    spectral: spectral$1,
-    fused: fused_ops,
-    signal: signal,
-    sparse: sparse$1,
-    string: string$1
+    zerosLike: zerosLike$3
 });
 
 /**
@@ -63518,6 +66427,7 @@ const tfOps = /*#__PURE__*/Object.freeze({
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$k = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'BiasAdd':
@@ -63580,6 +66490,7 @@ const CATEGORY$j = 'arithmetic';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$j = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'Abs':
@@ -63700,6 +66611,11 @@ const CATEGORY$i = 'basic_math';
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * =============================================================================
+ */
+/**
+ * This differs from util.assertShapesMatch in that it allows values of
+ * negative one, an undefined size of a dimensinon, in a shape to match
+ * anything.
  */
 /**
  * Used by TensorList and TensorArray to verify if elementShape matches, support
@@ -63951,7 +66867,7 @@ class TensorArray {
     }
     /**
      * Scatter the values of a Tensor in specific indices of a TensorArray.
-     * @param indices nummber[] values in [0, max_value). If the
+     * @param indices number[] values in [0, max_value). If the
      *    TensorArray is not dynamic, max_value=size().
      * @param tensor Tensor input tensor.
      */
@@ -64653,6 +67569,7 @@ const CATEGORY$h = 'control';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 function fusedConvAndDepthWiseParams(node, tensorMap, context) {
     const [extraOp, activationFunc] = getParamValue('fusedOps', node, tensorMap, context);
     const isBiasAdd = extraOp === 'biasadd';
@@ -64833,6 +67750,7 @@ const CATEGORY$g = 'convolution';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$g = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'Fill': {
@@ -64919,6 +67837,7 @@ const CATEGORY$f = 'creation';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 function nmsParams(node, tensorMap, context) {
     const boxes = getParamValue('boxes', node, tensorMap, context);
     const scores = getParamValue('scores', node, tensorMap, context);
@@ -64984,6 +67903,7 @@ const CATEGORY$e = 'dynamic';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$e = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'LowerBound': {
@@ -65036,6 +67956,7 @@ const CATEGORY$d = 'evaluation';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$d = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'Const': {
@@ -65298,6 +68219,7 @@ const CATEGORY$b = 'hash_table';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$b = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'ResizeBilinear': {
@@ -65354,6 +68276,7 @@ const CATEGORY$a = 'image';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$a = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'Equal': {
@@ -65412,6 +68335,7 @@ const CATEGORY$9 = 'logical';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$9 = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'BatchMatMul':
@@ -65472,6 +68396,7 @@ const CATEGORY$8 = 'matrices';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$8 = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'EuclideanNorm':
@@ -65514,6 +68439,7 @@ const CATEGORY$7 = 'normalization';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$7 = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'RaggedGather': {
@@ -65549,6 +68475,7 @@ const CATEGORY$6 = 'ragged';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$6 = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'Max': {
@@ -65780,6 +68707,7 @@ const CATEGORY$4 = 'slice_join';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$4 = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'SparseFillEmptyRows': {
@@ -65822,6 +68750,7 @@ const CATEGORY$3 = 'sparse';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$3 = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'FFT': {
@@ -65858,6 +68787,7 @@ const CATEGORY$2 = 'spectral';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$2 = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'StaticRegexReplace': {
@@ -65897,6 +68827,7 @@ const CATEGORY$1 = 'string';
  * limitations under the License.
  * =============================================================================
  */
+// tslint:disable-next-line: no-imports-from-dist
 const executeOp$1 = (node, tensorMap, context, ops = tfOps) => {
     switch (node.op) {
         case 'Cast': {
@@ -66664,7 +69595,7 @@ class GraphExecutor {
         }
         // Keep tensors if KEEP_INTERMEDIATE_TENSORS is on.
         try {
-            this.keepIntermediateTensors = env().getBool('KEEP_INTERMEDIATE_TENSORS');
+            this.keepIntermediateTensors = env$1().getBool('KEEP_INTERMEDIATE_TENSORS');
         }
         catch (e) {
             this.keepIntermediateTensors = false;
@@ -66821,7 +69752,7 @@ class GraphExecutor {
      * @param isFunctionExecution Optional. Flag for executing a function.
      * @param tensorArrayMap Optional, global TensorArray map by id. Used for
      * function execution.
-     * @param tensorArrayMap Optinal global TensorList map by id. Used for
+     * @param tensorArrayMap Optional global TensorList map by id. Used for
      * function execution.
      */
     async _executeAsync(inputs, outputs, isFunctionExecution = false, tensorArrayMap = {}, tensorListMap = {}) {
@@ -66836,7 +69767,7 @@ class GraphExecutor {
         }
         // Keep tensors if KEEP_INTERMEDIATE_TENSORS is on.
         try {
-            this.keepIntermediateTensors = env().getBool('KEEP_INTERMEDIATE_TENSORS');
+            this.keepIntermediateTensors = env$1().getBool('KEEP_INTERMEDIATE_TENSORS');
         }
         catch (e) {
             this.keepIntermediateTensors = false;
@@ -67243,7 +70174,12 @@ class GraphModel {
         }
         const loadResult = this.handler.load();
         if (isPromise(loadResult)) {
-            return loadResult.then(artifacts => this.loadSync(artifacts));
+            return loadResult.then(artifacts => {
+                if (artifacts.getWeightStream == null) {
+                    return this.loadSync(artifacts);
+                }
+                return this.loadStreaming(artifacts);
+            });
         }
         return this.loadSync(loadResult);
     }
@@ -67254,6 +70190,17 @@ class GraphModel {
      * @doc {heading: 'Models', subheading: 'Classes', ignoreCI: true}
      */
     loadSync(artifacts) {
+        const weightMap = this.io.decodeWeights(artifacts.weightData, artifacts.weightSpecs);
+        return this.loadWithWeightMap(artifacts, weightMap);
+    }
+    async loadStreaming(artifacts) {
+        if (artifacts.getWeightStream == null) {
+            throw new Error('Model artifacts missing streamWeights function');
+        }
+        const weightMap = await decodeWeightsStream(artifacts.getWeightStream(), artifacts.weightSpecs);
+        return this.loadWithWeightMap(artifacts, weightMap);
+    }
+    loadWithWeightMap(artifacts, weightMap) {
         this.artifacts = artifacts;
         const graph = this.artifacts.modelTopology;
         let signature = this.artifacts.signature;
@@ -67268,7 +70215,6 @@ class GraphModel {
         }
         this.signature = signature;
         this.version = `${graph.versions.producer}.${graph.versions.minConsumer}`;
-        const weightMap = this.io.decodeWeights(this.artifacts.weightData, this.artifacts.weightSpecs);
         this.executor = new GraphExecutor(OperationMapper.Instance.transformGraph(graph, this.signature));
         this.executor.weightMap = this.convertTensorMapToTensorsMap(weightMap);
         // Attach a model-level resourceManager to each executor to share resources,
@@ -67363,7 +70309,7 @@ class GraphModel {
      * Execute the inference for the input tensors.
      *
      * @param input The input tensors, when there is single input for the model,
-     * inputs param should be a `tf.Tensor`. For models with mutliple inputs,
+     * inputs param should be a `tf.Tensor`. For models with multiple inputs,
      * inputs params should be in either `tf.Tensor`[] if the input order is
      * fixed, or otherwise NamedTensorMap format.
      *
@@ -67714,7 +70660,7 @@ function getTFHubUrl(modelUrl) {
 
 /** @license See the LICENSE file. */
 // This code is auto-generated, do not modify this file!
-const version$5 = '4.11.0';
+const version$5 = '4.22.0';
 
 /**
  * @license
@@ -67941,7 +70887,7 @@ async function deepMapAndAwaitAll(input, mapFn) {
 // tslint:disable-next-line:no-any
 function isIterable(obj) {
     let isTextDecoder = false;
-    if (env().get('IS_BROWSER')) {
+    if (env$1().get('IS_BROWSER')) {
         isTextDecoder = obj instanceof TextDecoder;
     }
     else {
@@ -69194,7 +72140,7 @@ class ShuffleIterator extends PrefetchIterator {
         this.windowSize = windowSize;
         // Local state that should not be clobbered by out-of-order execution.
         this.upstreamExhausted = false;
-        this.random = seedrandom.alea(seed || now().toString());
+        this.random = seedrandomExports.alea(seed || now().toString());
         this.lastRead = Promise.resolve({ value: null, done: false });
     }
     async next() {
@@ -69635,7 +72581,7 @@ class Dataset {
             }
         }
         const base = this;
-        const random = seedrandom.alea(seed || now().toString());
+        const random = seedrandomExports.alea(seed || now().toString());
         return datasetFromIteratorFn(async () => {
             let seed2 = random.int32();
             if (reshuffleEachIteration) {
@@ -70363,7 +73309,7 @@ class MicrophoneIterator extends LazyIterator {
     }
     // Construct a MicrophoneIterator and start the audio stream.
     static async create(microphoneConfig = {}) {
-        if (!env().get('IS_BROWSER')) {
+        if (!env$1().get('IS_BROWSER')) {
             throw new Error('microphone API is only supported in browser environment.');
         }
         const microphoneIterator = new MicrophoneIterator(microphoneConfig);
@@ -70547,7 +73493,7 @@ class WebcamIterator extends LazyIterator {
     }
     // Construct a WebcamIterator and start it's video stream.
     static async create(webcamVideoElement, webcamConfig = {}) {
-        if (!env().get('IS_BROWSER')) {
+        if (!env$1().get('IS_BROWSER')) {
             throw new Error('tf.data.webcam is only supported in browser environment.');
         }
         if (!webcamVideoElement) {
@@ -70811,23 +73757,6 @@ class SplitIteratorImpl extends OneToManyIterator {
     }
 }
 
-/**
- * @license
- * Copyright 2018 Google LLC. All Rights Reserved.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * =============================================================================
- */
 class ByteChunkIterator extends LazyIterator {
     /**
      * Decode a stream of UTF8-encoded byte arrays to a stream of strings.
@@ -70890,7 +73819,7 @@ class Utf8IteratorImpl extends OneToManyIterator {
     constructor(upstream) {
         super();
         this.upstream = upstream;
-        if (env().get('IS_BROWSER')) {
+        if (env$1().get('IS_BROWSER')) {
             this.decoder = new TextDecoder('utf-8');
         }
         else {
@@ -70912,7 +73841,7 @@ class Utf8IteratorImpl extends OneToManyIterator {
             chunk = chunkResult.value;
         }
         let text;
-        if (env().get('IS_BROWSER')) {
+        if (env$1().get('IS_BROWSER')) {
             text = this.decoder.decode(chunk, { stream: true });
         }
         else {
@@ -70940,6 +73869,7 @@ class Utf8IteratorImpl extends OneToManyIterator {
  *
  * =============================================================================
  */
+// inspired by https://github.com/maxogden/filereader-stream
 /**
  * Provide a stream of chunks from a File, Blob, or Uint8Array.
  * @param file The source File, Blob or Uint8Array.
@@ -70953,7 +73883,7 @@ class FileChunkIterator extends ByteChunkIterator {
         this.file = file;
         this.options = options;
         assert$1((file instanceof Uint8Array) ||
-            (env().get('IS_BROWSER') ?
+            (env$1().get('IS_BROWSER') ?
                 (file instanceof File || file instanceof Blob) :
                 false), () => 'FileChunkIterator only supports File, Blob and Uint8Array ' +
             'right now.');
@@ -71133,7 +74063,7 @@ class FileDataSource extends DataSource {
         this.options = options;
     }
     async iterator() {
-        if (isLocalPath(this.input) && env().get('IS_NODE')) {
+        if (isLocalPath(this.input) && env$1().get('IS_NODE')) {
             // tslint:disable-next-line:no-require-imports
             const fs = require('fs');
             this.input = fs.readFileSync(this.input.slice(7));
@@ -71320,14 +74250,12 @@ function func(f) {
 }
 /**
  * Create a `Dataset` that produces each element from provided JavaScript
- * generator, which is a function*
- * (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators#Generator_functions),
- * or a function that returns an
- * iterator
- * (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators#Generator_functions).
+ * generator, which is a function that returns a (potentially async) iterator.
  *
- * The returned iterator should have `.next()` function that returns element in
- * format of `{value: TensorContainer, done:boolean}`.
+ * For more information on iterators and generators, see
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_Generators .
+ * For the iterator protocol, see
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols .
  *
  * Example of creating a dataset from an iterator factory:
  * ```js
@@ -71368,8 +74296,8 @@ function func(f) {
  * await ds.forEachAsync(e => console.log(e));
  * ```
  *
- * @param generator A JavaScript generator function that returns a JavaScript
- *     iterator.
+ * @param generator A JavaScript function that returns
+ *     a (potentially async) JavaScript iterator.
  *
  * @doc {
  *   heading: 'Data',
@@ -71457,7 +74385,7 @@ async function microphone(microphoneConfig) {
 
 /** @license See the LICENSE file. */
 // This code is auto-generated, do not modify this file!
-const version$4 = '4.11.0';
+const version$4 = '4.22.0';
 
 /**
  * @license
@@ -71475,6 +74403,23 @@ const version$4 = '4.11.0';
  * limitations under the License.
  * =============================================================================
  */
+
+var index = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    CSVDataset: CSVDataset,
+    Dataset: Dataset,
+    FileDataSource: FileDataSource,
+    TextLineDataset: TextLineDataset,
+    URLDataSource: URLDataSource,
+    array: array,
+    csv: csv,
+    func: func,
+    generator: generator,
+    microphone: microphone,
+    version_data: version$4,
+    webcam: webcam,
+    zip: zip
+});
 
 /**
  * @license
@@ -71533,7 +74478,7 @@ class MathBackendCPU extends KernelBackend {
     write(values, shape, dtype) {
         if (this.firstUse) {
             this.firstUse = false;
-            if (env().get('IS_NODE')) {
+            if (env$1().get('IS_NODE')) {
                 warn('\n============================\n' +
                     'Hi, looks like you are running TensorFlow.js in ' +
                     'Node.js. To speed things up dramatically, install our node ' +
@@ -74664,6 +77609,7 @@ function tileImpl(xBuf, reps) {
  * limitations under the License.
  * =============================================================================
  */
+/** An implementation of the TopK kernel shared between webgl and cpu. */
 const comparePair = (a, b) => {
     const valueDiff = b.value - a.value;
     return valueDiff === 0 ? a.index - b.index : valueDiff;
@@ -74698,12 +77644,12 @@ function select$2(array, k, left = 0, right = array.length - 1) {
         const t = array[k];
         let i = left;
         let j = right;
-        swap(array, left, k);
+        swap$1(array, left, k);
         if (comparePair(array[right], t) > 0) {
-            swap(array, left, right);
+            swap$1(array, left, right);
         }
         while (i < j) {
-            swap(array, i, j);
+            swap$1(array, i, j);
             i++;
             j--;
             while (comparePair(array[i], t) < 0) {
@@ -74714,11 +77660,11 @@ function select$2(array, k, left = 0, right = array.length - 1) {
             }
         }
         if (comparePair(array[left], t) === 0) {
-            swap(array, left, j);
+            swap$1(array, left, j);
         }
         else {
             j = j + 1;
-            swap(array, j, right);
+            swap$1(array, j, right);
         }
         // Adjust left and right towards the boundaries of the subset
         // containing the (k - left + 1)th smallest element.
@@ -74928,10 +77874,10 @@ function uniqueImpl(values, axis, shape, dtype) {
  * limitations under the License.
  * =============================================================================
  */
+// Shared functionality among backends.
 
-const shared = /*#__PURE__*/Object.freeze({
+var shared = /*#__PURE__*/Object.freeze({
     __proto__: null,
-    simpleAbsImpl: simpleAbsImpl,
     addImpl: addImpl,
     bincountImpl: bincountImpl,
     bincountReduceImpl: bincountReduceImpl,
@@ -74942,14 +77888,14 @@ const shared = /*#__PURE__*/Object.freeze({
     equalImpl: equalImpl,
     expImpl: expImpl,
     expm1Impl: expm1Impl,
-    floorImpl: floorImpl,
     floorDivImpl: floorDivImpl,
+    floorImpl: floorImpl,
     gatherNdImpl: gatherNdImpl,
     gatherV2Impl: gatherV2Impl,
-    greaterImpl: greaterImpl,
     greaterEqualImpl: greaterEqualImpl,
-    lessImpl: lessImpl,
+    greaterImpl: greaterImpl,
     lessEqualImpl: lessEqualImpl,
+    lessImpl: lessImpl,
     linSpaceImpl: linSpaceImpl,
     logImpl: logImpl,
     maxImpl: maxImpl$1,
@@ -74966,6 +77912,7 @@ const shared = /*#__PURE__*/Object.freeze({
     rsqrtImpl: rsqrtImpl,
     scatterImpl: scatterImpl,
     sigmoidImpl: sigmoidImpl,
+    simpleAbsImpl: simpleAbsImpl,
     sliceImpl: sliceImpl,
     sparseFillEmptyRowsImpl: sparseFillEmptyRowsImpl,
     sparseReshapeImpl: sparseReshapeImpl,
@@ -74986,7 +77933,7 @@ const shared = /*#__PURE__*/Object.freeze({
 
 /** @license See the LICENSE file. */
 // This code is auto-generated, do not modify this file!
-const version$3 = '4.11.0';
+const version$3 = '4.22.0';
 
 /**
  * @license
@@ -75003,6 +77950,10 @@ const version$3 = '4.11.0';
  * See the License for the specific language governing permissions and
  * limitations under the License.
  * =============================================================================
+ */
+/*
+ * base.ts contains all the exports from tfjs-backend-cpu
+ * without auto-kernel registration
  */
 // Side effects for default initialization of MathBackendCPU
 registerBackend('cpu', () => new MathBackendCPU(), 1 /* priority */);
@@ -80003,7 +82954,7 @@ function multinomial$1(args) {
         for (let event = 1; event < cdf.length; ++event) {
             cdf[event] = cdf[event - 1] + probVals[offset + event];
         }
-        const random = seedrandom.alea(seed.toString());
+        const random = seedrandomExports.alea(seed.toString());
         const outOffset = b * numSamples;
         for (let sampleId = 0; sampleId < numSamples; ++sampleId) {
             const r = random();
@@ -82442,6 +85393,9 @@ const unsortedSegmentSumConfig$1 = {
  * limitations under the License.
  * =============================================================================
  */
+// We explicitly import the modular kernels so they get registered in the
+// global registry when we compile the library. A modular build would replace
+// the contents of this file and import only the kernels that are needed.
 // List all kernel configs here
 const kernelConfigs$1 = [
     _fusedMatMulConfig$1,
@@ -82637,6 +85591,7 @@ for (const kernelConfig of kernelConfigs$1) {
  * limitations under the License.
  * =============================================================================
  */
+// All exports from this package should be in base.
 
 /**
  * @license
@@ -82700,7 +85655,7 @@ function getWebGLContext(webGLVersion, customCanvas) {
 function createCanvas(webGLVersion) {
     // Use canvas element for Safari, since its offscreen canvas does not support
     // fencing.
-    if (!env().getBool('IS_SAFARI') && typeof OffscreenCanvas !== 'undefined' &&
+    if (!env$1().getBool('IS_SAFARI') && typeof OffscreenCanvas !== 'undefined' &&
         webGLVersion === 2) {
         return new OffscreenCanvas(300, 150);
     }
@@ -82720,7 +85675,7 @@ function getWebGLRenderingContext(webGLVersion, customCanvas) {
         ev.preventDefault();
         delete contexts[webGLVersion];
     }, false);
-    if (env().getBool('SOFTWARE_WEBGL_ENABLED')) {
+    if (env$1().getBool('SOFTWARE_WEBGL_ENABLED')) {
         WEBGL_ATTRIBUTES.failIfMajorPerformanceCaveat = false;
     }
     if (webGLVersion === 1) {
@@ -82860,7 +85815,7 @@ gl, textureHalfFloatExtension) {
     let defaultNumChannels;
     let textureTypeHalfFloat;
     let textureTypeFloat;
-    if (env().getNumber('WEBGL_VERSION') === 2) {
+    if (env$1().getNumber('WEBGL_VERSION') === 2) {
         internalFormatFloat = glany.R32F;
         internalFormatHalfFloat = glany.R16F;
         internalFormatPackedHalfFloat = glany.RGBA16F;
@@ -82918,7 +85873,7 @@ gl, textureHalfFloatExtension) {
  */
 function callAndCheck(gl, func) {
     const returnValue = func();
-    if (env().getBool('DEBUG')) {
+    if (env$1().getBool('DEBUG')) {
         checkWebGLError(gl);
     }
     return returnValue;
@@ -82933,7 +85888,7 @@ function checkWebGLError(gl) {
 const MIN_FLOAT16 = 5.96e-8;
 const MAX_FLOAT16 = 65504;
 function canBeRepresented(num) {
-    if (env().getBool('WEBGL_RENDER_FLOAT32_ENABLED') || num === 0 ||
+    if (env$1().getBool('WEBGL_RENDER_FLOAT32_ENABLED') || num === 0 ||
         (MIN_FLOAT16 < Math.abs(num) && Math.abs(num) < MAX_FLOAT16)) {
         return true;
     }
@@ -82976,7 +85931,7 @@ function createFragmentShader(gl, fragmentShaderSource) {
     const fragmentShader = throwIfNull(gl, () => gl.createShader(gl.FRAGMENT_SHADER), 'Unable to create fragment WebGLShader.');
     callAndCheck(gl, () => gl.shaderSource(fragmentShader, fragmentShaderSource));
     callAndCheck(gl, () => gl.compileShader(fragmentShader));
-    if (env().get('ENGINE_COMPILE_ONLY')) {
+    if (env$1().get('ENGINE_COMPILE_ONLY')) {
         return fragmentShader;
     }
     if (gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS) === false) {
@@ -83014,7 +85969,7 @@ function createProgram(gl) {
 }
 function linkProgram(gl, program) {
     callAndCheck(gl, () => gl.linkProgram(program));
-    if (env().get('ENGINE_COMPILE_ONLY')) {
+    if (env$1().get('ENGINE_COMPILE_ONLY')) {
         return;
     }
     if (gl.getProgramParameter(program, gl.LINK_STATUS) === false) {
@@ -83047,7 +86002,7 @@ function createStaticIndexBuffer(gl, data) {
     return buffer;
 }
 function getNumChannels() {
-    if (env().getNumber('WEBGL_VERSION') === 2) {
+    if (env$1().getNumber('WEBGL_VERSION') === 2) {
         return 1;
     }
     return 4;
@@ -83056,7 +86011,7 @@ function createTexture(gl) {
     return throwIfNull(gl, () => gl.createTexture(), 'Unable to create WebGLTexture.');
 }
 function validateTextureSize(width, height) {
-    const maxTextureSize = env().getNumber('WEBGL_MAX_TEXTURE_SIZE');
+    const maxTextureSize = env$1().getNumber('WEBGL_MAX_TEXTURE_SIZE');
     if ((width <= 0) || (height <= 0)) {
         const requested = `[${width}x${height}]`;
         throw new Error('Requested texture size ' + requested + ' is invalid.');
@@ -83172,10 +86127,10 @@ function getShapeAs3D(shape) {
     return shapeAs3D;
 }
 function getTextureShapeFromLogicalShape(logShape, isPacked = false) {
-    let maxTexSize = env().getNumber('WEBGL_MAX_TEXTURE_SIZE');
-    let maxSizeForNarrowTex = env().getNumber('WEBGL_MAX_SIZE_FOR_NARROW_TEXTURE');
+    let maxTexSize = env$1().getNumber('WEBGL_MAX_TEXTURE_SIZE');
+    let maxSizeForNarrowTex = env$1().getNumber('WEBGL_MAX_SIZE_FOR_NARROW_TEXTURE');
     if (maxSizeForNarrowTex === Infinity &&
-        env().getBool('WEBGL_AUTO_SQUARIFY_NARROW_TEXTURE_SHAPE')) {
+        env$1().getBool('WEBGL_AUTO_SQUARIFY_NARROW_TEXTURE_SHAPE')) {
         maxSizeForNarrowTex = maxTexSize / 2;
     }
     if (isPacked) {
@@ -83459,6 +86414,53 @@ function assertNotComplex(tensor, opName) {
     });
 }
 
+var webgl_util = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    assertNotComplex: assertNotComplex,
+    bindCanvasToFramebuffer: bindCanvasToFramebuffer,
+    bindColorTextureToFramebuffer: bindColorTextureToFramebuffer,
+    bindTextureToProgramUniformSampler: bindTextureToProgramUniformSampler,
+    bindTextureUnit: bindTextureUnit,
+    bindVertexBufferToProgramAttribute: bindVertexBufferToProgramAttribute,
+    callAndCheck: callAndCheck,
+    canBeRepresented: canBeRepresented,
+    createFragmentShader: createFragmentShader,
+    createFramebuffer: createFramebuffer,
+    createProgram: createProgram,
+    createStaticIndexBuffer: createStaticIndexBuffer,
+    createStaticVertexBuffer: createStaticVertexBuffer,
+    createTexture: createTexture,
+    createVertexShader: createVertexShader$1,
+    getBatchDim: getBatchDim,
+    getExtensionOrThrow: getExtensionOrThrow,
+    getFramebufferErrorMessage: getFramebufferErrorMessage,
+    getMaxTexturesInShader: getMaxTexturesInShader,
+    getNumChannels: getNumChannels,
+    getProgramUniformLocation: getProgramUniformLocation,
+    getProgramUniformLocationOrThrow: getProgramUniformLocationOrThrow,
+    getRowsCols: getRowsCols,
+    getShapeAs3D: getShapeAs3D,
+    getTextureShapeFromLogicalShape: getTextureShapeFromLogicalShape,
+    getWebGLDisjointQueryTimerVersion: getWebGLDisjointQueryTimerVersion,
+    getWebGLErrorMessage: getWebGLErrorMessage,
+    getWebGLMaxTextureSize: getWebGLMaxTextureSize,
+    hasExtension: hasExtension,
+    isCapableOfRenderingToFloatTexture: isCapableOfRenderingToFloatTexture,
+    isDownloadFloatTextureEnabled: isDownloadFloatTextureEnabled,
+    isReshapeFree: isReshapeFree,
+    isWebGLFenceEnabled: isWebGLFenceEnabled,
+    isWebGLVersionEnabled: isWebGLVersionEnabled,
+    linkProgram: linkProgram,
+    logShaderSourceAndInfoLog: logShaderSourceAndInfoLog,
+    resetMaxTextureSize: resetMaxTextureSize,
+    resetMaxTexturesInShader: resetMaxTexturesInShader,
+    unbindColorTextureFromFramebuffer: unbindColorTextureFromFramebuffer,
+    unbindTextureUnit: unbindTextureUnit,
+    validateFramebuffer: validateFramebuffer,
+    validateProgram: validateProgram,
+    validateTextureSize: validateTextureSize
+});
+
 /**
  * @license
  * Copyright 2019 Google LLC. All Rights Reserved.
@@ -83475,7 +86477,7 @@ function assertNotComplex(tensor, opName) {
  * limitations under the License.
  * =============================================================================
  */
-const ENV = env();
+const ENV = env$1();
 /**
  * This file contains WebGL-specific flag registrations.
  */
@@ -83707,7 +86709,7 @@ function getGlslDifferences() {
     let defineSpecialNaN;
     let defineSpecialInf;
     let defineRound;
-    if (env().getNumber('WEBGL_VERSION') === 2) {
+    if (env$1().getNumber('WEBGL_VERSION') === 2) {
         version = '#version 300 es';
         attribute = 'in';
         varyingVs = 'out';
@@ -83727,7 +86729,7 @@ function getGlslDifferences() {
         //   - fraction = anything except all 0 bits (since all 0 bits represents
         //   infinity).
         // https://en.wikipedia.org/wiki/IEEE_754-1985#Representation_of_non-numbers
-        defineSpecialNaN = env().getBool('WEBGL2_ISNAN_CUSTOM') ? `
+        defineSpecialNaN = env$1().getBool('WEBGL2_ISNAN_CUSTOM') ? `
       bool isnan_custom(float val) {
         uint floatToUint = floatBitsToUint(val);
         return (floatToUint & 0x7fffffffu) > 0x7f800000u;
@@ -83985,6 +86987,8 @@ const ENCODE_FLOAT_SNIPPET = `
  * limitations under the License.
  * =============================================================================
  */
+// Please make sure the shaker key in makeShaderKey in gpgpu_math.ts is well
+// mapped if any shader source code is changed in this file.
 const { getBroadcastDims } = backend_util;
 function makeShader(inputsInfo, outputShape, program) {
     const prefixSnippets = [];
@@ -85678,7 +88682,7 @@ function compileProgram(gpgpu, program, inputs, output) {
     const source = makeShader(inputInfos, outShapeInfo, program);
     const fragmentShader = createFragmentShader(gpgpu.gl, source);
     const webGLProgram = gpgpu.createProgram(fragmentShader);
-    if (!env().get('ENGINE_COMPILE_ONLY')) {
+    if (!env$1().get('ENGINE_COMPILE_ONLY')) {
         gpgpu.buildVao(webGLProgram);
         return Object.assign({ program,
             fragmentShader,
@@ -85715,7 +88719,7 @@ function getUniformLocations(gpgpu, program, webGLProgram) {
     let nanLoc = null;
     // Add special uniforms (NAN, INFINITY)
     nanLoc = gpgpu.getUniformLocation(webGLProgram, 'NAN', false);
-    if (env().getNumber('WEBGL_VERSION') === 1) {
+    if (env$1().getNumber('WEBGL_VERSION') === 1) {
         infLoc = gpgpu.getUniformLocation(webGLProgram, 'INFINITY', false);
     }
     // Add user-defined uniforms
@@ -85796,7 +88800,7 @@ function runProgram(gpgpu, binary, inputs, output, customUniformValues) {
     gpgpu.setProgram(binary.webGLProgram);
     gpgpu.bindVertexArray(binary.webGLProgram.vao);
     // Set special uniforms (NAN, INFINITY)
-    if (env().getNumber('WEBGL_VERSION') === 1) {
+    if (env$1().getNumber('WEBGL_VERSION') === 1) {
         if (binary.infLoc !== null) {
             gpgpu.gl.uniform1f(binary.infLoc, Infinity);
         }
@@ -85988,12 +88992,12 @@ function makeShaderKey(program, inputs, output) {
     let key = program.constructor.name;
     // Fast string concat. See https://jsperf.com/string-concatenation/14.
     key += '_' + keyInputs + '_' + keyUserCode +
-        `${env().getNumber('WEBGL_VERSION')}`;
+        `${env$1().getNumber('WEBGL_VERSION')}`;
     return key;
 }
 function useShapeUniforms(rank) {
     // TODO: Remove the limitaion of rank <= 4.
-    return env().getBool('WEBGL_USE_SHAPES_UNIFORMS') && rank <= 4;
+    return env$1().getBool('WEBGL_USE_SHAPES_UNIFORMS') && rank <= 4;
 }
 
 /**
@@ -86384,7 +89388,7 @@ function createAndConfigureTexture(gl, width, height, internalFormat, textureFor
     callAndCheck(gl, () => gl.texParameteri(tex2d, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE));
     callAndCheck(gl, () => gl.texParameteri(tex2d, gl.TEXTURE_MIN_FILTER, gl.NEAREST));
     callAndCheck(gl, () => gl.texParameteri(tex2d, gl.TEXTURE_MAG_FILTER, gl.NEAREST));
-    if (env().getNumber('WEBGL_VERSION') === 1) {
+    if (env$1().getNumber('WEBGL_VERSION') === 1) {
         callAndCheck(gl, () => gl.texImage2D(tex2d, 0, internalFormat, width, height, 0, textureFormat, textureType, null));
     }
     else {
@@ -86452,7 +89456,7 @@ function uploadDenseMatrixToTexture(gl, texture, width, height, data, textureCon
         internalFormat = textureConfig.internalFormatPackedFloat;
     }
     dataForUpload.set(data);
-    if (env().getNumber('WEBGL_VERSION') === 2) {
+    if (env$1().getNumber('WEBGL_VERSION') === 2) {
         callAndCheck(gl, () => gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, gl.RGBA, texelDataType, dataForUpload));
     }
     else {
@@ -86463,7 +89467,7 @@ function uploadDenseMatrixToTexture(gl, texture, width, height, data, textureCon
 function uploadPixelDataToTexture(gl, texture, pixels) {
     callAndCheck(gl, () => gl.bindTexture(gl.TEXTURE_2D, texture));
     if (pixels.data instanceof Uint8Array) {
-        if (env().getNumber('WEBGL_VERSION') === 2) {
+        if (env$1().getNumber('WEBGL_VERSION') === 2) {
             callAndCheck(gl, () => gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, pixels.width, pixels.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels.data));
         }
         else {
@@ -86471,7 +89475,7 @@ function uploadPixelDataToTexture(gl, texture, pixels) {
         }
     }
     else {
-        if (env().getNumber('WEBGL_VERSION') === 2) {
+        if (env$1().getNumber('WEBGL_VERSION') === 2) {
             callAndCheck(gl, () => gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels));
         }
         else {
@@ -86526,6 +89530,31 @@ function downloadMatrixFromPackedOutputTexture(gl, physicalRows, physicalCols) {
     return packedRGBA;
 }
 
+var gpgpu_util = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    bindVertexProgramAttributeStreams: bindVertexProgramAttributeStreams,
+    createBufferFromOutputTexture: createBufferFromOutputTexture,
+    createFloat16MatrixTexture: createFloat16MatrixTexture,
+    createFloat16PackedMatrixTexture: createFloat16PackedMatrixTexture,
+    createFloat32MatrixTexture: createFloat32MatrixTexture,
+    createIndexBuffer: createIndexBuffer,
+    createPackedMatrixTexture: createPackedMatrixTexture,
+    createUnsignedBytesMatrixTexture: createUnsignedBytesMatrixTexture,
+    createVertexBuffer: createVertexBuffer,
+    createVertexShader: createVertexShader,
+    downloadByteEncodedFloatMatrixFromOutputTexture: downloadByteEncodedFloatMatrixFromOutputTexture,
+    downloadFloat32MatrixFromBuffer: downloadFloat32MatrixFromBuffer,
+    downloadMatrixFromPackedOutputTexture: downloadMatrixFromPackedOutputTexture,
+    downloadPackedMatrixFromBuffer: downloadPackedMatrixFromBuffer,
+    getInternalFormatForFloat16MatrixTexture: getInternalFormatForFloat16MatrixTexture,
+    getInternalFormatForFloat16PackedMatrixTexture: getInternalFormatForFloat16PackedMatrixTexture,
+    getInternalFormatForFloat32MatrixTexture: getInternalFormatForFloat32MatrixTexture,
+    getInternalFormatForPackedMatrixTexture: getInternalFormatForPackedMatrixTexture,
+    getInternalFormatForUnsignedBytesMatrixTexture: getInternalFormatForUnsignedBytesMatrixTexture,
+    uploadDenseMatrixToTexture: uploadDenseMatrixToTexture,
+    uploadPixelDataToTexture: uploadPixelDataToTexture
+});
+
 /**
  * @license
  * Copyright 2017 Google LLC. All Rights Reserved.
@@ -86548,7 +89577,7 @@ class GPGPUContext {
         this.program = null;
         this.disposed = false;
         this.itemsToPoll = [];
-        const glVersion = env().getNumber('WEBGL_VERSION');
+        const glVersion = env$1().getNumber('WEBGL_VERSION');
         if (gl != null) {
             this.gl = gl;
             setWebGLContext(glVersion, gl);
@@ -86557,7 +89586,7 @@ class GPGPUContext {
             this.gl = getWebGLContext(glVersion);
         }
         gl = this.gl;
-        if (env().getNumber('WEBGL_VERSION') === 2) {
+        if (env$1().getNumber('WEBGL_VERSION') === 2) {
             const gl2 = gl;
             this.createVertexArray = () => {
                 return callAndCheck(gl2, () => gl2.createVertexArray());
@@ -86596,7 +89625,7 @@ class GPGPUContext {
         const COLOR_BUFFER_HALF_FLOAT = 'EXT_color_buffer_half_float';
         this.parallelCompilationExtension =
             this.gl.getExtension('KHR_parallel_shader_compile');
-        if (env().getNumber('WEBGL_VERSION') === 1) {
+        if (env$1().getNumber('WEBGL_VERSION') === 1) {
             const TEXTURE_FLOAT = 'OES_texture_float';
             const TEXTURE_HALF_FLOAT = 'OES_texture_half_float';
             this.textureFloatExtension =
@@ -86605,7 +89634,7 @@ class GPGPUContext {
                 this.textureHalfFloatExtension =
                     getExtensionOrThrow(this.gl, TEXTURE_HALF_FLOAT);
             }
-            else if (env().get('WEBGL_FORCE_F16_TEXTURES')) {
+            else if (env$1().get('WEBGL_FORCE_F16_TEXTURES')) {
                 throw new Error('GL context does not support half float textures, yet the ' +
                     'environment flag WEBGL_FORCE_F16_TEXTURES is set to true.');
             }
@@ -86614,7 +89643,7 @@ class GPGPUContext {
                 this.colorBufferHalfFloatExtension =
                     getExtensionOrThrow(this.gl, COLOR_BUFFER_HALF_FLOAT);
             }
-            else if (env().get('WEBGL_FORCE_F16_TEXTURES')) {
+            else if (env$1().get('WEBGL_FORCE_F16_TEXTURES')) {
                 throw new Error('GL context does not support color renderable half floats, yet ' +
                     'the environment flag WEBGL_FORCE_F16_TEXTURES is set to true.');
             }
@@ -86640,7 +89669,7 @@ class GPGPUContext {
             getTextureConfig(this.gl, this.textureHalfFloatExtension);
     }
     get debug() {
-        return env().getBool('DEBUG');
+        return env$1().getBool('DEBUG');
     }
     dispose() {
         if (this.disposed) {
@@ -86724,7 +89753,7 @@ class GPGPUContext {
     createFence(gl) {
         let query;
         let isFencePassed;
-        if (env().getBool('WEBGL_FENCE_API_ENABLED')) {
+        if (env$1().getBool('WEBGL_FENCE_API_ENABLED')) {
             const gl2 = gl;
             const sync = gl2.fenceSync(gl2.SYNC_GPU_COMMANDS_COMPLETE, 0);
             gl.flush();
@@ -86735,10 +89764,10 @@ class GPGPUContext {
             };
             query = sync;
         }
-        else if (env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') > 0) {
+        else if (env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') > 0) {
             query = this.beginQuery();
             this.endQuery();
-            isFencePassed = () => this.isQueryAvailable(query, env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION'));
+            isFencePassed = () => this.isQueryAvailable(query, env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION'));
         }
         else {
             // If we have no way to fence, return true immediately. This will fire in
@@ -86857,7 +89886,7 @@ class GPGPUContext {
     getQueryTimerExtension() {
         if (this.disjointQueryTimerExtension == null) {
             this.disjointQueryTimerExtension =
-                getExtensionOrThrow(this.gl, env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') === 2 ?
+                getExtensionOrThrow(this.gl, env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') === 2 ?
                     'EXT_disjoint_timer_query_webgl2' :
                     'EXT_disjoint_timer_query');
         }
@@ -86870,7 +89899,7 @@ class GPGPUContext {
         return this.getQueryTimerExtension();
     }
     beginQuery() {
-        if (env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') === 2) {
+        if (env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') === 2) {
             const gl2 = this.gl;
             const ext = this.getQueryTimerExtensionWebGL2();
             const query = gl2.createQuery();
@@ -86883,7 +89912,7 @@ class GPGPUContext {
         return query;
     }
     endQuery() {
-        if (env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') === 2) {
+        if (env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION') === 2) {
             const gl2 = this.gl;
             const ext = this.getQueryTimerExtensionWebGL2();
             gl2.endQuery(ext.TIME_ELAPSED_EXT);
@@ -86896,8 +89925,8 @@ class GPGPUContext {
         await repeatedTry(() => this.disposed || // while testing contexts are created / disposed
             // in rapid succession, so without this check we
             // may poll for the query timer indefinitely
-            this.isQueryAvailable(query, env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION')));
-        return this.getQueryTime(query, env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION'));
+            this.isQueryAvailable(query, env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION')));
+        return this.getQueryTime(query, env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_VERSION'));
     }
     getQueryTime(query, queryTimerVersion) {
         if (queryTimerVersion === 0) {
@@ -86960,8 +89989,8 @@ class GPGPUContext {
         }
         // Start a new loop that polls.
         let scheduleFn = undefined;
-        if ('setTimeoutCustom' in env().platform) {
-            scheduleFn = env().platform.setTimeoutCustom.bind(env().platform);
+        if ('setTimeoutCustom' in env$1().platform) {
+            scheduleFn = env$1().platform.setTimeoutCustom.bind(env$1().platform);
         }
         repeatedTry(() => {
             this.pollItems();
@@ -87052,6 +90081,9 @@ function linearSearchLastTrue(arr) {
  * limitations under the License.
  * =============================================================================
  */
+// Import shared functionality from tfjs-backend-cpu without triggering
+// side effects.
+// tslint:disable-next-line: no-imports-from-dist
 const { addImpl: addImplCPU, bincountImpl: bincountImplCPU, bincountReduceImpl: bincountReduceImplCPU, bitwiseAndImpl: bitwiseAndImplCPU, castImpl: castImplCPU, ceilImpl: ceilImplCPU, concatImpl: concatImplCPU, equalImpl: equalImplCPU, expImpl: expImplCPU, expm1Impl: expm1ImplCPU, floorImpl: floorImplCPU, gatherNdImpl: gatherNdImplCPU, gatherV2Impl: gatherV2ImplCPU, greaterImpl: greaterImplCPU, greaterEqualImpl: greaterEqualImplCPU, lessImpl: lessImplCPU, lessEqualImpl: lessEqualImplCPU, linSpaceImpl: linSpaceImplCPU, logImpl: logImplCPU, maxImpl: maxImplCPU, maximumImpl: maximumImplCPU, minimumImpl: minimumImplCPU, multiplyImpl: multiplyImplCPU, negImpl: negImplCPU, notEqualImpl: notEqualImplCPU, prodImpl: prodImplCPU, raggedGatherImpl: raggedGatherImplCPU, raggedRangeImpl: raggedRangeImplCPU, raggedTensorToTensorImpl: raggedTensorToTensorImplCPU, rangeImpl: rangeImplCPU, rsqrtImpl: rsqrtImplCPU, scatterImpl: scatterImplCPU, sigmoidImpl: sigmoidImplCPU, simpleAbsImpl: simpleAbsImplCPU, sliceImpl: sliceImplCPU, sparseFillEmptyRowsImpl: sparseFillEmptyRowsImplCPU, sparseReshapeImpl: sparseReshapeImplCPU, sparseSegmentReductionImpl: sparseSegmentReductionImplCPU, sqrtImpl: sqrtImplCPU, staticRegexReplaceImpl: staticRegexReplaceImplCPU, stridedSliceImpl: stridedSliceImplCPU, stringNGramsImpl: stringNGramsImplCPU, stringSplitImpl: stringSplitImplCPU, stringToHashBucketFastImpl: stringToHashBucketFastImplCPU, subImpl: subImplCPU, tileImpl: tileImplCPU, topKImpl: topKImplCPU, transposeImpl: transposeImplCPU, uniqueImpl: uniqueImplCPU, } = shared;
 
 /**
@@ -87367,7 +90399,7 @@ class TextureManager {
             this.freeTextures[shapeKey] = [];
         }
         const texBytes = computeBytes(shape, physicalTexType, this.gpgpu.gl, this.gpgpu.textureConfig, isPacked);
-        const deleteTexThreshold = env()
+        const deleteTexThreshold = env$1()
             .getNumber('WEBGL_DELETE_TEXTURE_THRESHOLD');
         if (deleteTexThreshold !== -1 &&
             this._numBytesAllocated > deleteTexThreshold) {
@@ -87495,7 +90527,7 @@ function internalFormatForPhysicalTexType(physicalTexType, textureConfig) {
     }
 }
 function getPhysicalTextureForRendering(isPacked) {
-    if (env().getBool('WEBGL_RENDER_FLOAT32_ENABLED')) {
+    if (env$1().getBool('WEBGL_RENDER_FLOAT32_ENABLED')) {
         if (isPacked) {
             return PhysicalTextureType.PACKED_2X2_FLOAT32;
         }
@@ -87704,6 +90736,7 @@ class UnpackProgram {
  * limitations under the License.
  * =============================================================================
  */
+// Import webgl flags.
 const whereImpl = whereImpl$2;
 const EPSILON_FLOAT32 = 1e-7;
 const EPSILON_FLOAT16 = 1e-4;
@@ -87717,16 +90750,16 @@ function getBinaryCache(webGLVersion) {
 }
 // Empirically determined constant used to determine size threshold for handing
 // off execution to the CPU.
-const CPU_HANDOFF_SIZE_THRESHOLD = env().getNumber('CPU_HANDOFF_SIZE_THRESHOLD');
+const CPU_HANDOFF_SIZE_THRESHOLD = env$1().getNumber('CPU_HANDOFF_SIZE_THRESHOLD');
 // Empirically determined constant used to decide the number of MB on GPU
 // before we warn about high memory use. The MB are this constant * screen area
 // * dpi / 1024 / 1024.
 const BEFORE_PAGING_CONSTANT = 600;
 function numMBBeforeWarning() {
-    if (env().global.screen == null) {
+    if (env$1().global.screen == null) {
         return 1024; // 1 GB.
     }
-    return (env().global.screen.height * env().global.screen.width *
+    return (env$1().global.screen.height * env$1().global.screen.width *
         window.devicePixelRatio) *
         BEFORE_PAGING_CONSTANT / 1024 / 1024;
 }
@@ -87754,7 +90787,7 @@ class MathBackendWebGL extends KernelBackend {
         this.warnedAboutMemory = false;
         this.pendingDeletes = 0;
         this.disposed = false;
-        if (!env().getBool('HAS_WEBGL')) {
+        if (!env$1().getBool('HAS_WEBGL')) {
             throw new Error('WebGL is not supported on this device');
         }
         let newGPGPU;
@@ -87763,16 +90796,16 @@ class MathBackendWebGL extends KernelBackend {
                 newGPGPU = gpuResource;
             }
             else {
-                const gl = getWebGLContext(env().getNumber('WEBGL_VERSION'), gpuResource);
+                const gl = getWebGLContext(env$1().getNumber('WEBGL_VERSION'), gpuResource);
                 newGPGPU = new GPGPUContext(gl);
             }
             this.binaryCache = {};
             this.gpgpuCreatedLocally = false;
         }
         else {
-            const gl = getWebGLContext(env().getNumber('WEBGL_VERSION'));
+            const gl = getWebGLContext(env$1().getNumber('WEBGL_VERSION'));
             newGPGPU = new GPGPUContext(gl);
-            this.binaryCache = getBinaryCache(env().getNumber('WEBGL_VERSION'));
+            this.binaryCache = getBinaryCache(env$1().getNumber('WEBGL_VERSION'));
             this.gpgpuCreatedLocally = true;
         }
         this.gpgpu = newGPGPU;
@@ -87808,8 +90841,8 @@ class MathBackendWebGL extends KernelBackend {
         return output.dataId;
     }
     write(values, shape, dtype) {
-        if (env().getBool('WEBGL_CHECK_NUMERICAL_PROBLEMS') ||
-            env().getBool('DEBUG')) {
+        if (env$1().getBool('WEBGL_CHECK_NUMERICAL_PROBLEMS') ||
+            env$1().getBool('DEBUG')) {
             this.checkNumericalProblems(values);
         }
         if (dtype === 'complex64' && values != null) {
@@ -87841,7 +90874,7 @@ class MathBackendWebGL extends KernelBackend {
         }
     }
     move(dataId, values, shape, dtype, refCount) {
-        if (env().getBool('DEBUG')) {
+        if (env$1().getBool('DEBUG')) {
             this.checkNumericalProblems(values);
         }
         if (dtype === 'complex64') {
@@ -87923,19 +90956,19 @@ class MathBackendWebGL extends KernelBackend {
         if (values != null) {
             return this.convertAndCacheOnCPU(dataId);
         }
-        if (env().getBool('DEBUG')) {
+        if (env$1().getBool('DEBUG')) {
             // getBool('WEBGL_DOWNLOAD_FLOAT_ENABLED') caused a blocking GPU call.
             // For performance reason, only check it for debugging. In production,
             // it doesn't handle this use case anyway, so behavior is not changed.
-            if (!env().getBool('WEBGL_DOWNLOAD_FLOAT_ENABLED') &&
-                env().getNumber('WEBGL_VERSION') === 2) {
+            if (!env$1().getBool('WEBGL_DOWNLOAD_FLOAT_ENABLED') &&
+                env$1().getNumber('WEBGL_VERSION') === 2) {
                 throw new Error(`tensor.data() with WEBGL_DOWNLOAD_FLOAT_ENABLED=false and ` +
                     `WEBGL_VERSION=2 not yet supported.`);
             }
         }
         let buffer = null;
         let tmpDownloadTarget;
-        if (dtype !== 'complex64' && env().get('WEBGL_BUFFER_SUPPORTED')) {
+        if (dtype !== 'complex64' && env$1().get('WEBGL_BUFFER_SUPPORTED')) {
             // Possibly copy the texture into a buffer before inserting a fence.
             tmpDownloadTarget = this.decode(dataId);
             const tmpData = this.texData.get(tmpDownloadTarget.dataId);
@@ -88050,7 +91083,7 @@ class MathBackendWebGL extends KernelBackend {
         for (let i = 0; i < values.length; i++) {
             const num = values[i];
             if (!canBeRepresented(num)) {
-                if (env().getBool('WEBGL_RENDER_FLOAT32_CAPABLE')) {
+                if (env$1().getBool('WEBGL_RENDER_FLOAT32_CAPABLE')) {
                     throw Error(`The value ${num} cannot be represented with your ` +
                         `current settings. Consider enabling float32 rendering: ` +
                         `'tf.env().set('WEBGL_RENDER_FLOAT32_ENABLED', true);'`);
@@ -88062,7 +91095,7 @@ class MathBackendWebGL extends KernelBackend {
     getValuesFromTexture(dataId) {
         const { shape, dtype, isPacked } = this.texData.get(dataId);
         const size = sizeFromShape(shape);
-        if (env().getBool('WEBGL_DOWNLOAD_FLOAT_ENABLED')) {
+        if (env$1().getBool('WEBGL_DOWNLOAD_FLOAT_ENABLED')) {
             const tmpTarget = this.decode(dataId);
             const tmpData = this.texData.get(tmpTarget.dataId);
             const vals = this.gpgpu
@@ -88071,7 +91104,7 @@ class MathBackendWebGL extends KernelBackend {
             this.disposeIntermediateTensorInfo(tmpTarget);
             return vals;
         }
-        const shouldUsePackedProgram = env().getBool('WEBGL_PACK') && isPacked === true;
+        const shouldUsePackedProgram = env$1().getBool('WEBGL_PACK') && isPacked === true;
         const outputShape = shouldUsePackedProgram ? getShapeAs3D(shape) : shape;
         const program = shouldUsePackedProgram ?
             new EncodeFloatPackedProgram(outputShape) :
@@ -88085,7 +91118,7 @@ class MathBackendWebGL extends KernelBackend {
         return vals;
     }
     timerAvailable() {
-        return env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_RELIABLE') > 0;
+        return env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_RELIABLE') > 0;
     }
     time(f) {
         const oldActiveTimers = this.activeTimers;
@@ -88116,7 +91149,7 @@ class MathBackendWebGL extends KernelBackend {
             wallMs: null // will be filled by the engine
         };
         return (async () => {
-            if (env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_RELIABLE') >
+            if (env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_RELIABLE') >
                 0) {
                 const kernelMs = await Promise.all(flattenedActiveTimerQueries);
                 res['kernelMs'] = sum$4(kernelMs);
@@ -88144,13 +91177,13 @@ class MathBackendWebGL extends KernelBackend {
         };
     }
     startTimer() {
-        if (env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_RELIABLE') > 0) {
+        if (env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_RELIABLE') > 0) {
             return this.gpgpu.beginQuery();
         }
         return { startMs: now(), endMs: null };
     }
     endTimer(query) {
-        if (env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_RELIABLE') > 0) {
+        if (env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_RELIABLE') > 0) {
             this.gpgpu.endQuery();
             return query;
         }
@@ -88158,7 +91191,7 @@ class MathBackendWebGL extends KernelBackend {
         return query;
     }
     async getQueryTime(query) {
-        if (env().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_RELIABLE') > 0) {
+        if (env$1().getNumber('WEBGL_DISJOINT_QUERY_TIMER_EXTENSION_RELIABLE') > 0) {
             return this.gpgpu.waitForQueryAndGetTime(query);
         }
         const timerQuery = query;
@@ -88247,7 +91280,7 @@ class MathBackendWebGL extends KernelBackend {
     sustainable strategy for optimizing backend execution of ops.
      */
     shouldExecuteOnCPU(inputs, sizeThreshold = CPU_HANDOFF_SIZE_THRESHOLD) {
-        return env().getBool('WEBGL_CPU_FORWARD') &&
+        return env$1().getBool('WEBGL_CPU_FORWARD') &&
             inputs.every(input => this.texData.get(input.dataId).texture == null &&
                 sizeFromShape(input.shape) < sizeThreshold);
     }
@@ -88274,7 +91307,7 @@ class MathBackendWebGL extends KernelBackend {
             const outValues = simpleAbsImplCPU(this.texData.get(x.dataId).values);
             return this.makeOutput(x.shape, x.dtype, outValues);
         }
-        if (env().getBool('WEBGL_PACK_UNARY_OPERATIONS')) {
+        if (env$1().getBool('WEBGL_PACK_UNARY_OPERATIONS')) {
             return this.packedUnaryOp(x, ABS$1, x.dtype);
         }
         const program = new UnaryOpProgram(x.shape, ABS$1);
@@ -88386,7 +91419,7 @@ class MathBackendWebGL extends KernelBackend {
             if (texData.texture == null) {
                 if (!program.packedInputs &&
                     sizeFromShape(input.shape) <=
-                        env().getNumber('WEBGL_SIZE_UPLOAD_UNIFORM')) {
+                        env$1().getNumber('WEBGL_SIZE_UPLOAD_UNIFORM')) {
                     // Upload small tensors that live on the CPU as uniforms, not as
                     // textures. Do this only when the environment supports 32bit floats
                     // due to problems when comparing 16bit floats with 32bit floats.
@@ -88442,7 +91475,7 @@ class MathBackendWebGL extends KernelBackend {
         if (shouldTimeProgram) {
             query = this.startTimer();
         }
-        if (!env().get('ENGINE_COMPILE_ONLY')) {
+        if (!env$1().get('ENGINE_COMPILE_ONLY')) {
             runProgram(this.gpgpu, binary, inputsData, outputData, customUniformValues);
         }
         dataToDispose.forEach(info => this.disposeIntermediateTensorInfo(info));
@@ -88450,7 +91483,7 @@ class MathBackendWebGL extends KernelBackend {
             query = this.endTimer(query);
             this.activeTimers.push({ name: program.constructor.name, query: this.getQueryTime(query) });
         }
-        const glFlushThreshold = env().getNumber('WEBGL_FLUSH_THRESHOLD');
+        const glFlushThreshold = env$1().getNumber('WEBGL_FLUSH_THRESHOLD');
         // Manually GL flush requested
         if (glFlushThreshold > 0) {
             const time = now();
@@ -88459,7 +91492,7 @@ class MathBackendWebGL extends KernelBackend {
                 this.lastGlFlushTime = time;
             }
         }
-        if (!env().getBool('WEBGL_LAZILY_UNPACK') && outData.isPacked &&
+        if (!env$1().getBool('WEBGL_LAZILY_UNPACK') && outData.isPacked &&
             preventEagerUnpackingOfOutput === false) {
             const unpacked = this.unpackTensor(output);
             this.disposeIntermediateTensorInfo(output);
@@ -88487,7 +91520,7 @@ class MathBackendWebGL extends KernelBackend {
         }
         // Avoid disposing the compiled webgl programs during unit testing because
         // it slows down test execution.
-        if (!env().getBool('IS_TEST')) {
+        if (!env$1().getBool('IS_TEST')) {
             const allKeys = Object.keys(this.binaryCache);
             allKeys.forEach(key => {
                 this.gpgpu.deleteProgram(this.binaryCache[key].webGLProgram);
@@ -88512,13 +91545,13 @@ class MathBackendWebGL extends KernelBackend {
     floatPrecision() {
         if (this.floatPrecisionValue == null) {
             this.floatPrecisionValue = tidy(() => {
-                if (!env().get('WEBGL_RENDER_FLOAT32_ENABLED')) {
+                if (!env$1().get('WEBGL_RENDER_FLOAT32_ENABLED')) {
                     // Momentarily switching DEBUG flag to false so we don't throw an
                     // error trying to upload a small value.
-                    const debugFlag = env().getBool('DEBUG');
-                    env().set('DEBUG', false);
+                    const debugFlag = env$1().getBool('DEBUG');
+                    env$1().set('DEBUG', false);
                     const underflowCheckValue = this.abs(scalar(1e-8)).dataSync()[0];
-                    env().set('DEBUG', debugFlag);
+                    env$1().set('DEBUG', debugFlag);
                     if (underflowCheckValue > 0) {
                         return 32;
                     }
@@ -88591,7 +91624,7 @@ class MathBackendWebGL extends KernelBackend {
             texData.texShape = outputTexData.texShape;
             texData.isPacked = outputTexData.isPacked;
             texData.usage = outputTexData.usage;
-            if (!env().get('ENGINE_COMPILE_ONLY')) {
+            if (!env$1().get('ENGINE_COMPILE_ONLY')) {
                 texData.texture = outputTexData.texture;
                 // Once uploaded, don't store the values on cpu.
                 texData.values = null;
@@ -88739,7 +91772,7 @@ function float32ToTypedArray(a, dtype) {
 
 /** @license See the LICENSE file. */
 // This code is auto-generated, do not modify this file!
-const version$2 = '4.11.0';
+const version$2 = '4.22.0';
 
 /**
  * @license
@@ -88763,7 +91796,7 @@ const version$2 = '4.11.0';
  * @doc {heading: 'Environment', namespace: 'webgl'}
  */
 function forceHalfFloat() {
-    env().set('WEBGL_FORCE_F16_TEXTURES', true);
+    env$1().set('WEBGL_FORCE_F16_TEXTURES', true);
 }
 
 /**
@@ -88782,6 +91815,7 @@ function forceHalfFloat() {
  * limitations under the License.
  * =============================================================================
  */
+// base.ts is the webgl backend without auto kernel registration.
 if (isBrowser()) {
     registerBackend('webgl', () => new MathBackendWebGL(), 2 /* priority */);
 }
@@ -89035,7 +92069,7 @@ function leakyRelu(args) {
     const { x } = inputs;
     const { alpha } = attrs;
     const $alpha = backend.makeTensorInfo([], 'float32', createScalarValue(alpha, 'float32'));
-    const program = env().getBool('WEBGL_PACK_BINARY_OPERATIONS') ?
+    const program = env$1().getBool('WEBGL_PACK_BINARY_OPERATIONS') ?
         new BinaryOpPackedProgram(LEAKYRELU_PACKED, x.shape, $alpha.shape) :
         new BinaryOpProgram(LEAKYRELU, x.shape, $alpha.shape);
     const result = backend.runWebGLProgram(program, [x, $alpha], 'float32');
@@ -89072,7 +92106,7 @@ const PRELU_PACKED = `
 function prelu(args) {
     const { inputs, backend } = args;
     const { x, alpha } = inputs;
-    const program = env().getBool('WEBGL_PACK_BINARY_OPERATIONS') ?
+    const program = env$1().getBool('WEBGL_PACK_BINARY_OPERATIONS') ?
         new BinaryOpPackedProgram(PRELU_PACKED, x.shape, alpha.shape) :
         new BinaryOpProgram(PRELU, x.shape, alpha.shape);
     return backend.runWebGLProgram(program, [x, alpha], 'float32');
@@ -89118,7 +92152,7 @@ function unaryKernelFunc({ opSnippet, packedOpSnippet, cpuKernelImpl, dtype }) {
             const outValues = cpuKernelImpl(xData.values, $dtype);
             return webglBackend.makeTensorInfo(x.shape, $dtype, outValues);
         }
-        const shouldUsePackedProgram = env().getBool('WEBGL_PACK_UNARY_OPERATIONS') && packedOpSnippet != null;
+        const shouldUsePackedProgram = env$1().getBool('WEBGL_PACK_UNARY_OPERATIONS') && packedOpSnippet != null;
         let program;
         if (shouldUsePackedProgram) {
             program = new UnaryOpPackedProgram(x.shape, packedOpSnippet);
@@ -89190,7 +92224,7 @@ function binaryKernelFunc({ opSnippet, packedOpSnippet, checkOutOfBounds = false
             outData.values = outValues;
             return out;
         }
-        const shouldUsePackedProgram = env().getBool('WEBGL_PACK_BINARY_OPERATIONS') &&
+        const shouldUsePackedProgram = env$1().getBool('WEBGL_PACK_BINARY_OPERATIONS') &&
             packedOpSnippet != null;
         let program;
         if (shouldUsePackedProgram) {
@@ -89462,7 +92496,7 @@ function multiply(args) {
         return out;
     }
     let program;
-    if (env().getBool('WEBGL_PACK_BINARY_OPERATIONS')) {
+    if (env$1().getBool('WEBGL_PACK_BINARY_OPERATIONS')) {
         program = new BinaryOpPackedProgram(MUL, a.shape, b.shape);
     }
     else {
@@ -89984,7 +93018,7 @@ class TransposePackedProgram {
  * =============================================================================
  */
 function transposeImpl(x, perm, backend) {
-    const program = env().getBool('WEBGL_PACK_ARRAY_OPERATIONS') ?
+    const program = env$1().getBool('WEBGL_PACK_ARRAY_OPERATIONS') ?
         new TransposePackedProgram(x.shape, perm) :
         new TransposeProgram(x.shape, perm);
     return backend.runWebGLProgram(program, [x], x.dtype);
@@ -90302,7 +93336,7 @@ function abs(args) {
         return backend.makeTensorInfo(x.shape, x.dtype, outValues);
     }
     let program;
-    if (env().getBool('WEBGL_PACK_UNARY_OPERATIONS')) {
+    if (env$1().getBool('WEBGL_PACK_UNARY_OPERATIONS')) {
         program = new UnaryOpPackedProgram(x.shape, ABS);
     }
     else {
@@ -90511,7 +93545,7 @@ function addN(args) {
         return identity({ inputs: { x: tensors[0] }, backend });
     }
     // Limit the number of uploaded textures for optimization.
-    if (tensors.length > env().getNumber('WEBGL_MAX_TEXTURES_IN_SHADER')) {
+    if (tensors.length > env$1().getNumber('WEBGL_MAX_TEXTURES_IN_SHADER')) {
         const midIndex = Math.floor(tensors.length / 2);
         const leftSide = addN({ inputs: tensors.slice(0, midIndex), backend });
         const rightSide = addN({ inputs: tensors.slice(midIndex), backend });
@@ -90520,7 +93554,7 @@ function addN(args) {
     const dtype = tensors.map(t => t.dtype).reduce((d1, d2) => upcastType(d1, d2));
     const shapes = tensors.map(t => t.shape);
     // We can make sure shapes are identical in op level.
-    const usePackedOp = env().getBool('WEBGL_PACK');
+    const usePackedOp = env$1().getBool('WEBGL_PACK');
     const program = usePackedOp ?
         new AddNPackedProgram(tensors[0].shape, shapes) :
         new AddNProgram(tensors[0].shape, shapes);
@@ -90874,7 +93908,7 @@ function argReducePacked(backend, x, reduceType, bestIndicesA = null) {
 function argMinMaxReduce(backend, x, axis, reduceType) {
     const axes = [axis];
     assertAxesAreInnerMostDims('arg' + reduceType.charAt(0).toUpperCase() + reduceType.slice(1), axes, x.shape.length);
-    if (!env().getBool('WEBGL_PACK_REDUCE') || x.shape.length <= 2) {
+    if (!env$1().getBool('WEBGL_PACK_REDUCE') || x.shape.length <= 2) {
         const intermediateTensorInfos = [];
         // Eagerly unpack x input since it is passed in to all the shaders which
         // require unpacked inputs.
@@ -91990,7 +95024,7 @@ const batchNorm = ({ inputs, backend, attrs }) => {
         scaleShape = scale.shape;
         finalInputs.push(scale);
     }
-    const program = env().getBool('WEBGL_PACK_NORMALIZATION') ?
+    const program = env$1().getBool('WEBGL_PACK_NORMALIZATION') ?
         new BatchNormPackedProgram(x.shape, mean.shape, variance.shape, offsetShape, scaleShape, varianceEpsilon) :
         new BatchNormProgram(x.shape, mean.shape, variance.shape, offsetShape, scaleShape, varianceEpsilon);
     const output = backend.runWebGLProgram(program, finalInputs, finalInputs[0].dtype);
@@ -92187,7 +95221,7 @@ function slice(args) {
     const { isPacked } = backend.texData.get(x.dataId);
     const isContinous = isSliceContinous(x.shape, $begin, $size);
     if (isPacked || !isContinous) {
-        const program = env().getBool('WEBGL_PACK_ARRAY_OPERATIONS') ?
+        const program = env$1().getBool('WEBGL_PACK_ARRAY_OPERATIONS') ?
             new SlicePackedProgram($size) :
             new SliceProgram($size);
         const customValues = [$begin];
@@ -92315,8 +95349,8 @@ const BITWISEAND_UNPACKED = `
 function bitwiseAnd(args) {
     const { inputs, backend } = args;
     const { a, b } = inputs;
-    const shouldUsePackedProgram = env().getBool('WEBGL_PACK_BINARY_OPERATIONS');
-    const versionNumber = env().getNumber('WEBGL_VERSION');
+    const shouldUsePackedProgram = env$1().getBool('WEBGL_PACK_BINARY_OPERATIONS');
+    const versionNumber = env$1().getNumber('WEBGL_VERSION');
     // The type of a and b are ensured to be `int32` in core, therefore no need to
     // consider other type situations.
     if ((backend.shouldExecuteOnCPU([a, b])) || versionNumber === 1) {
@@ -92642,7 +95676,7 @@ function clipByValue(args) {
     const { x } = inputs;
     const { clipValueMin, clipValueMax } = attrs;
     let program;
-    if (env().getBool('WEBGL_PACK_CLIP')) {
+    if (env$1().getBool('WEBGL_PACK_CLIP')) {
         program = new ClipPackedProgram(x.shape);
     }
     else {
@@ -92992,7 +96026,7 @@ function concatImpl(inputs, axis, backend) {
     }
     // Keep only non-empty tensors (ignore tensors with 0 in their shape).
     const $inputs = inputs.filter(t => sizeFromShape(t.shape) > 0);
-    const shouldPack = env().getBool('WEBGL_PACK_ARRAY_OPERATIONS') &&
+    const shouldPack = env$1().getBool('WEBGL_PACK_ARRAY_OPERATIONS') &&
         $inputs[0].shape.length > 1;
     if ($inputs.length === 1) {
         // Clone tensor.
@@ -93001,7 +96035,7 @@ function concatImpl(inputs, axis, backend) {
             new UnaryOpPackedProgram(inputs[0].shape, CLONE);
         return backend.runWebGLProgram(program, inputs, dtype);
     }
-    const maxTexturesInShader = env().getNumber('WEBGL_MAX_TEXTURES_IN_SHADER');
+    const maxTexturesInShader = env$1().getNumber('WEBGL_MAX_TEXTURES_IN_SHADER');
     if ($inputs.length > maxTexturesInShader) {
         const reducedInputs = [];
         for (let i = 0; i < $inputs.length; i += maxTexturesInShader) {
@@ -94153,7 +97187,7 @@ function conv2d(args) {
         out = conv2dByMatMul({ x, filter, convInfo, backend });
     }
     else if (convInfo.strideWidth <= 2 && $dataFormat === 'channelsLast'
-        && env().getBool('WEBGL_EXP_CONV')) {
+        && env$1().getBool('WEBGL_EXP_CONV')) {
         const program = new Conv2DPackedProgram(convInfo);
         const customValues = [
             [convInfo.padInfo.top, convInfo.padInfo.left],
@@ -94164,7 +97198,7 @@ function conv2d(args) {
         out =
             backend.runWebGLProgram(program, [x, filter], 'float32', customValues);
     }
-    else if (env().getBool('WEBGL_CONV_IM2COL')) {
+    else if (env$1().getBool('WEBGL_CONV_IM2COL')) {
         out = conv2dWithIm2Row({ x, filter, convInfo, backend });
     }
     else {
@@ -94608,7 +97642,7 @@ function conv2DBackpropInput(args) {
     const { inputShape, strides, pad, dataFormat, dimRoundingMode } = attrs;
     const $dataFormat = convertConv2DDataFormat(dataFormat);
     const convInfo = computeConv2DInfo(inputShape, filter.shape, strides, 1 /* dilations */, pad, dimRoundingMode, false, $dataFormat);
-    if (env().getBool('WEBGL_PACK_CONV2DTRANSPOSE') &&
+    if (env$1().getBool('WEBGL_PACK_CONV2DTRANSPOSE') &&
         $dataFormat === 'channelsLast') {
         const customValues = [
             [convInfo.strideHeight, convInfo.strideWidth],
@@ -95788,7 +98822,7 @@ function depthwiseConv2dNative(args) {
         `1. Got strides ${strides} and dilations '${$dilations}'`);
     const convInfo = computeConv2DInfo(x.shape, filter.shape, strides, $dilations, pad, dimRoundingMode, true /* depthwise */);
     let program;
-    if (env().getBool('WEBGL_PACK_DEPTHWISECONV') && convInfo.strideWidth <= 2 &&
+    if (env$1().getBool('WEBGL_PACK_DEPTHWISECONV') && convInfo.strideWidth <= 2 &&
         convInfo.outChannels / convInfo.inChannels === 1) {
         program = new DepthwiseConvPacked2DProgram(convInfo);
     }
@@ -96298,7 +99332,7 @@ const ELU_DER_PACKED = `
 const eluGrad = (args) => {
     const { inputs, backend } = args;
     const { dy, y } = inputs;
-    const program = env().getBool('WEBGL_PACK_BINARY_OPERATIONS') ?
+    const program = env$1().getBool('WEBGL_PACK_BINARY_OPERATIONS') ?
         new BinaryOpPackedProgram(ELU_DER_PACKED, dy.shape, y.shape) :
         new BinaryOpProgram(ELU_DER, dy.shape, y.shape);
     return backend.runWebGLProgram(program, [dy, y], dy.dtype);
@@ -96982,7 +100016,7 @@ const fromPixelsConfig = {
     kernelFunc: fromPixels,
 };
 let fromPixels2DContext;
-let willReadFrequently = env().getBool('CANVAS2D_WILL_READ_FREQUENTLY_FOR_GPU');
+let willReadFrequently = env$1().getBool('CANVAS2D_WILL_READ_FREQUENTLY_FOR_GPU');
 function fromPixels(args) {
     const { inputs, backend, attrs } = args;
     let { pixels } = inputs;
@@ -97000,7 +100034,7 @@ function fromPixels(args) {
     const texShape = [height, width];
     const outShape = [height, width, numChannels];
     if (isImage || isVideo) {
-        const newWillReadFrequently = env().getBool('CANVAS2D_WILL_READ_FREQUENTLY_FOR_GPU');
+        const newWillReadFrequently = env$1().getBool('CANVAS2D_WILL_READ_FREQUENTLY_FOR_GPU');
         if (fromPixels2DContext == null ||
             newWillReadFrequently !== willReadFrequently) {
             willReadFrequently = newWillReadFrequently;
@@ -97016,7 +100050,7 @@ function fromPixels(args) {
     // This is a byte texture with pixels.
     backend.texData.get(tempPixelHandle.dataId).usage = TextureUsage.PIXELS;
     backend.gpgpu.uploadPixelDataToTexture(backend.getTexture(tempPixelHandle.dataId), pixels);
-    const program = env().getBool('WEBGL_PACK') ?
+    const program = env$1().getBool('WEBGL_PACK') ?
         new FromPixelsPackedProgram(outShape) :
         new FromPixelsProgram(outShape);
     const res = backend.runWebGLProgram(program, [tempPixelHandle], 'int32');
@@ -97102,7 +100136,7 @@ function fusedConv2d(args) {
         });
     }
     else if (convInfo.strideWidth <= 2 && $dataFormat === 'channelsLast'
-        && env().getBool('WEBGL_EXP_CONV')) {
+        && env$1().getBool('WEBGL_EXP_CONV')) {
         const fusedActivation = activation ? mapActivationToShaderProgram(activation, true) : null;
         const program = new Conv2DPackedProgram(convInfo, hasBias, fusedActivation, hasPreluActivationWeights, hasLeakyreluAlpha);
         const customValues = [
@@ -97114,7 +100148,7 @@ function fusedConv2d(args) {
         const inputs = prepareInputs();
         out = backend.runWebGLProgram(program, inputs, 'float32', customValues);
     }
-    else if (env().getBool('WEBGL_CONV_IM2COL')) {
+    else if (env$1().getBool('WEBGL_CONV_IM2COL')) {
         out = conv2dWithIm2Row({
             x,
             filter,
@@ -97171,7 +100205,7 @@ function fusedDepthwiseConv2D(args) {
     assert$1(eitherStridesOrDilationsAreOne(strides, $dilations), () => 'Error in depthwiseConv2d: Either strides or dilations must be ' +
         `1. Got strides ${strides} and dilations '${$dilations}'`);
     const convInfo = computeConv2DInfo(x.shape, filter.shape, strides, $dilations, pad, dimRoundingMode, true /* depthwise */);
-    const shouldPackDepthwiseConv = env().getBool('WEBGL_PACK_DEPTHWISECONV') &&
+    const shouldPackDepthwiseConv = env$1().getBool('WEBGL_PACK_DEPTHWISECONV') &&
         convInfo.strideWidth <= 2 &&
         convInfo.outChannels / convInfo.inChannels === 1;
     const fusedActivation = activation ?
@@ -97365,7 +100399,7 @@ function gatherV2(args) {
     const { x, indices } = inputs;
     const { axis, batchDims } = attrs;
     const parsedAxis = parseAxisParam(axis, x.shape)[0];
-    if (env().get('DEBUG')) {
+    if (env$1().get('DEBUG')) {
         // In debug mode, throw error when any index is out of bound.
         // Otherwise, just fill out of bounds with zeroes.
         const indicesVals = backend.readSync(indices.dataId);
@@ -98012,7 +101046,7 @@ const lrn = (args) => {
     const { inputs, backend, attrs } = args;
     const { x } = inputs;
     const { depthRadius, bias, alpha, beta } = attrs;
-    const program = env().getBool('WEBGL_PACK_NORMALIZATION') ?
+    const program = env$1().getBool('WEBGL_PACK_NORMALIZATION') ?
         new LRNPackedProgram(x.shape, depthRadius, bias, alpha, beta) :
         new LRNProgram(x.shape, depthRadius, bias, alpha, beta);
     return backend.runWebGLProgram(program, [x], x.dtype);
@@ -99050,7 +102084,7 @@ class MirrorPadPackedProgram {
 const mirrorPadKernelFunc = ({ inputs, backend, attrs }) => {
     const { x } = inputs;
     const { paddings, mode } = attrs;
-    const program = env().getBool('WEBGL_PACK_ARRAY_OPERATIONS') ?
+    const program = env$1().getBool('WEBGL_PACK_ARRAY_OPERATIONS') ?
         new MirrorPadPackedProgram(x.shape, paddings, mode) :
         new MirrorPadProgram(x.shape, paddings, mode);
     const output = backend.runWebGLProgram(program, [x], x.dtype);
@@ -99349,7 +102383,7 @@ function neg(args) {
         return backend.makeTensorInfo(newShape, x.dtype, outValues);
     }
     let program;
-    if (env().getBool('WEBGL_PACK_UNARY_OPERATIONS')) {
+    if (env$1().getBool('WEBGL_PACK_UNARY_OPERATIONS')) {
         program = new UnaryOpPackedProgram(x.shape, NEG_PACKED);
     }
     else {
@@ -99840,7 +102874,7 @@ const padV2 = (args) => {
             attrs: { shape: outputShape, value: constantValue, dtype: x.dtype }
         });
     }
-    const program = env().getBool('WEBGL_PACK_ARRAY_OPERATIONS') ?
+    const program = env$1().getBool('WEBGL_PACK_ARRAY_OPERATIONS') ?
         new PadPackedProgram(x.shape, paddings, constantValue) :
         new PadProgram(x.shape, paddings, constantValue);
     const customValues = [[constantValue]];
@@ -100413,7 +103447,7 @@ function resizeBilinear(args) {
     const { images } = inputs;
     const { alignCorners, halfPixelCenters, size } = attrs;
     const [newHeight, newWidth] = size;
-    const program = env().getBool('WEBGL_PACK_IMAGE_OPERATIONS') ?
+    const program = env$1().getBool('WEBGL_PACK_IMAGE_OPERATIONS') ?
         new ResizeBilinearPackedProgram(images.shape, newHeight, newWidth, alignCorners, halfPixelCenters) :
         new ResizeBilinearProgram(images.shape, newHeight, newWidth, alignCorners, halfPixelCenters);
     return backend.runWebGLProgram(program, [images], 'float32');
@@ -100755,7 +103789,7 @@ function resizeNearestNeighbor(args) {
     const { images } = inputs;
     const { alignCorners, halfPixelCenters, size } = attrs;
     const [newHeight, newWidth] = size;
-    const program = env().getBool('WEBGL_PACK_IMAGE_OPERATIONS') ?
+    const program = env$1().getBool('WEBGL_PACK_IMAGE_OPERATIONS') ?
         new ResizeNearestNeighborPackedProgram(images.shape, newHeight, newWidth, alignCorners, halfPixelCenters) :
         new ResizeNearestNeighborProgram(images.shape, newHeight, newWidth, alignCorners, halfPixelCenters);
     return backend.runWebGLProgram(program, [images], images.dtype);
@@ -101083,7 +104117,7 @@ function reverse(args) {
     if (xRank === 0) {
         return identity({ inputs: { x }, backend });
     }
-    const program = env().getBool('WEBGL_PACK_ARRAY_OPERATIONS') ?
+    const program = env$1().getBool('WEBGL_PACK_ARRAY_OPERATIONS') ?
         new ReversePackedProgram(x.shape, $dims) :
         new ReverseProgram(x.shape, $dims);
     return backend.runWebGLProgram(program, [x], x.dtype);
@@ -101427,7 +104461,7 @@ function scatterNd(args) {
     const flattenX = reshape({ inputs: { x: updates }, backend, attrs: { shape: [numUpdates, sliceSize] } });
     const defaultValue = backend.makeTensorInfo([], 'float32', new Float32Array([0])); // scalar(0)
     let program;
-    if (env().getBool('WEBGL_PACK')) {
+    if (env$1().getBool('WEBGL_PACK')) {
         program = new ScatterPackedProgram(numUpdates, sliceRank, flattenIndices.shape.length, flattenX.shape.length, strides, flattenShape);
     }
     else {
@@ -101472,7 +104506,7 @@ class SearchSortedProgram {
         // WebGL1 doesn't accept non constant loop conditions, so upper bound loop
         // iterations.
         const webGL1LoopHead = `for (int i = 0; i < ${Math.ceil(Math.log2(numInputs + 1))}; ++i) { if (left >= right) break;`;
-        const loopHead = env().getNumber('WEBGL_VERSION') === 2 ? webGL2LoopHead :
+        const loopHead = env$1().getNumber('WEBGL_VERSION') === 2 ? webGL2LoopHead :
             webGL1LoopHead;
         // left corresponds to lower bound and right to upper bound.
         const boundComparator = side === 'left' ? '<' : '<=';
@@ -102847,10 +105881,10 @@ function topK(args) {
     const { k, sorted } = attrs;
     // Empirically determined constant used to determine last dim threshold for
     // handing off execution to the CPU.
-    const TOPK_LAST_DIM_CPU_HANDOFF_SIZE_THRESHOLD = env().getNumber('TOPK_LAST_DIM_CPU_HANDOFF_SIZE_THRESHOLD');
+    const TOPK_LAST_DIM_CPU_HANDOFF_SIZE_THRESHOLD = env$1().getNumber('TOPK_LAST_DIM_CPU_HANDOFF_SIZE_THRESHOLD');
     // Empirically determined constant used to determine k threshold for handing
     // off execution to the CPU.
-    const TOPK_K_CPU_HANDOFF_THRESHOLD = env().getNumber('TOPK_K_CPU_HANDOFF_THRESHOLD');
+    const TOPK_K_CPU_HANDOFF_THRESHOLD = env$1().getNumber('TOPK_K_CPU_HANDOFF_THRESHOLD');
     const xShape = x.shape;
     const lastDim = xShape[xShape.length - 1];
     if (backend.shouldExecuteOnCPU([x]) ||
@@ -103669,10 +106703,11 @@ for (const kernelConfig of kernelConfigs) {
  * limitations under the License.
  * =============================================================================
  */
+// All exports from this package should be in base.
 
 /** @license See the LICENSE file. */
 // This code is auto-generated, do not modify this file!
-const version$1 = '4.11.0';
+const version$1 = '4.22.0';
 
 /**
  * @license
@@ -103701,32 +106736,32 @@ const version = {
 };
 
 async function tsDistance(v1, v2) {
-  // Vectors
-  const t = tensor([1212, 12]).print();
-  console.info("el tensor es: ", t, v1, v2);
-  return t;
-  /*
-  a = tf.placeholder(tf.float32, shape=[600, 52])
-  b = tf.placeholder(tf.float32, shape=[16000, 52])
-  # Cosine similarity
-  similarity = tf.reduce_sum(a[:, tf.newaxis] * b, axis=-1)
-  # Only necessary if vectors are not normalized
-  similarity /= tf.norm(a[:, tf.newaxis], axis=-1) * tf.norm(b, axis=-1)
-  # If you prefer the distance measure
-  distance = 1 - similarity
-  */
+    // Vectors
+    const t = tensor([1212, 12]).print();
+    console.info("el tensor es: ", t, v1, v2);
+    return t;
+    /*
+    a = tf.placeholder(tf.float32, shape=[600, 52])
+    b = tf.placeholder(tf.float32, shape=[16000, 52])
+    # Cosine similarity
+    similarity = tf.reduce_sum(a[:, tf.newaxis] * b, axis=-1)
+    # Only necessary if vectors are not normalized
+    similarity /= tf.norm(a[:, tf.newaxis], axis=-1) * tf.norm(b, axis=-1)
+    # If you prefer the distance measure
+    distance = 1 - similarity
+    */
 }
 async function getDistance(v1, v2) {
-  if (v1.length !== v2.length)
-    throw new Error("v1 and v2 must have the same length");
-  let i = 0;
-  let sum = 0;
-  while (i < v1.length) {
-    // calculate euclidean distantce
-    sum += Math.pow(v1[i].x - v2[i].x, 2) + Math.pow(v1[i].y - v2[i].y, 2) + Math.pow(v1[i].z - v2[i].z, 2);
-    i++;
-  }
-  return Math.sqrt(sum);
+    if (v1.length !== v2.length)
+        throw new Error("v1 and v2 must have the same length");
+    let i = 0;
+    let sum = 0;
+    while (i < v1.length) {
+        // calculate euclidean distantce
+        sum += Math.pow(v1[i].x - v2[i].x, 2) + Math.pow(v1[i].y - v2[i].y, 2) + Math.pow(v1[i].z - v2[i].z, 2);
+        i++;
+    }
+    return Math.sqrt(sum);
 }
 /**
  *
@@ -103736,19 +106771,19 @@ async function getDistance(v1, v2) {
  * @param lm
  */
 async function getBestMatch(labeledDescriptors, lm, umbral = 1.5) {
-  let bestMatch = null;
-  let bestDistance = Infinity;
-  for (const descriptor of labeledDescriptors) {
-    const distance = await getDistance(descriptor.descriptors, lm);
-    if (distance > umbral) {
-      continue;
+    let bestMatch = null;
+    let bestDistance = Infinity;
+    for (const descriptor of labeledDescriptors) {
+        const distance = await getDistance(descriptor.descriptors, lm);
+        if (distance > umbral) {
+            continue;
+        }
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestMatch = descriptor;
+        }
     }
-    if (distance < bestDistance) {
-      bestDistance = distance;
-      bestMatch = descriptor;
-    }
-  }
-  return bestMatch;
+    return bestMatch;
 }
 
 exports.getBestMatch = getBestMatch;

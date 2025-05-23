@@ -18,7 +18,7 @@ export class WebCamera implements SuperCamera {
 
 
     public async initCamera( parentElement: HTMLElement, direction: CameraDirection, drawImageCb: Function = null) {
-        
+
         this.resetCamera();
 
         if ( !this.elVideo ) {
@@ -29,7 +29,7 @@ export class WebCamera implements SuperCamera {
             this.canvas = createCanvas(parentElement)
             parentElement.appendChild(this.canvas)
         }
-        
+
         initWebcamToVideo(this.elVideo, direction)
 
         renderToCanvas(this.canvas, this.elVideo, drawImageCb)
@@ -46,9 +46,8 @@ export class WebCamera implements SuperCamera {
         if (this.elVideo) this.elVideo.srcObject = null;
     }
 
-    public async takePicture(): Promise<File> {
-        return await takePicture(this.canvas)
-
+    public async takePicture(quality: number = 0.85): Promise<File> {
+        return await takePicture(this.canvas, quality);
     }
 
 }

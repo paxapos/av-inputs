@@ -19,12 +19,12 @@
       <li><a href="/input_scan_reader.html">Input Scan on ENTER</a></li>
       <li><a href="/input_barcode.html">Input Scan Bar Code</a></li>
     </ul>
-   
+
     <hr />
 
     <h1>Input scanner para lector de QRs</h1>
 
-    <img src="https://upload.wikimedia.org/wikipedia/commons/1/13/Barcode-scanner.jpg" width="100" />
+    <img src="https://upload.wikimedia.org/wikipedia/commons/1/13/Barcode-scanner.jpg" width="100" style="aspect-ratio:  1 / 1;" />
     <input-scan-reader id="scanner" modal-timer="40" ></input-scan-reader>
 
     <p>
@@ -47,14 +47,14 @@
 
     </p>
     <script>
-     
+
         $scanner = document.getElementById("scanner");
         $scanner.addEventListener("scan", (e) => {
           console.info("scan", e.detail);
-        
+
         })
     </script>
 
-  
+
   </body>
 </html>

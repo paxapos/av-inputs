@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+    <title>Improved Webcam Component Demo</title>
+
+    <script type="module" src="/build/av-inputs.esm.js"></script>
+    <script nomodule src="/build/av-inputs.js"></script>
+
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 16px 64px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 32px;
+        font-size: 2.5rem;
+        font-weight: 300;
+      }
+
+      .demo-section {
+        margin-bottom: 48px;
+      }
+
+      .demo-title {
+        font-size: 1.5rem;
+        color: #555;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .demo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 32px;
+        margin-bottom: 32px;
+      }
+
+      .demo-item {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+      }
+
+      .demo-item h3 {
+        margin-top: 0;
+        color: #333;
+        font-size: 1.2rem;
+      }
+
+      .demo-item p {
+        color: #666;
+        margin-bottom: 24px;
+        line-height: 1.6;
+      }
+
+      .controls {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin: 24px 0;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        background: #667eea;
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .btn:hover {
+        background: #5a67d8;
+        transform: translateY(-2px);
+      }
+
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn.secondary {
+        background: #6c757d;
+      }
+
+      .btn.secondary:hover {
+        background: #5a6268;
+      }
+
+      .btn.success {
+        background: #28a745;
+      }
+
+      .btn.success:hover {
+        background: #218838;
+      }
+
+      .log {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 16px;
+        max-height: 200px;
+        overflow-y: auto;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        line-height: 1.4;
+      }
+
+      .log-entry {
+        margin-bottom: 8px;
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+
+      .log-entry.info {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .log-entry.error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .log-entry.warning {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .properties {
+        background: #e9ecef;
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 16px;
+      }
+
+      .properties h4 {
+        margin-top: 0;
+        color: #495057;
+      }
+
+      .property-group {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .property-group label {
+        font-weight: 600;
+        color: #495057;
+        min-width: 120px;
+      }
+
+      .property-group input,
+      .property-group select {
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 16px;
+        }
+
+        .demo-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .controls {
+          flex-direction: column;
+        }
+
+        .property-group {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .property-group label {
+          min-width: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📸 Improved Webcam Component</h1>
+
+      <div class="demo-section">
+        <h2 class="demo-title">Basic Examples</h2>
+
+        <div class="demo-grid">
+          <div class="demo-item">
+            <h3>Default Configuration</h3>
+            <p>Auto-start enabled, controls visible, flash effect enabled</p>
+            <input-file-from-webcam
+              id="webcam-default"
+              width="300"
+              height="300">
+            </input-file-from-webcam>
+          </div>
+
+          <div class="demo-item">
+            <h3>Manual Start</h3>
+            <p>Auto-start disabled, manual camera initialization</p>
+            <input-file-from-webcam
+              id="webcam-manual"
+              width="300"
+              height="300"
+              auto-start="false">
+            </input-file-from-webcam>
+            <div class="controls">
+              <button class="btn" id="start-manual">Start Camera</button>
+              <button class="btn secondary" id="stop-manual">Stop Camera</button>
+            </div>
+          </div>
+
+          <div class="demo-item">
+            <h3>No Controls</h3>
+            <p>Hidden controls, click to capture</p>
+            <input-file-from-webcam
+              id="webcam-no-controls"
+              width="300"
+              height="300"
+              show-controls="false">
+            </input-file-from-webcam>
+          </div>
+
+          <div class="demo-item">
+            <h3>Custom Quality</h3>
+            <p>High quality images (0.95 compression)</p>
+            <input-file-from-webcam
+              id="webcam-hq"
+              width="300"
+              height="300"
+              image-quality="0.95">
+            </input-file-from-webcam>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2 class="demo-title">Interactive Controls</h2>
+
+        <div style="text-align: center; margin-bottom: 32px;">
+          <input-file-from-webcam
+            id="webcam-interactive"
+            width="460"
+            height="460"
+            capture-button-text="🎯"
+            flip-button-text="🔄">
+          </input-file-from-webcam>
+
+          <div class="controls">
+            <button class="btn" id="take-picture">Take Picture</button>
+            <button class="btn secondary" id="toggle-camera">Toggle Camera</button>
+            <button class="btn secondary" id="reset-camera">Reset Camera</button>
+            <button class="btn success" id="download-picture" style="display: none;">Download Last Picture</button>
+          </div>
+
+          <div class="properties">
+            <h4>Camera Properties</h4>
+            <div class="property-group">
+              <label>Width:</label>
+              <input type="number" id="width-input" value="460" min="200" max="800">
+            </div>
+            <div class="property-group">
+              <label>Height:</label>
+              <input type="number" id="height-input" value="460" min="200" max="800">
+            </div>
+            <div class="property-group">
+              <label>Image Quality:</label>
+              <input type="range" id="quality-input" min="0.1" max="1" step="0.05" value="0.85">
+              <span id="quality-value">0.85</span>
+            </div>
+            <div class="property-group">
+              <label>Flash Effect:</label>
+              <input type="checkbox" id="flash-input" checked>
+            </div>
+            <div class="property-group">
+              <label>Show Controls:</label>
+              <input type="checkbox" id="controls-input" checked>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-section">
+        <h2 class="demo-title">Event Log</h2>
+        <div id="event-log" class="log">
+          <div class="log-entry info">Ready to capture events...</div>
+        </div>
+        <button class="btn secondary" id="clear-log">Clear Log</button>
+      </div>
+    </div>
+
+    <script>
+      // Global variables
+      let lastPicture = null;
+      const eventLog = document.getElementById('event-log');
+
+      // Utility functions
+      function addLogEntry(message, type = 'info') {
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        eventLog.appendChild(entry);
+        eventLog.scrollTop = eventLog.scrollHeight;
+      }
+
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // Setup event listeners for all webcam components
+      function setupWebcamEvents(webcam, name) {
+        webcam.addEventListener('cameraStarted', () => {
+          addLogEntry(`${name}: Camera started successfully`, 'info');
+        });
+
+        webcam.addEventListener('cameraStopped', () => {
+          addLogEntry(`${name}: Camera stopped`, 'info');
+        });
+
+        webcam.addEventListener('cameraError', (event) => {
+          const error = event.detail;
+          addLogEntry(`${name}: Camera error (${error.type}): ${error.message}`, 'error');
+        });
+
+        webcam.addEventListener('pictureTaken', (event) => {
+          const blob = event.detail;
+          lastPicture = blob;
+          addLogEntry(`${name}: Picture taken (${(blob.size / 1024).toFixed(1)} KB)`, 'info');
+          document.getElementById('download-picture').style.display = 'inline-block';
+        });
+
+        webcam.addEventListener('facingModeChanged', (event) => {
+          const mode = event.detail;
+          addLogEntry(`${name}: Facing mode changed to ${mode}`, 'info');
+        });
+      }
+
+      // Initialize all webcam components
+      document.addEventListener('DOMContentLoaded', () => {
+        // Setup event listeners
+        const webcams = document.querySelectorAll('input-file-from-webcam');
+        webcams.forEach((webcam, index) => {
+          setupWebcamEvents(webcam, `Webcam-${index + 1}`);
+        });
+
+        // Interactive controls
+        const interactiveWebcam = document.getElementById('webcam-interactive');
+        const manualWebcam = document.getElementById('webcam-manual');
+
+        // Manual controls
+        document.getElementById('start-manual').addEventListener('click', () => {
+          manualWebcam.startCamera();
+        });
+
+        document.getElementById('stop-manual').addEventListener('click', () => {
+          manualWebcam.stopCamera();
+        });
+
+        // Interactive controls
+        document.getElementById('take-picture').addEventListener('click', async () => {
+          try {
+            await interactiveWebcam.takePic();
+          } catch (error) {
+            addLogEntry(`Error taking picture: ${error.message}`, 'error');
+          }
+        });
+
+        document.getElementById('toggle-camera').addEventListener('click', () => {
+          interactiveWebcam.toggleCamera();
+        });
+
+        document.getElementById('reset-camera').addEventListener('click', () => {
+          interactiveWebcam.resetCamera();
+        });
+
+        document.getElementById('download-picture').addEventListener('click', () => {
+          if (lastPicture) {
+            const filename = `webcam-capture-${Date.now()}.jpg`;
+            downloadBlob(lastPicture, filename);
+            addLogEntry(`Downloaded: ${filename}`, 'info');
+          }
+        });
+
+        // Property controls
+        document.getElementById('width-input').addEventListener('change', (e) => {
+          interactiveWebcam.width = parseInt(e.target.value);
+        });
+
+        document.getElementById('height-input').addEventListener('change', (e) => {
+          interactiveWebcam.height = parseInt(e.target.value);
+        });
+
+        document.getElementById('quality-input').addEventListener('input', (e) => {
+          const value = parseFloat(e.target.value);
+          interactiveWebcam.imageQuality = value;
+          document.getElementById('quality-value').textContent = value.toFixed(2);
+        });
+
+        document.getElementById('flash-input').addEventListener('change', (e) => {
+          interactiveWebcam.flashEffect = e.target.checked;
+        });
+
+        document.getElementById('controls-input').addEventListener('change', (e) => {
+          interactiveWebcam.showControls = e.target.checked;
+        });
+
+        // Clear log
+        document.getElementById('clear-log').addEventListener('click', () => {
+          eventLog.innerHTML = '<div class="log-entry info">Log cleared...</div>';
+        });
+
+        addLogEntry('Demo initialized successfully!', 'info');
+      });
+    </script>
+  </body>
+</html>

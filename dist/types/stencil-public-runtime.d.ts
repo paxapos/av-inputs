@@ -4,6 +4,16 @@ export interface ComponentDecorator {
 }
 export interface ComponentOptions {
     /**
+     * When set to `true` this component will be form-associated. See
+     * https://stenciljs.com/docs/next/form-associated documentation on how to
+     * build form-associated Stencil components that integrate into forms like
+     * native browser elements such as `<input>` and `<textarea>`.
+     *
+     * The {@link AttachInternals} decorator allows for access to the
+     * `ElementInternals` object to modify the associated form.
+     */
+    formAssociated?: boolean;
+    /**
      * Tag name of the web component. Ideally, the tag name must be globally unique,
      * so it's recommended to choose an unique prefix for all your components within the same collection.
      *
@@ -62,7 +72,7 @@ export interface PropOptions {
     /**
      * The name of the associated DOM attribute.
      * Stencil uses different heuristics to determine the default name of the attribute,
-     * but using this property, you can override the default behaviour.
+     * but using this property, you can override the default behavior.
      */
     attribute?: string | null;
     /**
@@ -107,6 +117,9 @@ export interface EventOptions {
      */
     composed?: boolean;
 }
+export interface AttachInternalsDecorator {
+    (): PropertyDecorator;
+}
 export interface ListenDecorator {
     (eventName: string, opts?: ListenOptions): CustomMethodDecorator<any>;
 }
@@ -128,7 +141,7 @@ export interface ListenOptions {
      * By default, Stencil uses several heuristics to determine if
      * it must attach a `passive` event listener or not.
      *
-     * Using the `passive` option can be used to change the default behaviour.
+     * Using the `passive` option can be used to change the default behavior.
      * Please see https://developers.google.com/web/updates/2016/06/passive-event-listeners for further information.
      */
     passive?: boolean;
@@ -175,6 +188,12 @@ export declare const Element: ElementDecorator;
  * https://stenciljs.com/docs/events
  */
 export declare const Event: EventDecorator;
+/**
+ * If the `formAssociated` option is set in options passed to the
+ * `@Component()` decorator then this decorator may be used to get access to the
+ * `ElementInternals` instance associated with the component.
+ */
+export declare const AttachInternals: AttachInternalsDecorator;
 /**
  * The `Listen()` decorator is for listening DOM events, including the ones
  * dispatched from `@Events()`.
@@ -241,6 +260,25 @@ export declare function setPlatformHelpers(helpers: {
  * @returns the base path
  */
 export declare function getAssetPath(path: string): string;
+/**
+ * Method to render a virtual DOM tree to a container element.
+ *
+ * @example
+ * ```tsx
+ * import { render } from '@stencil/core';
+ *
+ * const vnode = (
+ *   <div>
+ *     <h1>Hello, world!</h1>
+ *   </div>
+ * );
+ * render(vnode, document.body);
+ * ```
+ *
+ * @param vnode - The virtual DOM tree to render
+ * @param container - The container element to render the virtual DOM tree to
+ */
+export declare function render(vnode: VNode, container: Element): void;
 /**
  * Used to manually set the base path where assets can be found. For lazy-loaded
  * builds the asset path is automatically set and assets copied to the correct
@@ -432,7 +470,7 @@ export interface QueueApi {
 /**
  * Host
  */
-interface HostAttributes {
+export interface HostAttributes {
     class?: string | {
         [className: string]: boolean;
     };
@@ -471,7 +509,7 @@ export interface FunctionalUtilities {
     /**
      * Utility for reading the children of a functional component at runtime.
      * Since the Stencil runtime uses a different interface for children it is
-     * not recommendeded to read the children directly, and is preferable to use
+     * not recommended to read the children directly, and is preferable to use
      * this utility to, for instance, perform a side effect for each child.
      */
     forEach: (children: VNode[], cb: (vnode: ChildNode, index: number, array: ChildNode[]) => void) => void;
@@ -749,6 +787,7 @@ export declare namespace JSXBase {
         hrefLang?: string;
         hreflang?: string;
         media?: string;
+        ping?: string;
         rel?: string;
         target?: string;
         referrerPolicy?: ReferrerPolicy;
@@ -775,7 +814,6 @@ export declare namespace JSXBase {
         cite?: string;
     }
     interface ButtonHTMLAttributes<T> extends HTMLAttributes<T> {
-        autoFocus?: boolean;
         disabled?: boolean;
         form?: string;
         formAction?: string;
@@ -791,6 +829,9 @@ export declare namespace JSXBase {
         name?: string;
         type?: string;
         value?: string | string[] | number;
+        popoverTargetAction?: string;
+        popoverTargetElement?: Element | null;
+        popoverTarget?: string;
     }
     interface CanvasHTMLAttributes<T> extends HTMLAttributes<T> {
         height?: number | string;
@@ -804,6 +845,7 @@ export declare namespace JSXBase {
     }
     interface DetailsHTMLAttributes<T> extends HTMLAttributes<T> {
         open?: boolean;
+        name?: string;
         onToggle?: (event: Event) => void;
     }
     interface DelHTMLAttributes<T> extends HTMLAttributes<T> {
@@ -872,6 +914,8 @@ export declare namespace JSXBase {
     }
     interface ImgHTMLAttributes<T> extends HTMLAttributes<T> {
         alt?: string;
+        crossOrigin?: string;
+        crossorigin?: string;
         decoding?: 'async' | 'auto' | 'sync';
         importance?: 'low' | 'auto' | 'high';
         height?: number | string;
@@ -897,8 +941,6 @@ export declare namespace JSXBase {
         autocapitalize?: string;
         autoComplete?: string;
         autocomplete?: string;
-        autoFocus?: boolean;
-        autofocus?: boolean | string;
         capture?: string;
         checked?: boolean;
         crossOrigin?: string;
@@ -930,6 +972,8 @@ export declare namespace JSXBase {
         minlength?: number | string;
         multiple?: boolean;
         name?: string;
+        onSelect?: (event: Event) => void;
+        onselect?: (event: Event) => void;
         pattern?: string;
         placeholder?: string;
         readOnly?: boolean;
@@ -948,10 +992,11 @@ export declare namespace JSXBase {
         webkitdirectory?: boolean;
         webkitEntries?: any;
         width?: number | string;
+        popoverTargetAction?: string;
+        popoverTargetElement?: Element | null;
+        popoverTarget?: string;
     }
     interface KeygenHTMLAttributes<T> extends HTMLAttributes<T> {
-        autoFocus?: boolean;
-        autofocus?: boolean | string;
         challenge?: string;
         disabled?: boolean;
         form?: string;
@@ -964,7 +1009,6 @@ export declare namespace JSXBase {
     interface LabelHTMLAttributes<T> extends HTMLAttributes<T> {
         form?: string;
         htmlFor?: string;
-        htmlfor?: string;
     }
     interface LiHTMLAttributes<T> extends HTMLAttributes<T> {
         value?: string | string[] | number;
@@ -991,6 +1035,8 @@ export declare namespace JSXBase {
         autoPlay?: boolean;
         autoplay?: boolean | string;
         controls?: boolean;
+        controlslist?: 'nodownload' | 'nofullscreen' | 'noremoteplayback';
+        controlsList?: 'nodownload' | 'nofullscreen' | 'noremoteplayback';
         crossOrigin?: string;
         crossorigin?: string;
         loop?: boolean;
@@ -1075,7 +1121,6 @@ export declare namespace JSXBase {
     interface OutputHTMLAttributes<T> extends HTMLAttributes<T> {
         form?: string;
         htmlFor?: string;
-        htmlfor?: string;
         name?: string;
     }
     interface ParamHTMLAttributes<T> extends HTMLAttributes<T> {
@@ -1100,7 +1145,6 @@ export declare namespace JSXBase {
         type?: string;
     }
     interface SelectHTMLAttributes<T> extends HTMLAttributes<T> {
-        autoFocus?: boolean;
         disabled?: boolean;
         form?: string;
         multiple?: boolean;
@@ -1111,11 +1155,13 @@ export declare namespace JSXBase {
         autocomplete?: string;
     }
     interface SourceHTMLAttributes<T> extends HTMLAttributes<T> {
+        height?: number;
         media?: string;
         sizes?: string;
         src?: string;
         srcSet?: string;
         type?: string;
+        width?: number;
     }
     interface StyleHTMLAttributes<T> extends HTMLAttributes<T> {
         media?: string;
@@ -1133,8 +1179,6 @@ export declare namespace JSXBase {
     interface TextareaHTMLAttributes<T> extends HTMLAttributes<T> {
         autoComplete?: string;
         autocomplete?: string;
-        autoFocus?: boolean;
-        autofocus?: boolean | string;
         cols?: number;
         disabled?: boolean;
         form?: string;
@@ -1143,6 +1187,8 @@ export declare namespace JSXBase {
         minLength?: number;
         minlength?: number | string;
         name?: string;
+        onSelect?: (event: Event) => void;
+        onselect?: (event: Event) => void;
         placeholder?: string;
         readOnly?: boolean;
         readonly?: boolean | string;
@@ -1185,6 +1231,8 @@ export declare namespace JSXBase {
     interface HTMLAttributes<T = HTMLElement> extends DOMAttributes<T> {
         innerHTML?: string;
         accessKey?: string;
+        autoFocus?: boolean;
+        autofocus?: boolean | string;
         class?: string | {
             [className: string]: boolean;
         };
@@ -1196,6 +1244,7 @@ export declare namespace JSXBase {
         draggable?: boolean;
         hidden?: boolean;
         id?: string;
+        inert?: boolean;
         lang?: string;
         spellcheck?: 'true' | 'false' | any;
         style?: {
@@ -1204,6 +1253,7 @@ export declare namespace JSXBase {
         tabIndex?: number;
         tabindex?: number | string;
         title?: string;
+        popover?: string | null;
         inputMode?: string;
         inputmode?: string;
         enterKeyHint?: string;
@@ -1289,7 +1339,7 @@ export declare namespace JSXBase {
         clipPathUnits?: number | string;
         'clip-rule'?: number | string;
         'color-interpolation'?: number | string;
-        'color-interpolation-filters'?: 'auto' | 's-rGB' | 'linear-rGB' | 'inherit';
+        'color-interpolation-filters'?: 'auto' | 'sRGB' | 'linearRGB';
         'color-profile'?: number | string;
         'color-rendering'?: number | string;
         contentScriptType?: number | string;
@@ -1536,6 +1586,10 @@ export declare namespace JSXBase {
         onSubmitCapture?: (event: Event) => void;
         onInvalid?: (event: Event) => void;
         onInvalidCapture?: (event: Event) => void;
+        onBeforeToggle?: (event: Event) => void;
+        onBeforeToggleCapture?: (event: Event) => void;
+        onToggle?: (event: Event) => void;
+        onToggleCapture?: (event: Event) => void;
         onLoad?: (event: Event) => void;
         onLoadCapture?: (event: Event) => void;
         onError?: (event: Event) => void;
@@ -1619,8 +1673,16 @@ export declare namespace JSXBase {
         onAnimationEndCapture?: (event: AnimationEvent) => void;
         onAnimationIteration?: (event: AnimationEvent) => void;
         onAnimationIterationCapture?: (event: AnimationEvent) => void;
+        onTransitionCancel?: (event: TransitionEvent) => void;
+        onTransitionCancelCapture?: (event: TransitionEvent) => void;
         onTransitionEnd?: (event: TransitionEvent) => void;
         onTransitionEndCapture?: (event: TransitionEvent) => void;
+        onTransitionRun?: (event: TransitionEvent) => void;
+        onTransitionRunCapture?: (event: TransitionEvent) => void;
+        onTransitionStart?: (event: TransitionEvent) => void;
+        onTransitionStartCapture?: (event: TransitionEvent) => void;
+        [key: `aria-${string}`]: string | boolean | undefined;
+        [key: `aria${string}`]: string | boolean | undefined;
     }
 }
 export interface JSXAttributes<T = Element> {

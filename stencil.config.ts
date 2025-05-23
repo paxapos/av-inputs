@@ -1,10 +1,15 @@
 import { Config } from '@stencil/core';
 import { angularOutputTarget } from '@stencil/angular-output-target';
 import { JsonDocs } from '@stencil/core/internal';
+import nodePolyfills from 'rollup-plugin-node-polyfills'; // Change this line
 
 export const config: Config = {
   namespace: 'av-inputs',
+  plugins: [ // Add the plugins array here
+    nodePolyfills(), // Add the polyfills plugin
+  ],
   outputTargets: [
+
     {
       type: 'dist',
       esmLoaderPath: '../loader',
@@ -15,7 +20,7 @@ export const config: Config = {
     {
       type: 'docs-custom',
       generator: (docs: JsonDocs) => {
-          // Custom logic goes here
+        // Custom logic goes here
       }
     },
     {
@@ -35,8 +40,7 @@ export const config: Config = {
     angularOutputTarget({
       componentCorePackage: 'av-inputs',
       directivesProxyFile: 'angular/components.ts',
-      //directivesArrayFile: 'dist/angular/index.ts',
-      includeImportCustomElements: true
+      //directivesArrayFile: 'dist/angular/index.ts'
     }),
   ],
 };
