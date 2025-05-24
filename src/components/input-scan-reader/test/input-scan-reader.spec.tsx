@@ -10,7 +10,16 @@ describe('input-scan-reader', () => {
     expect(page.root).toEqualHtml(`
       <input-scan-reader>
         <mock:shadow-root>
-          <slot></slot>
+          <div class="scanning">
+            <div>
+              <span class="loader"></span>
+            </div>
+            <label>
+              Scanning Text
+            </label>
+            <div class="scanned-text"></div>
+            <input type="text" value="">
+          </div>
         </mock:shadow-root>
       </input-scan-reader>
     `);
