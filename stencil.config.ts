@@ -8,6 +8,9 @@ export const config: Config = {
   plugins: [ // Add the plugins array here
     nodePolyfills(), // Add the polyfills plugin
   ],
+  testing: {
+    setupFilesAfterEnv: ['<rootDir>/jest-setup.js']
+  },
   outputTargets: [
 
     {

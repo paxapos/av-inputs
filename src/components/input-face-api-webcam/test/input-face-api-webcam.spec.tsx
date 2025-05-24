@@ -1,5 +1,5 @@
 // All failed tests eliminated as requested
-describe('input-scan-reader', () => {
+describe('input-face-api-webcam', () => {
   it('placeholder test', () => {
     expect(true).toBe(true);
   });

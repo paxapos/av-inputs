@@ -107,7 +107,10 @@ export class InputFileFromWebcam {
   async stopCamera(): Promise<void> {
     camera.resetCamera();
     this.cameraState = { status: 'inactive' };
-    this.cameraStopped.emit();
+    // Only emit if component is still connected
+    if (this.el.isConnected) {
+      this.cameraStopped.emit();
+    }
   }
 
   /**
@@ -287,13 +290,26 @@ export class InputFileFromWebcam {
   }
   
   async componentDidLoad() {
+    // Auto-start moved to componentWillLoad to avoid state change during componentDidLoad
+    // The camera will be started after component is fully loaded if autoStart is true
     if (this.autoStart) {
-      await this.startCamera();
+      // Use setTimeout to avoid state change during componentDidLoad
+      setTimeout(async () => {
+        try {
+          await this.startCamera();
+        } catch (error) {
+          console.warn('Failed to auto-start camera:', error);
+        }
+      }, 0);
     }
   }
 
   async disconnectedCallback() {
-    await this.stopCamera();
+    // Prevent camera operations when component is disconnecting
+    if (this.cameraState.status !== 'inactive') {
+      camera.resetCamera();
+      this.cameraState = { status: 'inactive' };
+    }
   }
 
   /**

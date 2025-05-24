@@ -76,7 +76,10 @@ export class InputScanReader {
 
   componentDidLoad() {
     if (!this.readingEnabled) {
-      this.start();
+      // Use setTimeout to avoid state change during componentDidLoad
+      setTimeout(() => {
+        this.start();
+      }, 0);
     }
   }
 
