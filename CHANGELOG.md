@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.12] - 2025-05-24
+
+### Changes
+- refactor: improve camera handling and testing setup for input components
+- refactor: remove obsolete test for input-face-api-webcam and enhance input-file-from-webcam and input-scan-reader tests
+- fix: add 'dist/' to .gitignore to prevent build artifacts from being tracked
+- Remove unused camera, face detection, text handling, and utility type definitions to clean up the codebase.
+- feat: add custom elements loader and text processing utilities
+
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
