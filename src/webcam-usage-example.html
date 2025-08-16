@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejemplo de Uso - Webcam Component</title>
+    <script type="module" src="./build/av-inputs.esm.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+        }
+
+        .examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 40px;
+        }
+
+        .example {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            background: #f9f9f9;
+        }
+
+        .example h2 {
+            color: #555;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        .example p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #5a6dd8;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .output {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            min-height: 100px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .timestamp {
+            color: #999;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .examples {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Ejemplos de Uso - Webcam Component Mejorado</h1>
+
+        <div class="examples">
+            <!-- Ejemplo 1: Webcam con todos los controles -->
+            <div class="example">
+                <h2>📸 Webcam con Controles Completos</h2>
+                <p>Muestra todos los botones de acción con los nuevos iconos SVG mejorados.</p>
+
+                <input-file-from-webcam
+                    id="webcam1"
+                    width="400"
+                    height="300"
+                    show-action-buttons="true"
+                    show-controls="true"
+                    auto-start="true">
+                </input-file-from-webcam>
+
+                <div class="output" id="output1"></div>
+            </div>
+
+            <!-- Ejemplo 2: Webcam con control externo -->
+            <div class="example">
+                <h2>🎮 Control Externo (Sin Botones)</h2>
+                <p>Los botones de acción están ocultos. La cámara se controla desde botones externos.</p>
+
+                <input-file-from-webcam
+                    id="webcam2"
+                    width="400"
+                    height="300"
+                    show-action-buttons="false"
+                    show-controls="true"
+                    auto-start="false">
+                </input-file-from-webcam>
+
+                <div class="controls">
+                    <button onclick="startWebcam2()">🟢 Iniciar Cámara</button>
+                    <button onclick="takePhoto2()">📷 Tomar Foto</button>
+                    <button onclick="flipCamera2()">🔄 Cambiar Cámara</button>
+                    <button onclick="stopWebcam2()">🛑 Detener Cámara</button>
+                </div>
+
+                <div class="output" id="output2"></div>
+            </div>
+
+            <!-- Ejemplo 3: Webcam minimalista -->
+            <div class="example">
+                <h2>🎯 Modo Minimalista</h2>
+                <p>Solo cámara, sin controles visibles. Perfecto para integración personalizada.</p>
+
+                <input-file-from-webcam
+                    id="webcam3"
+                    width="400"
+                    height="300"
+                    show-action-buttons="false"
+                    show-controls="false"
+                    auto-start="false"
+                    flash-effect="false">
+                </input-file-from-webcam>
+
+                <div class="controls">
+                    <button onclick="toggleWebcam3()">⚡ Toggle Cámara</button>
+                    <button onclick="captureQuick()">⚡ Captura Rápida</button>
+                </div>
+
+                <div class="output" id="output3"></div>
+            </div>
+
+            <!-- Ejemplo 4: Uso como input de formulario -->
+            <div class="example">
+                <h2>📝 Input de Formulario</h2>
+                <p>Funciona como un input estándar de formulario con validación.</p>
+
+                <form id="photoForm">
+                    <input-file-from-webcam
+                        id="webcam4"
+                        name="photo"
+                        width="400"
+                        height="300"
+                        required="true"
+                        show-action-buttons="true"
+                        auto-start="false">
+                    </input-file-from-webcam>
+
+                    <div class="controls">
+                        <button type="button" onclick="validateForm()">✅ Validar</button>
+                        <button type="submit">📤 Enviar Formulario</button>
+                    </div>
+                </form>
+
+                <div class="output" id="output4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Funciones para logging
+        function addLog(outputId, message, type = 'info') {
+            const output = document.getElementById(outputId);
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span>
+                <strong>${type.toUpperCase()}:</strong> ${message}
+            `;
+
+            output.insertBefore(entry, output.firstChild);
+
+            // Mantener solo los últimos 10 logs
+            if (output.children.length > 10) {
+                output.removeChild(output.lastChild);
+            }
+        }
+
+        // Event listeners para webcam1 (con controles completos)
+        const webcam1 = document.getElementById('webcam1');
+        webcam1.addEventListener('pictureTaken', (e) => {
+            addLog('output1', `Foto capturada. Tamaño: ${(e.detail.size / 1024).toFixed(2)} KB`, 'success');
+        });
+        webcam1.addEventListener('cameraStarted', () => {
+            addLog('output1', 'Cámara iniciada correctamente', 'success');
+        });
+        webcam1.addEventListener('cameraError', (e) => {
+            addLog('output1', `Error: ${e.detail.message}`, 'error');
+        });
+        webcam1.addEventListener('facingModeChanged', (e) => {
+            addLog('output1', `Cámara cambiada a: ${e.detail}`, 'info');
+        });
+
+        // Funciones para webcam2 (control externo)
+        const webcam2 = document.getElementById('webcam2');
+
+        async function startWebcam2() {
+            try {
+                await webcam2.startCamera();
+                addLog('output2', 'Cámara iniciada desde control externo', 'success');
+            } catch (error) {
+                addLog('output2', `Error al iniciar: ${error.message}`, 'error');
+            }
+        }
+
+        async function takePhoto2() {
+            try {
+                const blob = await webcam2.takePic();
+                addLog('output2', `Foto tomada externamente. Tamaño: ${(blob.size / 1024).toFixed(2)} KB`, 'success');
+            } catch (error) {
+                addLog('output2', `Error al tomar foto: ${error.message}`, 'error');
+            }
+        }
+
+        async function flipCamera2() {
+            try {
+                await webcam2.toggleCamera();
+                addLog('output2', 'Cámara volteada desde control externo', 'info');
+            } catch (error) {
+                addLog('output2', `Error al voltear: ${error.message}`, 'error');
+            }
+        }
+
+        async function stopWebcam2() {
+            try {
+                await webcam2.stopCamera();
+                addLog('output2', 'Cámara detenida desde control externo', 'info');
+            } catch (error) {
+                addLog('output2', `Error al detener: ${error.message}`, 'error');
+            }
+        }
+
+        // Event listeners para webcam2
+        webcam2.addEventListener('pictureTaken', (e) => {
+            addLog('output2', `[Evento] Foto capturada. Tamaño: ${(e.detail.size / 1024).toFixed(2)} KB`, 'success');
+        });
+
+        // Funciones para webcam3 (minimalista)
+        const webcam3 = document.getElementById('webcam3');
+        let webcam3Active = false;
+
+        async function toggleWebcam3() {
+            try {
+                if (webcam3Active) {
+                    await webcam3.stopCamera();
+                    webcam3Active = false;
+                    addLog('output3', 'Cámara minimalista detenida', 'info');
+                } else {
+                    await webcam3.startCamera();
+                    webcam3Active = true;
+                    addLog('output3', 'Cámara minimalista iniciada', 'success');
+                }
+            } catch (error) {
+                addLog('output3', `Error en toggle: ${error.message}`, 'error');
+            }
+        }
+
+        async function captureQuick() {
+            try {
+                const blob = await webcam3.takePic();
+                addLog('output3', `Captura rápida. Tamaño: ${(blob.size / 1024).toFixed(2)} KB`, 'success');
+            } catch (error) {
+                addLog('output3', `Error en captura rápida: ${error.message}`, 'error');
+            }
+        }
+
+        // Funciones para webcam4 (formulario)
+        const webcam4 = document.getElementById('webcam4');
+        const photoForm = document.getElementById('photoForm');
+
+        async function validateForm() {
+            try {
+                const isValid = await webcam4.checkValidity();
+                const value = await webcam4.getFormValue();
+
+                if (isValid && value) {
+                    addLog('output4', 'Formulario válido ✅', 'success');
+                    addLog('output4', `Valor del input: ${value.substring(0, 50)}...`, 'info');
+                } else {
+                    addLog('output4', 'Formulario inválido ❌ - Se requiere una foto', 'error');
+                }
+            } catch (error) {
+                addLog('output4', `Error en validación: ${error.message}`, 'error');
+            }
+        }
+
+        photoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            try {
+                const isValid = await webcam4.checkValidity();
+                if (isValid) {
+                    const formData = new FormData(photoForm);
+                    addLog('output4', 'Formulario enviado correctamente 🚀', 'success');
+                    addLog('output4', `Datos del formulario preparados para envío`, 'info');
+                } else {
+                    addLog('output4', 'No se puede enviar - formulario inválido', 'error');
+                }
+            } catch (error) {
+                addLog('output4', `Error en envío: ${error.message}`, 'error');
+            }
+        });
+
+        // Event listeners para webcam4
+        webcam4.addEventListener('pictureTaken', (e) => {
+            addLog('output4', `Foto para formulario capturada. Tamaño: ${(e.detail.size / 1024).toFixed(2)} KB`, 'success');
+        });
+
+        webcam4.addEventListener('validationFailed', () => {
+            addLog('output4', 'Validación fallida en input', 'error');
+        });
+
+        // Log inicial
+        addLog('output1', 'Webcam con controles completos cargada', 'info');
+        addLog('output2', 'Webcam con control externo cargada (botones ocultos)', 'info');
+        addLog('output3', 'Webcam minimalista cargada (sin controles)', 'info');
+        addLog('output4', 'Webcam como input de formulario cargada', 'info');
+    </script>
+</body>
+</html>

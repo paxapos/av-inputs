@@ -54,6 +54,16 @@ Object.defineProperty(global.HTMLVideoElement.prototype, 'pause', {
   value: jest.fn()
 });
 
+// Mock Blob constructor globally if not available
+if (typeof global.Blob === 'undefined') {
+  global.Blob = class Blob {
+    constructor(array = [], options = {}) {
+      this.size = array.reduce((size, item) => size + (item.length || 0), 0);
+      this.type = options.type || '';
+    }
+  };
+}
+
 // Mock HTMLCanvasElement.toBlob method
 if (typeof HTMLCanvasElement !== 'undefined') {
   HTMLCanvasElement.prototype.toBlob = jest.fn((callback) => {

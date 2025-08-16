@@ -5,64 +5,174 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
-import { Html5QrcodeCameraScanConfig, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from "html5-qrcode";
-import { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
+import { Event } from "@stencil/core";
 import { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 import { CameraDirection } from "./utils/camera.service";
 import { DetectionImg } from "./utils/facepi.service";
 import { FaceDetectionError } from "./components/input-face-api-webcam/input-face-api-webcam";
 import { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { WebcamError } from "./components/input-file-from-webcam/input-file-from-webcam";
-export { Html5QrcodeCameraScanConfig, Html5QrcodeScannerState, Html5QrcodeSupportedFormats } from "html5-qrcode";
-export { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
+import { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
+export { Event } from "@stencil/core";
 export { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 export { CameraDirection } from "./utils/camera.service";
 export { DetectionImg } from "./utils/facepi.service";
 export { FaceDetectionError } from "./components/input-face-api-webcam/input-face-api-webcam";
 export { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 export { WebcamError } from "./components/input-file-from-webcam/input-file-from-webcam";
+export { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export namespace Components {
+    /**
+     * Camera-based barcode scanner component optimized for real-time scanning
+     * with intelligent duplicate prevention and error recovery
+     * Functions as a form input element with standard input properties
+     */
     interface InputBarcode {
         /**
-          * Cualquiera de estas configuraciones https://scanapp.org/html5-qrcode-docs/docs/apis/interfaces/Html5QrcodeCameraScanConfig
+          * ARIA label for accessibility
          */
-        "cameraConfig": Html5QrcodeCameraScanConfig;
+        "accessibilityLabel"?: string;
         /**
-          * id of camera
+          * ARIA description for accessibility
          */
-        "cameraId": string;
+        "ariaDescribedby"?: string;
         /**
-          * Camera user or enviroment
+          * Auto-focus the scanner when component loads
          */
-        "facingMode": 'user'|'enviroment';
+        "autoFocus"?: boolean;
         /**
-          * get Cameras of user
+          * Auto-start scanning when component loads
          */
-        "getCameras": () => Promise<void>;
+        "autoStart": boolean;
         /**
-          * get state
+          * Camera configuration for optimal performance 10 FPS provides good balance between performance and accuracy
          */
-        "getState": () => Promise<Html5QrcodeScannerState>;
+        "cameraConfig": any;
         /**
-          * Height of the camera
+          * Specific camera device ID to use (optional)
+         */
+        "cameraId"?: string;
+        /**
+          * Check validity of current value
+         */
+        "checkValidity": () => Promise<boolean>;
+        /**
+          * Whether the input is disabled
+         */
+        "disabled"?: boolean;
+        /**
+          * Camera facing mode: 'user' for front camera, 'environment' for back camera
+         */
+        "facingMode": 'user' | 'environment';
+        /**
+          * Get available cameras for the device
+          * @returns Promise resolving to array of camera devices
+         */
+        "getCameras": () => Promise<any[]>;
+        /**
+          * Get form value for form submission
+         */
+        "getFormValue": () => Promise<string>;
+        /**
+          * Get current scanner state
+         */
+        "getState": () => Promise<any | null>;
+        /**
+          * Height of the camera viewport
          */
         "height": string;
-        "start": () => Promise<never>;
+        /**
+          * Maximum length for scanned value
+         */
+        "maxlength"?: number;
+        /**
+          * Minimum length for scanned value
+         */
+        "minlength"?: number;
+        /**
+          * The name attribute for form submission
+         */
+        "name"?: string;
+        /**
+          * Pattern for input validation (regex)
+         */
+        "pattern"?: string;
+        /**
+          * Placeholder text when no value is present
+         */
+        "placeholder"?: string;
+        /**
+          * Whether the input is readonly
+         */
+        "readonly"?: boolean;
+        /**
+          * Whether the input is required for form validation
+         */
+        "required"?: boolean;
+        /**
+          * Blur the scanner (stop scanning)
+         */
+        "setBlur": () => Promise<void>;
+        /**
+          * Focus the scanner (start scanning)
+         */
+        "setFocus": () => Promise<void>;
+        /**
+          * Set form value programmatically
+         */
+        "setFormValue": (value: string) => Promise<void>;
+        /**
+          * Start the barcode scanner
+         */
+        "start": () => Promise<void>;
+        /**
+          * Stop the scanner and clean up resources
+         */
         "stop": () => Promise<void>;
         /**
-          * All formats of camera
+          * Supported barcode and QR code formats for scanning Optimized selection for best performance Using format constants compatible with html5-qrcode v2.3.8+
          */
-        "supportedFormats": Html5QrcodeSupportedFormats[];
+        "supportedFormats": number[];
         /**
-          * Width of the camera
+          * Tab order for keyboard navigation
+         */
+        "tabOrder"?: number;
+        /**
+          * Form validation message
+         */
+        "validationMessage"?: string;
+        /**
+          * The value of the input (last scanned data)
+         */
+        "value"?: string;
+        /**
+          * Width of the camera viewport
          */
         "width": string;
     }
+    /**
+     * AI-powered face detection and recognition component
+     * High-performance facial analysis with MediaPipe and TensorFlow.js
+     * Optimized for real-time detection with Web Workers
+     * Functions as a form input element for facial recognition data
+     */
     interface InputFaceApiWebcam {
+        /**
+          * ARIA label for accessibility
+         */
+        "accessibilityLabel"?: string;
+        /**
+          * ARIA description for accessibility
+         */
+        "ariaDescribedby"?: string;
         /**
           * Enable automatic photo capture when face is detected
          */
         "autoCapture": boolean;
+        /**
+          * Auto-focus the detection when component loads
+         */
+        "autoFocus"?: boolean;
         /**
           * Auto-start detection when component loads
          */
@@ -76,9 +186,18 @@ export namespace Components {
          */
         "captureThreshold": number;
         /**
+          * Check validity of the input
+         */
+        "checkValidity": () => Promise<boolean>;
+        "customValidation"?: (value: string) => boolean;
+        /**
           * Detection timer interval in milliseconds
          */
         "detectionTimer"?: number;
+        /**
+          * Whether the input is disabled
+         */
+        "disabled"?: boolean;
         /**
           * Enable or disable face detection
          */
@@ -106,6 +225,14 @@ export namespace Components {
          */
         "getFaceLandMarks": () => Promise<FaceLandmarkerResult>;
         /**
+          * Get the current form value
+         */
+        "getFormValue": () => Promise<string>;
+        /**
+          * Get validation message
+         */
+        "getValidationMessage": () => Promise<string>;
+        /**
           * Height of the video element
          */
         "height"?: number;
@@ -114,15 +241,47 @@ export namespace Components {
          */
         "initializeCamera": () => Promise<void>;
         /**
+          * The name attribute for form submission
+         */
+        "name"?: string;
+        /**
+          * Placeholder text when no face is detected
+         */
+        "placeholder"?: string;
+        /**
           * Predicts best face match, uses worker to calculate distance between the given blob and the trained model passed in trainedModel prop
           * @param blob
           * @returns
          */
         "predictBestMatch": (blob?: Blob) => Promise<any>;
         /**
+          * Whether the input is readonly
+         */
+        "readonly"?: boolean;
+        /**
+          * Whether the input is required for form validation
+         */
+        "required"?: boolean;
+        /**
           * Score threshold to detect a face
          */
         "scoreThreshold"?: number;
+        /**
+          * Blur the component (stop camera and detection)
+         */
+        "setBlur": () => Promise<void>;
+        /**
+          * Set custom validity
+         */
+        "setCustomValidity": (message: string) => Promise<void>;
+        /**
+          * Focus the component (start camera and detection)
+         */
+        "setFocus": () => Promise<void>;
+        /**
+          * Set the form value
+         */
+        "setFormValue": (value: string) => Promise<void>;
         /**
           * Show bounding boxes around detected faces
          */
@@ -152,6 +311,10 @@ export namespace Components {
          */
         "stopDetection": () => Promise<void>;
         /**
+          * Tab order for keyboard navigation
+         */
+        "tabOrder"?: number;
+        /**
           * Toggle camera between front and back
          */
         "toggleCamera": () => Promise<void>;
@@ -160,37 +323,79 @@ export namespace Components {
          */
         "trainedModel"?: LabeledDescriptorsArray;
         /**
+          * Form validation message
+         */
+        "validationMessage"?: string;
+        /**
+          * The value of the input (JSON string of face detection data)
+         */
+        "value"?: string;
+        /**
           * Width of the video element
          */
         "width"?: number;
     }
+    /**
+     * Simple webcam photo capture component optimized for performance
+     * Perfect for employee check-ins, ID verification, and quick photo capture
+     * Functions as a form input element for file/image submission
+     */
     interface InputFileFromWebcam {
+        /**
+          * Accept attribute for file type validation
+         */
+        "accept"?: string;
+        /**
+          * ARIA label for accessibility
+         */
+        "accessibilityLabel"?: string;
+        /**
+          * ARIA description for accessibility
+         */
+        "ariaDescribedby"?: string;
+        /**
+          * Auto-focus the camera when component loads
+         */
+        "autoFocus"?: boolean;
         /**
           * Auto-start camera when component loads
          */
         "autoStart"?: boolean;
         /**
-          * Capture button text
+          * Text for the capture button
          */
         "captureButtonText"?: string;
         /**
-          * you can pass a function and override the canvas.drawImage function so you can change the image adding filters or any kind of magin in your image  you just need to crear a function with all canvas.-drawImage arguments  here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
+          * Check validity of current value
+         */
+        "checkValidity": () => Promise<boolean>;
+        "customValidation"?: (value: string) => boolean;
+        /**
+          * Whether the input is disabled
+         */
+        "disabled"?: boolean;
+        /**
+          * Custom canvas drawing function for image processing Override to add filters or effects to captured images
          */
         "drawImageCb"?: Function;
         /**
-          * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
+          * Camera facing mode: front or back camera
          */
         "facingMode"?: CameraDirection;
         /**
-          * Enable flash effect when taking picture
+          * Enable flash effect animation when taking picture
          */
         "flashEffect"?: boolean;
         /**
-          * Flip camera button text
+          * Text for the flip camera button
          */
         "flipButtonText"?: string;
         /**
-          * height of the video element
+          * Get form value for form submission (base64 data URL)
+         */
+        "getFormValue": () => Promise<string>;
+        /**
+          * Height of the video element in pixels
          */
         "height"?: number;
         /**
@@ -198,53 +403,205 @@ export namespace Components {
          */
         "imageQuality"?: number;
         /**
-          * Reset camera
+          * Maximum file size in bytes (0 = no limit)
+         */
+        "maxFileSize"?: number;
+        /**
+          * The name attribute for form submission
+         */
+        "name"?: string;
+        /**
+          * Placeholder text when no image is captured
+         */
+        "placeholder"?: string;
+        /**
+          * Whether the input is readonly
+         */
+        "readonly"?: boolean;
+        /**
+          * Force release camera (useful when component is hidden in modal)
+         */
+        "releaseCamera": () => Promise<void>;
+        /**
+          * Request camera access (useful when component becomes visible from modal)
+         */
+        "requestCamera": () => Promise<void>;
+        /**
+          * Whether the input is required for form validation
+         */
+        "required"?: boolean;
+        /**
+          * Reset camera by stopping and restarting
          */
         "resetCamera": () => Promise<void>;
         /**
-          * Show camera controls (flip, capture button, etc)
+          * Blur the camera (stop camera)
+         */
+        "setBlur": () => Promise<void>;
+        /**
+          * Focus the camera (start camera)
+         */
+        "setFocus": () => Promise<void>;
+        /**
+          * Set form value programmatically
+         */
+        "setFormValue": (value: string) => Promise<void>;
+        /**
+          * Show action buttons (capture and flip camera buttons)
+         */
+        "showActionButtons"?: boolean;
+        /**
+          * Show camera control buttons (flip, capture, etc.)
          */
         "showControls"?: boolean;
         /**
-          * Start the camera
+          * Start the camera with error handling
          */
         "startCamera": () => Promise<void>;
         /**
-          * Stop the camera
+          * Stop the camera and clean up resources
          */
         "stopCamera": () => Promise<void>;
         /**
-          * Take a picture
-          * @returns a blob with the image
+          * Tab order for keyboard navigation
+         */
+        "tabOrder"?: number;
+        /**
+          * Take a picture with flash effect and error handling
          */
         "takePic": () => Promise<Blob>;
         /**
-          * Toogle webcam, for example in mobile show front or back camera
+          * Toggle between front and back camera
          */
         "toggleCamera": () => Promise<void>;
         /**
-          * Width of the video element
+          * Form validation message
+         */
+        "validationMessage"?: string;
+        /**
+          * The value of the input (base64 data URL of captured image)
+         */
+        "value"?: string;
+        /**
+          * Width of the video element in pixels
          */
         "width"?: number;
     }
+    /**
+     * Hardware barcode scanner input component
+     * Optimized for physical barcode scanners that input as HID keyboard devices
+     * Handles rapid input patterns with intelligent timeout management
+     * Functions as a form input element with standard input properties
+     */
     interface InputScanReader {
         /**
-          * Structured scanned text
-          * @returns the text scanned
+          * ARIA label for accessibility
          */
-        "getData": () => Promise<InputScanData>;
+        "accessibilityLabel"?: string;
         /**
-          * get raw scanned text
-          * @returns the text scanned
+          * ARIA description for accessibility
+         */
+        "ariaDescribedby"?: string;
+        /**
+          * Auto-focus the scanner when component loads
+         */
+        "autoFocus"?: boolean;
+        /**
+          * Check validity of current value
+         */
+        "checkValidity": () => Promise<boolean>;
+        /**
+          * Whether the input is disabled
+         */
+        "disabled"?: boolean;
+        /**
+          * Get processed scan data
+         */
+        "getData": () => Promise<InputScanData | null>;
+        /**
+          * Get form value for form submission
+         */
+        "getFormValue": () => Promise<string>;
+        /**
+          * Get current raw scanned text
          */
         "getText": () => Promise<string>;
         /**
-          * Show a modal with the scanned text. like a white blink on the screen
+          * Timeout duration in milliseconds before clearing incomplete input
+         */
+        "inputTimeout"?: number;
+        /**
+          * Maximum length for scanned value
+         */
+        "maxlength"?: number;
+        /**
+          * Minimum input length to consider valid scanner input
+         */
+        "minInputLength"?: number;
+        /**
+          * Minimum length for scanned value
+         */
+        "minlength"?: number;
+        /**
+          * Duration in milliseconds to show confirmation modal after successful scan
          */
         "modalTimer"?: number;
+        /**
+          * The name attribute for form submission
+         */
+        "name"?: string;
+        /**
+          * Pattern for input validation (regex)
+         */
+        "pattern"?: string;
+        /**
+          * Placeholder text when no value is present
+         */
+        "placeholder"?: string;
+        /**
+          * Whether the input is readonly
+         */
+        "readonly"?: boolean;
+        /**
+          * Whether the input is required for form validation
+         */
+        "required"?: boolean;
+        /**
+          * Title text displayed during scanning operation
+         */
         "scanTitle"?: string;
+        /**
+          * Blur the scanner (stop scanning)
+         */
+        "setBlur": () => Promise<void>;
+        /**
+          * Focus the scanner (start scanning)
+         */
+        "setFocus": () => Promise<void>;
+        /**
+          * Set form value programmatically
+         */
+        "setFormValue": (value: string) => Promise<void>;
+        /**
+          * Start scanning mode
+         */
         "start": () => Promise<void>;
+        /**
+          * Stop scanning mode
+         */
         "stop": () => Promise<void>;
+        /**
+          * Tab order for keyboard navigation
+         */
+        "tabOrder"?: number;
+        /**
+          * Form validation message
+         */
+        "validationMessage"?: string;
+        /**
+          * The value of the input (last scanned data)
+         */
+        "value"?: string;
     }
 }
 export interface InputBarcodeCustomEvent<T> extends CustomEvent<T> {
@@ -265,8 +622,18 @@ export interface InputScanReaderCustomEvent<T> extends CustomEvent<T> {
 }
 declare global {
     interface HTMLInputBarcodeElementEventMap {
-        "scan": InputScanData;
+        "inputChange": Event;
+        "valueChange": Event;
+        "focusGained": FocusEvent;
+        "focusLost": FocusEvent;
+        "validationFailed": Event;
+        "scan": string;
     }
+    /**
+     * Camera-based barcode scanner component optimized for real-time scanning
+     * with intelligent duplicate prevention and error recovery
+     * Functions as a form input element with standard input properties
+     */
     interface HTMLInputBarcodeElement extends Components.InputBarcode, HTMLStencilElement {
         addEventListener<K extends keyof HTMLInputBarcodeElementEventMap>(type: K, listener: (this: HTMLInputBarcodeElement, ev: InputBarcodeCustomEvent<HTMLInputBarcodeElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
         addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
@@ -291,7 +658,18 @@ declare global {
         "cameraError": FaceDetectionError;
         "facingModeChanged": CameraDirection;
         "photoCapture": Blob;
+        "inputChange": Event;
+        "valueChange": Event;
+        "focusGained": FocusEvent;
+        "focusLost": FocusEvent;
+        "validationFailed": Event;
     }
+    /**
+     * AI-powered face detection and recognition component
+     * High-performance facial analysis with MediaPipe and TensorFlow.js
+     * Optimized for real-time detection with Web Workers
+     * Functions as a form input element for facial recognition data
+     */
     interface HTMLInputFaceApiWebcamElement extends Components.InputFaceApiWebcam, HTMLStencilElement {
         addEventListener<K extends keyof HTMLInputFaceApiWebcamElementEventMap>(type: K, listener: (this: HTMLInputFaceApiWebcamElement, ev: InputFaceApiWebcamCustomEvent<HTMLInputFaceApiWebcamElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
         addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
@@ -308,11 +686,21 @@ declare global {
     };
     interface HTMLInputFileFromWebcamElementEventMap {
         "pictureTaken": Blob;
+        "inputChange": Event;
+        "valueChange": Event;
+        "focusGained": FocusEvent;
+        "focusLost": FocusEvent;
+        "validationFailed": Event;
         "facingModeChanged": CameraDirection;
         "cameraStarted": void;
         "cameraStopped": void;
         "cameraError": WebcamError;
     }
+    /**
+     * Simple webcam photo capture component optimized for performance
+     * Perfect for employee check-ins, ID verification, and quick photo capture
+     * Functions as a form input element for file/image submission
+     */
     interface HTMLInputFileFromWebcamElement extends Components.InputFileFromWebcam, HTMLStencilElement {
         addEventListener<K extends keyof HTMLInputFileFromWebcamElementEventMap>(type: K, listener: (this: HTMLInputFileFromWebcamElement, ev: InputFileFromWebcamCustomEvent<HTMLInputFileFromWebcamElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
         addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
@@ -329,7 +717,18 @@ declare global {
     };
     interface HTMLInputScanReaderElementEventMap {
         "scan": InputScanData;
+        "inputChange": Event;
+        "valueChange": Event;
+        "focusGained": FocusEvent;
+        "focusLost": FocusEvent;
+        "validationFailed": Event;
     }
+    /**
+     * Hardware barcode scanner input component
+     * Optimized for physical barcode scanners that input as HID keyboard devices
+     * Handles rapid input patterns with intelligent timeout management
+     * Functions as a form input element with standard input properties
+     */
     interface HTMLInputScanReaderElement extends Components.InputScanReader, HTMLStencilElement {
         addEventListener<K extends keyof HTMLInputScanReaderElementEventMap>(type: K, listener: (this: HTMLInputScanReaderElement, ev: InputScanReaderCustomEvent<HTMLInputScanReaderElementEventMap[K]>) => any, options?: boolean | AddEventListenerOptions): void;
         addEventListener<K extends keyof DocumentEventMap>(type: K, listener: (this: Document, ev: DocumentEventMap[K]) => any, options?: boolean | AddEventListenerOptions): void;
@@ -352,41 +751,144 @@ declare global {
     }
 }
 declare namespace LocalJSX {
+    /**
+     * Camera-based barcode scanner component optimized for real-time scanning
+     * with intelligent duplicate prevention and error recovery
+     * Functions as a form input element with standard input properties
+     */
     interface InputBarcode {
         /**
-          * Cualquiera de estas configuraciones https://scanapp.org/html5-qrcode-docs/docs/apis/interfaces/Html5QrcodeCameraScanConfig
+          * ARIA label for accessibility
          */
-        "cameraConfig"?: Html5QrcodeCameraScanConfig;
+        "accessibilityLabel"?: string;
         /**
-          * id of camera
+          * ARIA description for accessibility
+         */
+        "ariaDescribedby"?: string;
+        /**
+          * Auto-focus the scanner when component loads
+         */
+        "autoFocus"?: boolean;
+        /**
+          * Auto-start scanning when component loads
+         */
+        "autoStart"?: boolean;
+        /**
+          * Camera configuration for optimal performance 10 FPS provides good balance between performance and accuracy
+         */
+        "cameraConfig"?: any;
+        /**
+          * Specific camera device ID to use (optional)
          */
         "cameraId"?: string;
         /**
-          * Camera user or enviroment
+          * Whether the input is disabled
          */
-        "facingMode"?: 'user'|'enviroment';
+        "disabled"?: boolean;
         /**
-          * Height of the camera
+          * Camera facing mode: 'user' for front camera, 'environment' for back camera
+         */
+        "facingMode"?: 'user' | 'environment';
+        /**
+          * Height of the camera viewport
          */
         "height"?: string;
         /**
-          * Event Scan
+          * Maximum length for scanned value
          */
-        "onScan"?: (event: InputBarcodeCustomEvent<InputScanData>) => void;
+        "maxlength"?: number;
         /**
-          * All formats of camera
+          * Minimum length for scanned value
          */
-        "supportedFormats"?: Html5QrcodeSupportedFormats[];
+        "minlength"?: number;
         /**
-          * Width of the camera
+          * The name attribute for form submission
+         */
+        "name"?: string;
+        /**
+          * Emitted when component gains focus (standard form event)
+         */
+        "onFocusGained"?: (event: InputBarcodeCustomEvent<FocusEvent>) => void;
+        /**
+          * Emitted when component loses focus (standard form event)
+         */
+        "onFocusLost"?: (event: InputBarcodeCustomEvent<FocusEvent>) => void;
+        /**
+          * Emitted when input value changes (standard form event)
+         */
+        "onInputChange"?: (event: InputBarcodeCustomEvent<Event>) => void;
+        /**
+          * Emitted when a barcode is successfully scanned
+         */
+        "onScan"?: (event: InputBarcodeCustomEvent<string>) => void;
+        /**
+          * Emitted when input validation fails (standard form event)
+         */
+        "onValidationFailed"?: (event: InputBarcodeCustomEvent<Event>) => void;
+        /**
+          * Emitted when input value is committed (standard form event)
+         */
+        "onValueChange"?: (event: InputBarcodeCustomEvent<Event>) => void;
+        /**
+          * Pattern for input validation (regex)
+         */
+        "pattern"?: string;
+        /**
+          * Placeholder text when no value is present
+         */
+        "placeholder"?: string;
+        /**
+          * Whether the input is readonly
+         */
+        "readonly"?: boolean;
+        /**
+          * Whether the input is required for form validation
+         */
+        "required"?: boolean;
+        /**
+          * Supported barcode and QR code formats for scanning Optimized selection for best performance Using format constants compatible with html5-qrcode v2.3.8+
+         */
+        "supportedFormats"?: number[];
+        /**
+          * Tab order for keyboard navigation
+         */
+        "tabOrder"?: number;
+        /**
+          * Form validation message
+         */
+        "validationMessage"?: string;
+        /**
+          * The value of the input (last scanned data)
+         */
+        "value"?: string;
+        /**
+          * Width of the camera viewport
          */
         "width"?: string;
     }
+    /**
+     * AI-powered face detection and recognition component
+     * High-performance facial analysis with MediaPipe and TensorFlow.js
+     * Optimized for real-time detection with Web Workers
+     * Functions as a form input element for facial recognition data
+     */
     interface InputFaceApiWebcam {
+        /**
+          * ARIA label for accessibility
+         */
+        "accessibilityLabel"?: string;
+        /**
+          * ARIA description for accessibility
+         */
+        "ariaDescribedby"?: string;
         /**
           * Enable automatic photo capture when face is detected
          */
         "autoCapture"?: boolean;
+        /**
+          * Auto-focus the detection when component loads
+         */
+        "autoFocus"?: boolean;
         /**
           * Auto-start detection when component loads
          */
@@ -399,10 +901,15 @@ declare namespace LocalJSX {
           * Minimum confidence score for face detection to trigger photo capture
          */
         "captureThreshold"?: number;
+        "customValidation"?: (value: string) => boolean;
         /**
           * Detection timer interval in milliseconds
          */
         "detectionTimer"?: number;
+        /**
+          * Whether the input is disabled
+         */
+        "disabled"?: boolean;
         /**
           * Enable or disable face detection
          */
@@ -419,6 +926,10 @@ declare namespace LocalJSX {
           * Height of the video element
          */
         "height"?: number;
+        /**
+          * The name attribute for form submission
+         */
+        "name"?: string;
         /**
           * Event emitted when camera encounters an error
          */
@@ -452,9 +963,41 @@ declare namespace LocalJSX {
          */
         "onFacingModeChanged"?: (event: InputFaceApiWebcamCustomEvent<CameraDirection>) => void;
         /**
+          * Standard focus event
+         */
+        "onFocusGained"?: (event: InputFaceApiWebcamCustomEvent<FocusEvent>) => void;
+        /**
+          * Standard blur event
+         */
+        "onFocusLost"?: (event: InputFaceApiWebcamCustomEvent<FocusEvent>) => void;
+        /**
+          * Standard input event when face detection data changes
+         */
+        "onInputChange"?: (event: InputFaceApiWebcamCustomEvent<Event>) => void;
+        /**
           * Event emitted when a photo is automatically captured
          */
         "onPhotoCapture"?: (event: InputFaceApiWebcamCustomEvent<Blob>) => void;
+        /**
+          * Standard invalid event for form validation
+         */
+        "onValidationFailed"?: (event: InputFaceApiWebcamCustomEvent<Event>) => void;
+        /**
+          * Standard change event when detection data is committed
+         */
+        "onValueChange"?: (event: InputFaceApiWebcamCustomEvent<Event>) => void;
+        /**
+          * Placeholder text when no face is detected
+         */
+        "placeholder"?: string;
+        /**
+          * Whether the input is readonly
+         */
+        "readonly"?: boolean;
+        /**
+          * Whether the input is required for form validation
+         */
+        "required"?: boolean;
         /**
           * Score threshold to detect a face
          */
@@ -480,47 +1023,93 @@ declare namespace LocalJSX {
          */
         "stopButtonText"?: string;
         /**
+          * Tab order for keyboard navigation
+         */
+        "tabOrder"?: number;
+        /**
           * Trained models to use for recognition and best match
          */
         "trainedModel"?: LabeledDescriptorsArray;
+        /**
+          * Form validation message
+         */
+        "validationMessage"?: string;
+        /**
+          * The value of the input (JSON string of face detection data)
+         */
+        "value"?: string;
         /**
           * Width of the video element
          */
         "width"?: number;
     }
+    /**
+     * Simple webcam photo capture component optimized for performance
+     * Perfect for employee check-ins, ID verification, and quick photo capture
+     * Functions as a form input element for file/image submission
+     */
     interface InputFileFromWebcam {
+        /**
+          * Accept attribute for file type validation
+         */
+        "accept"?: string;
+        /**
+          * ARIA label for accessibility
+         */
+        "accessibilityLabel"?: string;
+        /**
+          * ARIA description for accessibility
+         */
+        "ariaDescribedby"?: string;
+        /**
+          * Auto-focus the camera when component loads
+         */
+        "autoFocus"?: boolean;
         /**
           * Auto-start camera when component loads
          */
         "autoStart"?: boolean;
         /**
-          * Capture button text
+          * Text for the capture button
          */
         "captureButtonText"?: string;
+        "customValidation"?: (value: string) => boolean;
         /**
-          * you can pass a function and override the canvas.drawImage function so you can change the image adding filters or any kind of magin in your image  you just need to crear a function with all canvas.-drawImage arguments  here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
+          * Whether the input is disabled
+         */
+        "disabled"?: boolean;
+        /**
+          * Custom canvas drawing function for image processing Override to add filters or effects to captured images
          */
         "drawImageCb"?: Function;
         /**
-          * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
+          * Camera facing mode: front or back camera
          */
         "facingMode"?: CameraDirection;
         /**
-          * Enable flash effect when taking picture
+          * Enable flash effect animation when taking picture
          */
         "flashEffect"?: boolean;
         /**
-          * Flip camera button text
+          * Text for the flip camera button
          */
         "flipButtonText"?: string;
         /**
-          * height of the video element
+          * Height of the video element in pixels
          */
         "height"?: number;
         /**
           * Image quality for captured photos (0.1 to 1.0)
          */
         "imageQuality"?: number;
+        /**
+          * Maximum file size in bytes (0 = no limit)
+         */
+        "maxFileSize"?: number;
+        /**
+          * The name attribute for form submission
+         */
+        "name"?: string;
         /**
           * Event emitted when camera encounters an error
          */
@@ -538,28 +1127,169 @@ declare namespace LocalJSX {
          */
         "onFacingModeChanged"?: (event: InputFileFromWebcamCustomEvent<CameraDirection>) => void;
         /**
+          * Standard focus event
+         */
+        "onFocusGained"?: (event: InputFileFromWebcamCustomEvent<FocusEvent>) => void;
+        /**
+          * Standard blur event
+         */
+        "onFocusLost"?: (event: InputFileFromWebcamCustomEvent<FocusEvent>) => void;
+        /**
+          * Standard input event when value changes
+         */
+        "onInputChange"?: (event: InputFileFromWebcamCustomEvent<Event>) => void;
+        /**
           * Event emitted when the user takes a picture
          */
         "onPictureTaken"?: (event: InputFileFromWebcamCustomEvent<Blob>) => void;
         /**
-          * Show camera controls (flip, capture button, etc)
+          * Standard invalid event for form validation
+         */
+        "onValidationFailed"?: (event: InputFileFromWebcamCustomEvent<Event>) => void;
+        /**
+          * Standard change event when value is committed
+         */
+        "onValueChange"?: (event: InputFileFromWebcamCustomEvent<Event>) => void;
+        /**
+          * Placeholder text when no image is captured
+         */
+        "placeholder"?: string;
+        /**
+          * Whether the input is readonly
+         */
+        "readonly"?: boolean;
+        /**
+          * Whether the input is required for form validation
+         */
+        "required"?: boolean;
+        /**
+          * Show action buttons (capture and flip camera buttons)
+         */
+        "showActionButtons"?: boolean;
+        /**
+          * Show camera control buttons (flip, capture, etc.)
          */
         "showControls"?: boolean;
         /**
-          * Width of the video element
+          * Tab order for keyboard navigation
+         */
+        "tabOrder"?: number;
+        /**
+          * Form validation message
+         */
+        "validationMessage"?: string;
+        /**
+          * The value of the input (base64 data URL of captured image)
+         */
+        "value"?: string;
+        /**
+          * Width of the video element in pixels
          */
         "width"?: number;
     }
+    /**
+     * Hardware barcode scanner input component
+     * Optimized for physical barcode scanners that input as HID keyboard devices
+     * Handles rapid input patterns with intelligent timeout management
+     * Functions as a form input element with standard input properties
+     */
     interface InputScanReader {
         /**
-          * Show a modal with the scanned text. like a white blink on the screen
+          * ARIA label for accessibility
+         */
+        "accessibilityLabel"?: string;
+        /**
+          * ARIA description for accessibility
+         */
+        "ariaDescribedby"?: string;
+        /**
+          * Auto-focus the scanner when component loads
+         */
+        "autoFocus"?: boolean;
+        /**
+          * Whether the input is disabled
+         */
+        "disabled"?: boolean;
+        /**
+          * Timeout duration in milliseconds before clearing incomplete input
+         */
+        "inputTimeout"?: number;
+        /**
+          * Maximum length for scanned value
+         */
+        "maxlength"?: number;
+        /**
+          * Minimum input length to consider valid scanner input
+         */
+        "minInputLength"?: number;
+        /**
+          * Minimum length for scanned value
+         */
+        "minlength"?: number;
+        /**
+          * Duration in milliseconds to show confirmation modal after successful scan
          */
         "modalTimer"?: number;
         /**
-          * Fired when the user press enter or tab used with scanners like BARCODES or QR
+          * The name attribute for form submission
+         */
+        "name"?: string;
+        /**
+          * Standard focus event
+         */
+        "onFocusGained"?: (event: InputScanReaderCustomEvent<FocusEvent>) => void;
+        /**
+          * Standard blur event
+         */
+        "onFocusLost"?: (event: InputScanReaderCustomEvent<FocusEvent>) => void;
+        /**
+          * Standard input event when value changes
+         */
+        "onInputChange"?: (event: InputScanReaderCustomEvent<Event>) => void;
+        /**
+          * Event emitted when scanner completes reading
          */
         "onScan"?: (event: InputScanReaderCustomEvent<InputScanData>) => void;
+        /**
+          * Standard invalid event for form validation
+         */
+        "onValidationFailed"?: (event: InputScanReaderCustomEvent<Event>) => void;
+        /**
+          * Standard change event when value is committed
+         */
+        "onValueChange"?: (event: InputScanReaderCustomEvent<Event>) => void;
+        /**
+          * Pattern for input validation (regex)
+         */
+        "pattern"?: string;
+        /**
+          * Placeholder text when no value is present
+         */
+        "placeholder"?: string;
+        /**
+          * Whether the input is readonly
+         */
+        "readonly"?: boolean;
+        /**
+          * Whether the input is required for form validation
+         */
+        "required"?: boolean;
+        /**
+          * Title text displayed during scanning operation
+         */
         "scanTitle"?: string;
+        /**
+          * Tab order for keyboard navigation
+         */
+        "tabOrder"?: number;
+        /**
+          * Form validation message
+         */
+        "validationMessage"?: string;
+        /**
+          * The value of the input (last scanned data)
+         */
+        "value"?: string;
     }
     interface IntrinsicElements {
         "input-barcode": InputBarcode;
@@ -572,9 +1302,31 @@ export { LocalJSX as JSX };
 declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
+            /**
+             * Camera-based barcode scanner component optimized for real-time scanning
+             * with intelligent duplicate prevention and error recovery
+             * Functions as a form input element with standard input properties
+             */
             "input-barcode": LocalJSX.InputBarcode & JSXBase.HTMLAttributes<HTMLInputBarcodeElement>;
+            /**
+             * AI-powered face detection and recognition component
+             * High-performance facial analysis with MediaPipe and TensorFlow.js
+             * Optimized for real-time detection with Web Workers
+             * Functions as a form input element for facial recognition data
+             */
             "input-face-api-webcam": LocalJSX.InputFaceApiWebcam & JSXBase.HTMLAttributes<HTMLInputFaceApiWebcamElement>;
+            /**
+             * Simple webcam photo capture component optimized for performance
+             * Perfect for employee check-ins, ID verification, and quick photo capture
+             * Functions as a form input element for file/image submission
+             */
             "input-file-from-webcam": LocalJSX.InputFileFromWebcam & JSXBase.HTMLAttributes<HTMLInputFileFromWebcamElement>;
+            /**
+             * Hardware barcode scanner input component
+             * Optimized for physical barcode scanners that input as HID keyboard devices
+             * Handles rapid input patterns with intelligent timeout management
+             * Functions as a form input element with standard input properties
+             */
             "input-scan-reader": LocalJSX.InputScanReader & JSXBase.HTMLAttributes<HTMLInputScanReaderElement>;
         }
     }

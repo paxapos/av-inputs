@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Múltiples Cámaras - Modal Test</title>
+    <script type="module" src="./build/av-inputs.esm.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .cameras-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .camera-section {
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .camera-section h3 {
+            margin-top: 0;
+            color: #495057;
+            text-align: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        button.danger {
+            background: #dc3545;
+        }
+
+        button.danger:hover {
+            background: #a71e2a;
+        }
+
+        button.success {
+            background: #28a745;
+        }
+
+        button.success:hover {
+            background: #1e7e34;
+        }
+
+        button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        button.warning:hover {
+            background: #d39e00;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .log-entry.info {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .log-entry.success {
+            background: #cfe2ff;
+            color: #084298;
+        }
+
+        .log-entry.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .log-entry.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .cameras-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 Test: Múltiples Cámaras y Modales</h1>
+
+        <div class="cameras-grid">
+            <!-- Cámara Principal -->
+            <div class="camera-section">
+                <h3>📹 Cámara Principal (Pantalla)</h3>
+                <div class="status inactive" id="main-status">Inactiva</div>
+
+                <input-file-from-webcam
+                    id="main-camera"
+                    width="350"
+                    height="250"
+                    auto-start="false"
+                    show-action-buttons="true">
+                </input-file-from-webcam>
+
+                <div class="controls">
+                    <button onclick="startMainCamera()">🟢 Iniciar</button>
+                    <button onclick="stopMainCamera()" class="danger">🛑 Detener</button>
+                    <button onclick="takeMainPhoto()" class="success">📸 Foto</button>
+                    <button onclick="openModal()" class="warning">📱 Abrir Modal</button>
+                </div>
+            </div>
+
+            <!-- Cámara Secundaria -->
+            <div class="camera-section">
+                <h3>📱 Cámara Secundaria</h3>
+                <div class="status inactive" id="secondary-status">Inactiva</div>
+
+                <input-file-from-webcam
+                    id="secondary-camera"
+                    width="350"
+                    height="250"
+                    auto-start="false"
+                    show-action-buttons="true"
+                    facing-mode="REAR">
+                </input-file-from-webcam>
+
+                <div class="controls">
+                    <button onclick="startSecondaryCamera()">🟢 Iniciar</button>
+                    <button onclick="stopSecondaryCamera()" class="danger">🛑 Detener</button>
+                    <button onclick="takeSecondaryPhoto()" class="success">📸 Foto</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="stopAllCameras()" class="danger">🚫 Detener Todas</button>
+            <button onclick="testCameraSwitching()" class="warning">🔄 Test Switching</button>
+            <button onclick="clearLog()">🗑️ Limpiar Log</button>
+        </div>
+
+        <!-- Modal con Cámara -->
+        <div id="cameraModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h2>📸 Cámara en Modal</h2>
+                <div class="status inactive" id="modal-status">Inactiva</div>
+
+                <div style="text-align: center; margin: 20px 0;">
+                    <input-file-from-webcam
+                        id="modal-camera"
+                        width="400"
+                        height="300"
+                        auto-start="false"
+                        show-action-buttons="true">
+                    </input-file-from-webcam>
+                </div>
+
+                <div class="controls">
+                    <button onclick="startModalCamera()">🟢 Iniciar Modal</button>
+                    <button onclick="stopModalCamera()" class="danger">🛑 Detener Modal</button>
+                    <button onclick="takeModalPhoto()" class="success">📸 Foto Modal</button>
+                    <button onclick="closeModal()" class="warning">❌ Cerrar Modal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log de Eventos -->
+        <div class="log" id="event-log">
+            <div class="log-entry info">[INFO] Sistema inicializado. Listo para testear múltiples cámaras.</div>
+        </div>
+    </div>
+
+    <script>
+        // Referencias a las cámaras
+        const mainCamera = document.getElementById('main-camera');
+        const secondaryCamera = document.getElementById('secondary-camera');
+        const modalCamera = document.getElementById('modal-camera');
+        const modal = document.getElementById('cameraModal');
+
+        // Referencias a estados
+        const mainStatus = document.getElementById('main-status');
+        const secondaryStatus = document.getElementById('secondary-status');
+        const modalStatus = document.getElementById('modal-status');
+
+        // Función para logging
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('event-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            log.insertBefore(entry, log.firstChild);
+
+            // Mantener solo los últimos 20 logs
+            if (log.children.length > 20) {
+                log.removeChild(log.lastChild);
+            }
+        }
+
+        // Función para actualizar estado visual
+        function updateStatus(statusElement, isActive) {
+            statusElement.textContent = isActive ? 'Activa' : 'Inactiva';
+            statusElement.className = `status ${isActive ? 'active' : 'inactive'}`;
+        }
+
+        // Funciones de la cámara principal
+        async function startMainCamera() {
+            try {
+                await mainCamera.startCamera();
+                updateStatus(mainStatus, true);
+                addLog('Cámara principal iniciada', 'success');
+            } catch (error) {
+                addLog(`Error al iniciar cámara principal: ${error.message}`, 'error');
+            }
+        }
+
+        async function stopMainCamera() {
+            try {
+                await mainCamera.stopCamera();
+                updateStatus(mainStatus, false);
+                addLog('Cámara principal detenida', 'info');
+            } catch (error) {
+                addLog(`Error al detener cámara principal: ${error.message}`, 'error');
+            }
+        }
+
+        async function takeMainPhoto() {
+            try {
+                const blob = await mainCamera.takePic();
+                addLog(`Foto tomada en cámara principal: ${(blob.size / 1024).toFixed(2)} KB`, 'success');
+            } catch (error) {
+                addLog(`Error al tomar foto principal: ${error.message}`, 'error');
+            }
+        }
+
+        // Funciones de la cámara secundaria
+        async function startSecondaryCamera() {
+            try {
+                await secondaryCamera.startCamera();
+                updateStatus(secondaryStatus, true);
+                addLog('Cámara secundaria iniciada', 'success');
+            } catch (error) {
+                addLog(`Error al iniciar cámara secundaria: ${error.message}`, 'error');
+            }
+        }
+
+        async function stopSecondaryCamera() {
+            try {
+                await secondaryCamera.stopCamera();
+                updateStatus(secondaryStatus, false);
+                addLog('Cámara secundaria detenida', 'info');
+            } catch (error) {
+                addLog(`Error al detener cámara secundaria: ${error.message}`, 'error');
+            }
+        }
+
+        async function takeSecondaryPhoto() {
+            try {
+                const blob = await secondaryCamera.takePic();
+                addLog(`Foto tomada en cámara secundaria: ${(blob.size / 1024).toFixed(2)} KB`, 'success');
+            } catch (error) {
+                addLog(`Error al tomar foto secundaria: ${error.message}`, 'error');
+            }
+        }
+
+        // Funciones del modal
+        async function openModal() {
+            modal.style.display = 'block';
+            addLog('Modal abierto - preparando cámara modal', 'info');
+
+            // Opcional: detener cámaras principales cuando se abre modal
+            // await stopMainCamera();
+            // await stopSecondaryCamera();
+        }
+
+        async function closeModal() {
+            try {
+                await stopModalCamera();
+                modal.style.display = 'none';
+                updateStatus(modalStatus, false);
+                addLog('Modal cerrado', 'info');
+
+                // Opcional: reactivar cámara principal al cerrar modal
+                // setTimeout(() => startMainCamera(), 500);
+            } catch (error) {
+                addLog(`Error al cerrar modal: ${error.message}`, 'error');
+            }
+        }
+
+        async function startModalCamera() {
+            try {
+                await modalCamera.startCamera();
+                updateStatus(modalStatus, true);
+                addLog('Cámara modal iniciada', 'success');
+            } catch (error) {
+                addLog(`Error al iniciar cámara modal: ${error.message}`, 'error');
+            }
+        }
+
+        async function stopModalCamera() {
+            try {
+                await modalCamera.stopCamera();
+                updateStatus(modalStatus, false);
+                addLog('Cámara modal detenida', 'info');
+            } catch (error) {
+                addLog(`Error al detener cámara modal: ${error.message}`, 'error');
+            }
+        }
+
+        async function takeModalPhoto() {
+            try {
+                const blob = await modalCamera.takePic();
+                addLog(`Foto tomada en modal: ${(blob.size / 1024).toFixed(2)} KB`, 'success');
+            } catch (error) {
+                addLog(`Error al tomar foto modal: ${error.message}`, 'error');
+            }
+        }
+
+        // Funciones de utilidad
+        async function stopAllCameras() {
+            try {
+                await Promise.all([
+                    stopMainCamera(),
+                    stopSecondaryCamera(),
+                    stopModalCamera()
+                ]);
+                addLog('Todas las cámaras detenidas', 'warning');
+            } catch (error) {
+                addLog(`Error al detener todas las cámaras: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCameraSwitching() {
+            addLog('Iniciando test de switching automático...', 'warning');
+
+            try {
+                // Test 1: Alternar entre principal y secundaria
+                await startMainCamera();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                await startSecondaryCamera(); // Esto debería detener la principal automáticamente
+                await new Promise(resolve => setTimeout(resolve, 2000));
+
+                await startMainCamera(); // Esto debería detener la secundaria automáticamente
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                addLog('Test de switching completado exitosamente', 'success');
+            } catch (error) {
+                addLog(`Error en test de switching: ${error.message}`, 'error');
+            }
+        }
+
+        function clearLog() {
+            const log = document.getElementById('event-log');
+            log.innerHTML = '<div class="log-entry info">[INFO] Log limpiado.</div>';
+        }
+
+        // Event listeners para detectar cambios automáticos
+        [mainCamera, secondaryCamera, modalCamera].forEach((camera, index) => {
+            const names = ['Principal', 'Secundaria', 'Modal'];
+            const name = names[index];
+
+            camera.addEventListener('cameraStarted', () => {
+                addLog(`[EVENTO] ${name} - Cámara iniciada automáticamente`, 'info');
+            });
+
+            camera.addEventListener('cameraStopped', () => {
+                addLog(`[EVENTO] ${name} - Cámara detenida automáticamente`, 'warning');
+            });
+
+            camera.addEventListener('cameraError', (e) => {
+                addLog(`[EVENTO] ${name} - Error: ${e.detail.message}`, 'error');
+            });
+
+            camera.addEventListener('pictureTaken', (e) => {
+                addLog(`[EVENTO] ${name} - Foto capturada: ${(e.detail.size / 1024).toFixed(2)} KB`, 'success');
+            });
+        });
+
+        // Cerrar modal al hacer click fuera
+        window.onclick = function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        addLog('Página cargada. Puedes probar múltiples cámaras y modales.', 'success');
+    </script>
+</body>
+</html>

@@ -136,60 +136,141 @@ canvas {
 /* Camera controls */
 .camera-controls {
   position: absolute;
-  bottom: 16px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  gap: 12px;
+  gap: 16px;
   z-index: 10;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 12px;
+  border-radius: 50px;
+  backdrop-filter: blur(10px);
 }
 
 .control-button {
-  width: 56px;
-  height: 56px;
-  border: none;
+  width: 60px;
+  height: 60px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(255, 255, 255, 0.1);
   color: white;
-  font-size: 24px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.control-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .control-button:hover {
-  background: rgba(0, 0, 0, 0.9);
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: scale(1.05);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.control-button:hover::before {
+  opacity: 1;
 }
 
 .control-button:active {
   transform: scale(0.95);
 }
 
+.flip-button {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.8) 0%, rgba(21, 101, 192, 0.8) 100%);
+}
+
+.flip-button:hover {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.9) 0%, rgba(21, 101, 192, 0.9) 100%);
+}
+
 .capture-button {
-  width: 72px;
-  height: 72px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #333;
-  font-size: 28px;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.9) 0%, rgba(211, 47, 47, 0.9) 100%);
+  border-width: 3px;
+  position: relative;
 }
 
 .capture-button:hover {
-  background: white;
+  background: linear-gradient(135deg, rgba(244, 67, 54, 1) 0%, rgba(211, 47, 47, 1) 100%);
+  transform: scale(1.1);
+}
+
+.capture-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+}
+
+.capture-button:hover::after {
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* SVG Icons */
+.flip-icon,
+.capture-icon {
+  width: 24px;
+  height: 24px;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.capture-button .capture-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.capture-icon.loading {
+  animation: spin 1s linear infinite;
 }
 
 .control-button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
+  background: rgba(128, 128, 128, 0.3);
 }
 
 .control-button:disabled:hover {
   transform: none;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(128, 128, 128, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+}
+
+.control-button:disabled::before {
+  opacity: 0;
+}
+
+.control-button:disabled .flip-icon,
+.control-button:disabled .capture-icon {
+  opacity: 0.7;
 }
 
 /* Flash effect */
@@ -216,19 +297,30 @@ canvas {
   }
 
   .camera-controls {
-    bottom: 12px;
+    bottom: 16px;
+    gap: 12px;
+    padding: 10px;
   }
 
   .control-button {
-    width: 48px;
-    height: 48px;
-    font-size: 20px;
+    width: 50px;
+    height: 50px;
+  }
+
+  .flip-icon,
+  .capture-icon {
+    width: 20px;
+    height: 20px;
   }
 
   .capture-button {
-    width: 64px;
-    height: 64px;
-    font-size: 24px;
+    width: 70px;
+    height: 70px;
+  }
+
+  .capture-button .capture-icon {
+    width: 28px;
+    height: 28px;
   }
 
   .camera-state p {

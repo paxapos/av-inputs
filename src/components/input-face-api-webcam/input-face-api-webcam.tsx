@@ -19,17 +19,22 @@ export interface FaceDetectionError {
 
 type CameraState = 'inactive' | 'loading' | 'ready' | 'detecting' | 'error';
 
+/**
+ * AI-powered face detection and recognition component
+ * High-performance facial analysis with MediaPipe and TensorFlow.js
+ * Optimized for real-time detection with Web Workers
+ * Functions as a form input element for facial recognition data
+ */
 @Component({
   tag: 'input-face-api-webcam',
   styleUrl: 'input-face-api-webcam.css',
   shadow: true,
+  formAssociated: true
 })
 export class InputFaceApiWebcam {
-  //webcam stream
-  video: HTMLVideoElement;
-
-  //canvas to draw webcam
-  canvas: HTMLCanvasElement;
+  // Core elements
+  private video: HTMLVideoElement;
+  private canvas: HTMLCanvasElement;
 
   @Element() el: HTMLElement;
 
@@ -40,11 +45,87 @@ export class InputFaceApiWebcam {
   @State() detectedFacesCount: number = 0;
   @State() isRecognizing: boolean = false;
 
+  /**
+   * Standard form input properties
+   */
+
+  /**
+   * The name attribute for form submission
+   */
+  @Prop() name?: string;
+
+  /**
+   * The value of the input (JSON string of face detection data)
+   */
+  @Prop({ mutable: true }) value?: string = '';
+
+  /**
+   * Whether the input is disabled
+   */
+  @Prop({ reflect: true }) disabled?: boolean = false;
+
+  /**
+   * Whether the input is readonly
+   */
+  @Prop({ reflect: true }) readonly?: boolean = false;
+
+  /**
+   * Whether the input is required for form validation
+   */
+  @Prop({ reflect: true }) required?: boolean = false;
+
+  /**
+   * Placeholder text when no face is detected
+   */
+  @Prop() placeholder?: string = 'No face detected';
+
+  /**
+   * Form validation message
+   */
+  @Prop() validationMessage?: string;
+
+  /**
+   * Auto-focus the detection when component loads
+   */
+  @Prop() autoFocus?: boolean = false;
+
+  /**
+   * Tab order for keyboard navigation
+   */
+  @Prop() tabOrder?: number;
+
+  /**
+   * ARIA label for accessibility
+   */
+  @Prop() accessibilityLabel?: string = 'Face detection and recognition input';
+
+  /**
+   * ARIA description for accessibility
+   */
+  @Prop() ariaDescribedby?: string;
+
+  // Internal state for form validation
+  @State() private isValid: boolean = true;
+  @State() private currentValidationMessage: string = '';
+
+  // Custom validation function (optional)
+  @Prop() customValidation?: (value: string) => boolean;
+
   @Watch('detectionResult')
   detectionResultChangedHandler(newValue: DetectionImg, oldValue: DetectionImg) {
     if (newValue?.blobImg) {
       this.detectedFacesCount = newValue.detection ? 1 : 0;
       this.faceDetected.emit(newValue);
+
+      // Update form value with detection data
+      if (newValue.detection) {
+        this.updateFormValue(JSON.stringify({
+          confidence: newValue.detection.categories?.[0]?.score || 0,
+          timestamp: Date.now(),
+          landmarks: newValue.detection.keypoints || [],
+          boundingBox: newValue.detection.boundingBox || null
+        }));
+      }
 
       // Auto capture photo if enabled and face confidence is above threshold
       if (this.autoCapture && newValue.detection &&
@@ -55,6 +136,11 @@ export class InputFaceApiWebcam {
       if (oldValue) {
         this.detectedFacesCount = 0;
         this.faceStopDetection.emit();
+
+        // Clear form value when no face detected
+        if (this.value) {
+          this.updateFormValue('');
+        }
       }
     }
   }
@@ -390,6 +476,35 @@ export class InputFaceApiWebcam {
     bubbles: true,
   }) photoCapture: EventEmitter<Blob>;
 
+  /**
+   * Standard form input events
+   */
+
+  /**
+   * Standard input event when face detection data changes
+   */
+  @Event() inputChange: EventEmitter<Event>;
+
+  /**
+   * Standard change event when detection data is committed
+   */
+  @Event() valueChange: EventEmitter<Event>;
+
+  /**
+   * Standard focus event
+   */
+  @Event() focusGained: EventEmitter<FocusEvent>;
+
+  /**
+   * Standard blur event
+   */
+  @Event() focusLost: EventEmitter<FocusEvent>;
+
+  /**
+   * Standard invalid event for form validation
+   */
+  @Event() validationFailed: EventEmitter<Event>;
+
 
   // Private properties
   private lastVideoTime = -1;
@@ -612,6 +727,121 @@ drawWebcamnToCanvas(ctx) {
   ctx.drawImage(this.video, left, top, imgSize, imgSize, 0,0, this.canvas.width, this.canvas.height);
 }
 
+
+  /**
+   * Form validation method
+   */
+  private validateInput(): void {
+    let isValid = true;
+    let message = '';
+
+    // Required validation
+    if (this.required && !this.value) {
+      isValid = false;
+      message = this.validationMessage || 'Face detection data is required.';
+    }
+
+    // Confidence threshold validation
+    if (this.value) {
+      try {
+        const faceData = JSON.parse(this.value);
+        if (faceData.detection?.categories?.[0]?.score < this.captureThreshold) {
+          isValid = false;
+          message = this.validationMessage || `Face detection confidence must be at least ${this.captureThreshold * 100}%.`;
+        }
+      } catch (e) {
+        isValid = false;
+        message = this.validationMessage || 'Invalid face detection data format.';
+      }
+    }
+
+    // Custom validation
+    if (this.customValidation && !this.customValidation(this.value)) {
+      isValid = false;
+      message = this.validationMessage || 'Custom validation failed.';
+    }
+
+    this.isValid = isValid;
+    this.currentValidationMessage = message;
+
+    if (!isValid) {
+      this.validationFailed.emit();
+    }
+  }
+
+  /**
+   * Update form value and emit events
+   */
+  private updateFormValue(newValue: string): void {
+    this.value = newValue;
+    this.validateInput();
+    this.inputChange.emit();
+    this.valueChange.emit();
+  }
+
+  // Form Association Methods
+  /**
+   * Get the current form value
+   */
+  @Method()
+  async getFormValue(): Promise<string> {
+    return this.value;
+  }
+
+  /**
+   * Set the form value
+   */
+  @Method()
+  async setFormValue(value: string): Promise<void> {
+    this.updateFormValue(value);
+  }
+
+  /**
+   * Check validity of the input
+   */
+  @Method()
+  async checkValidity(): Promise<boolean> {
+    this.validateInput();
+    return this.isValid;
+  }
+
+  /**
+   * Get validation message
+   */
+  @Method()
+  async getValidationMessage(): Promise<string> {
+    return this.currentValidationMessage;
+  }
+
+  /**
+   * Set custom validity
+   */
+  @Method()
+  async setCustomValidity(message: string): Promise<void> {
+    this.isValid = !message;
+    this.currentValidationMessage = message;
+  }
+
+  /**
+   * Focus the component (start camera and detection)
+   */
+  @Method()
+  async setFocus(): Promise<void> {
+    if (!this.disabled && !this.readonly) {
+      await this.initializeCamera();
+      await this.startDetection();
+      this.focusGained.emit();
+    }
+  }
+
+  /**
+   * Blur the component (stop camera and detection)
+   */
+  @Method()
+  async setBlur(): Promise<void> {
+    await this.stopDetection();
+    this.focusLost.emit();
+  }
 
   render() {
     const hostStyle = {

@@ -1,17 +1,24 @@
 import { InputScanData } from 'src/components';
 import { InputScanDataPersona, InputScanType } from 'src/components/input-scan-reader/input-scan-reader.types';
 
+/**
+ * Optimized text processing for barcode/QR scanner data
+ * Handles DNI, driver licenses, and various document formats with high performance
+ */
 
+/**
+ * Extract data from DNI v1 format (Argentina)
+ */
 function getDataFromDNIv1(type: InputScanType, scannedText: string, regRun: RegExpExecArray): InputScanDataPersona {
   return {
     type: type,
     text: scannedText,
     data: {
-      apellido: regRun[4],
-      nombre: regRun[5],
-      dni: regRun[1],
-      fecha_nacimiento: regRun[6],
-      sexo: regRun[7],
+      apellido: regRun[4]?.trim() || '',
+      nombre: regRun[5]?.trim() || '',
+      dni: regRun[1]?.trim() || '',
+      fecha_nacimiento: regRun[6]?.trim() || '',
+      sexo: regRun[7]?.trim() || '',
     },
   };
 }

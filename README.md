@@ -1,22 +1,82 @@
-# input-file-from-webcam
-stencil.js component that shows the webcam and allow you to take pictures easily and changes from to back camera with one click
+# AV-Inputs - Professional Web Components Library
 
+A high-performance StencilJS library providing optimized web components for camera, barcode scanning, and data input operations. Built for production environments with focus on performance, reliability, and cross-browser compatibility.
+
+## 🎯 Components Overview
+
+### 📷 input-barcode
+**Camera-based barcode/QR scanner**
+- Uses device camera for real-time scanning
+- Supports 17+ barcode formats (QR, Code128, EAN, UPC, etc.)
+- Optimized for continuous scanning with duplicate prevention
+- Perfect for: POS systems, inventory management, product lookup
+
+### ⌨️ input-scan-reader  
+**Hardware barcode scanner input**
+- Captures input from physical barcode scanners (HID keyboard devices)
+- Intelligent text processing for documents (DNI, licenses)
+- Background operation without UI interference  
+- Perfect for: Dedicated scanner setups, access control, document verification
+
+### 🤖 input-face-api-webcam
+**AI-powered face detection & recognition**
+- Real-time face detection using MediaPipe/TensorFlow.js
+- Custom face recognition with trained models
+- Auto photo capture with confidence thresholds
+- Perfect for: Employee attendance, access control, ID verification
+
+### 📸 input-file-from-webcam
+**Simple webcam photo capture**
+- Streamlined photo capture with one click
+- Front/back camera switching
+- Custom image processing support
+- Perfect for: Employee check-ins, profile photos, quick documentation
+
+## 🔧 Key Differences
+
+| Feature | input-barcode | input-scan-reader | input-face-api-webcam | input-file-from-webcam |
+|---------|---------------|-------------------|----------------------|----------------------|
+| **Input Method** | Camera scanning | Hardware scanner | AI face detection | Camera photo |
+| **Processing** | Real-time decode | Keyboard events | Neural networks | Simple capture |
+| **Performance** | Medium CPU | Minimal CPU | High CPU | Low CPU |
+| **Use Case** | Mobile/tablet scanning | Fixed scanner stations | Security/attendance | Quick photos |
+
+## ⚡ Performance Features
+
+- **Memory efficient**: Automatic cleanup and resource management
+- **Web Workers**: Heavy computations don't block UI
+- **Optimized scanning**: Intelligent duplicate prevention and timeouts  
+- **Error recovery**: Robust error handling with automatic restart
+- **Cross-platform**: Works on desktop, mobile, and tablets
+
+## 🚀 Quick Start
 
 ```html
-<script type="module" src='https://cdn.jsdelivr.net/npm/input-file-from-webcam/dist/esm/input-file-from-webcam.js'></script>
-<input-file-from-webcam id="my-input"></input-file-from-webcam>
+<!-- Camera barcode scanning -->
+<input-barcode 
+  facing-mode="environment" 
+  width="400px" 
+  height="300px">
+</input-barcode>
+
+<!-- Hardware scanner input -->
+<input-scan-reader 
+  scan-title="Scan ID Card"
+  modal-timer="2000">
+</input-scan-reader>
+
+<!-- Face detection -->
+<input-face-api-webcam 
+  auto-capture="true"
+  score-threshold="0.8">
+</input-face-api-webcam>
+
+<!-- Simple photo capture -->
+<input-file-from-webcam 
+  auto-start="true"
+  image-quality="0.9">
+</input-file-from-webcam>
 ```
-
-![image](https://user-images.githubusercontent.com/222193/225028312-5d30ae4c-4c49-4665-9d49-6d0977e5e2d9.png)
-
-
-
-
-# How it works?
-
-just add:
-
-npm install https://github.com/alevilar/input-file-from-webcam
 
 
 

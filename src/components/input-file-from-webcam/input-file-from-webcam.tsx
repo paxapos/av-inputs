@@ -1,10 +1,11 @@
-import { Component, Host, h, Method, Listen, Prop, Event, EventEmitter, Element, State, Watch } from '@stencil/core';
-import { camera } from '../../utils/camera';
+import { Component, Host, h, Method, Listen, Prop, Event, EventEmitter, Element, State } from '@stencil/core';
+import { CameraInstanceManager } from '../../utils/camera-manager';
 import { CameraDirection } from '../../utils/camera.service';
 
 export interface WebcamError {
   type: 'permission' | 'device' | 'stream' | 'unknown';
   message: string;
+  details?: any;
 }
 
 export interface CameraState {
@@ -12,10 +13,16 @@ export interface CameraState {
   error?: WebcamError;
 }
 
+/**
+ * Simple webcam photo capture component optimized for performance
+ * Perfect for employee check-ins, ID verification, and quick photo capture
+ * Functions as a form input element for file/image submission
+ */
 @Component({
   tag: 'input-file-from-webcam',
   styleUrl: 'input-file-from-webcam.css',
   shadow: true,
+  formAssociated: true
 })
 export class InputFileFromWebcam {
 
@@ -24,76 +31,170 @@ export class InputFileFromWebcam {
   @State() cameraState: CameraState = { status: 'inactive' };
   @State() isFlipped: boolean = false;
 
-  /**
-   * Width of the video element
-   */
-  @Prop({reflect: true, mutable: true}) width?: number = 460
+  private wasActiveBeforeHidden: boolean = false;
+  private visibilityChangeHandler = this.handleVisibilityChange.bind(this);
+  private isDestroyed: boolean = false;
+  private cameraInstance: any = null; // Instancia propia de cámara
+  private componentId: string; // ID único del componente
 
   /**
-   * height of the video element
+   * Standard form input properties
    */
-  @Prop({reflect: true, mutable: true}) height?: number = 460
 
   /**
-   * FacingModel optiones following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value
+   * The name attribute for form submission
    */
-  @Prop({ mutable: true, reflect: true }) facingMode?: CameraDirection = CameraDirection.Front
+  @Prop() name?: string;
 
   /**
-   * Show camera controls (flip, capture button, etc)
+   * The value of the input (base64 data URL of captured image)
    */
-  @Prop() showControls?: boolean = true
+  @Prop({ mutable: true }) value?: string = '';
+
+  /**
+   * Whether the input is disabled
+   */
+  @Prop({ reflect: true }) disabled?: boolean = false;
+
+  /**
+   * Whether the input is readonly
+   */
+  @Prop({ reflect: true }) readonly?: boolean = false;
+
+  /**
+   * Whether the input is required for form validation
+   */
+  @Prop({ reflect: true }) required?: boolean = false;
+
+  /**
+   * Placeholder text when no image is captured
+   */
+  @Prop() placeholder?: string = 'No image captured';
+
+  /**
+   * Accept attribute for file type validation
+   */
+  @Prop() accept?: string = 'image/*';
+
+  /**
+   * Form validation message
+   */
+  @Prop() validationMessage?: string;
+
+  /**
+   * Auto-focus the camera when component loads
+   */
+  @Prop() autoFocus?: boolean = false;
+
+  /**
+   * Tab order for keyboard navigation
+   */
+  @Prop() tabOrder?: number;
+
+  /**
+   * ARIA label for accessibility
+   */
+  @Prop() accessibilityLabel?: string = 'Webcam photo capture input';
+
+  /**
+   * ARIA description for accessibility
+   */
+  @Prop() ariaDescribedby?: string;
+
+  // Custom validation function (optional)
+  @Prop() customValidation?: (value: string) => boolean;
+
+  /**
+   * Width of the video element in pixels
+   */
+  @Prop({ reflect: true, mutable: true }) width?: number = 460;
+
+  /**
+   * Height of the video element in pixels
+   */
+  @Prop({ reflect: true, mutable: true }) height?: number = 460;
+
+  /**
+   * Camera facing mode: front or back camera
+   */
+  @Prop({ mutable: true, reflect: true }) facingMode?: CameraDirection = CameraDirection.Front;
+
+  /**
+   * Show camera control buttons (flip, capture, etc.)
+   */
+  @Prop() showControls?: boolean = true;
+
+  /**
+   * Show action buttons (capture and flip camera buttons)
+   */
+  @Prop() showActionButtons?: boolean = true;
 
   /**
    * Auto-start camera when component loads
    */
-  @Prop() autoStart?: boolean = true
+  @Prop() autoStart?: boolean = true;
 
   /**
    * Image quality for captured photos (0.1 to 1.0)
    */
-  @Prop() imageQuality?: number = 0.85
+  @Prop() imageQuality?: number = 0.85;
 
   /**
-   * Enable flash effect when taking picture
+   * Maximum file size in bytes (0 = no limit)
    */
-  @Prop() flashEffect?: boolean = true
+  @Prop() maxFileSize?: number = 0;
 
   /**
-   * Capture button text
+   * Enable flash effect animation when taking picture
    */
-  @Prop() captureButtonText?: string = '📸'
+  @Prop() flashEffect?: boolean = true;
 
   /**
-   * Flip camera button text
+   * Text for the capture button
    */
-  @Prop() flipButtonText?: string = '🔄'
+  @Prop() captureButtonText?: string = '';
 
   /**
-   * you can pass a function and override the canvas.drawImage function so you
-   * can change the image adding filters or any kind of magin in your image
-   * 
-   * you just need to crear a function with all canvas.-drawImage arguments
-   * 
-   * here you have the list of vars you get: videoElement, left, top, imgSize, imgSize, 0,0, canvas.width, canvas.height
+   * Text for the flip camera button
    */
-  @Prop() drawImageCb?: Function = null
+  @Prop() flipButtonText?: string = '';
 
   /**
-   * Start the camera
+   * Custom canvas drawing function for image processing
+   * Override to add filters or effects to captured images
+   */
+  @Prop() drawImageCb?: Function = null;
+
+  /**
+   * Start the camera with error handling
    */
   @Method()
   async startCamera(): Promise<void> {
+    if (this.isDestroyed) return;
+
     try {
       this.cameraState = { status: 'loading' };
-      await camera.initCamera(this.el, this.facingMode, this.drawImageCb);
-      this.cameraState = { status: 'ready' };
-      this.cameraStarted.emit();
+
+      // Crear instancia única para este componente si no existe
+      if (!this.cameraInstance) {
+        this.cameraInstance = CameraInstanceManager.createInstance(this.componentId);
+      }
+
+      await this.cameraInstance.initCamera(this.el, this.facingMode, this.drawImageCb);
+
+      if (!this.isDestroyed) {
+        this.cameraState = { status: 'ready' };
+        this.cameraStarted.emit();
+      }
     } catch (error) {
+      if (this.isDestroyed) return;
+
       const webcamError: WebcamError = {
         type: this.getErrorType(error),
-        message: error.message || 'Unknown camera error'
+        message: error.message || 'Unknown camera error',
+        details: error
       };
+
       this.cameraState = { status: 'error', error: webcamError };
       this.cameraError.emit(webcamError);
       throw error;
@@ -101,12 +202,18 @@ export class InputFileFromWebcam {
   }
 
   /**
-   * Stop the camera
+   * Stop the camera and clean up resources
    */
   @Method()
   async stopCamera(): Promise<void> {
-    camera.resetCamera();
+    this.isDestroyed = true;
+
+    if (this.cameraInstance) {
+      this.cameraInstance.resetCamera();
+    }
+
     this.cameraState = { status: 'inactive' };
+
     // Only emit if component is still connected
     if (this.el.isConnected) {
       this.cameraStopped.emit();
@@ -114,44 +221,200 @@ export class InputFileFromWebcam {
   }
 
   /**
-   * Take a picture
-   * @returns a blob with the image
+   * Take a picture with flash effect and error handling
    */
   @Method()
   async takePic(): Promise<Blob> {
+    if (this.isDestroyed || this.disabled || this.readonly) {
+      throw new Error('Cannot take picture: component is disabled or destroyed');
+    }
+
     try {
       this.cameraState = { ...this.cameraState, status: 'capturing' };
-      
+
       if (this.flashEffect) {
         this.showFlashEffect();
       }
-      
-      const pic = await camera.takePicture(this.imageQuality);
-      this.cameraState = { ...this.cameraState, status: 'ready' };
-      this.pictureTaken.emit(pic);
+
+      if (!this.cameraInstance) {
+        throw new Error('Camera not initialized');
+      }
+
+      const pic = await this.cameraInstance.takePicture(this.imageQuality);
+
+      if (!this.isDestroyed) {
+        // Validate file size if maxFileSize is set
+        if (this.maxFileSize > 0 && pic.size > this.maxFileSize) {
+          throw new Error(`File size (${(pic.size / 1024).toFixed(1)}KB) exceeds maximum allowed size (${(this.maxFileSize / 1024).toFixed(1)}KB)`);
+        }
+
+        this.cameraState = { ...this.cameraState, status: 'ready' };
+
+        // Convert blob to base64 for form value
+        const base64 = await this.blobToBase64(pic);
+        const oldValue = this.value;
+        this.value = base64;
+
+        // Validate
+        if (!this.validateInput()) {
+          return pic;
+        }
+
+        this.pictureTaken.emit(pic);
+
+        // Emit standard form events
+        this.inputChange.emit();
+
+        if (oldValue !== base64) {
+          this.valueChange.emit();
+        }
+      }
+
       return pic;
     } catch (error) {
-      this.cameraState = { ...this.cameraState, status: 'ready' };
+      if (!this.isDestroyed) {
+        this.cameraState = { ...this.cameraState, status: 'ready' };
+      }
       throw error;
     }
   }
 
   /**
-   * Reset camera
+   * Convert blob to base64 data URL
+   */
+  private blobToBase64(blob: Blob): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  /**
+   * Validate captured image against form constraints
+   */
+  private validateInput(): boolean {
+    // Required validation
+    if (this.required && (!this.value || this.value.trim() === '')) {
+      this.setCustomValidity('An image is required');
+      return false;
+    }
+
+    // File type validation
+    if (this.accept && this.value) {
+      const mimeType = this.value.split(';')[0].split(':')[1];
+      const acceptTypes = this.accept.split(',').map(t => t.trim());
+      const isValid = acceptTypes.some(acceptType => {
+        if (acceptType === 'image/*') return mimeType.startsWith('image/');
+        return mimeType === acceptType;
+      });
+
+      if (!isValid) {
+        this.setCustomValidity(this.validationMessage || 'Invalid file type');
+        return false;
+      }
+    }
+
+    this.setCustomValidity('');
+    return true;
+  }
+
+  /**
+   * Set custom validity message
+   */
+  private setCustomValidity(message: string): void {
+    if (message) {
+      this.validationFailed.emit();
+    }
+  }
+
+  /**
+   * Form association methods
+   */
+
+  /**
+   * Get form value for form submission (base64 data URL)
+   */
+  @Method()
+  async getFormValue(): Promise<string> {
+    return this.value || '';
+  }
+
+  /**
+   * Set form value programmatically
+   */
+  @Method()
+  async setFormValue(value: string): Promise<void> {
+    this.value = value;
+  }
+
+  /**
+   * Check validity of current value
+   */
+  @Method()
+  async checkValidity(): Promise<boolean> {
+    return this.validateInput();
+  }
+
+  /**
+   * Focus the camera (start camera)
+   */
+  @Method()
+  async setFocus(): Promise<void> {
+    if (!this.disabled) {
+      await this.startCamera();
+      this.focusGained.emit();
+    }
+  }
+
+  /**
+   * Blur the camera (stop camera)
+   */
+  @Method()
+  async setBlur(): Promise<void> {
+    await this.stopCamera();
+    this.focusLost.emit();
+  }
+
+  /**
+   * Reset camera by stopping and restarting
    */
   @Method()
   async resetCamera(): Promise<void> {
     await this.stopCamera();
-    if (this.autoStart) {
+    if (this.autoStart && !this.isDestroyed) {
+      this.isDestroyed = false;
       await this.startCamera();
     }
   }
 
   /**
-   * Toogle webcam, for example in mobile show front or back camera
+   * Force release camera (useful when component is hidden in modal)
    */
   @Method()
-  async toggleCamera(): Promise<void>{
+  async releaseCamera(): Promise<void> {
+    if (this.cameraInstance) {
+      this.cameraInstance.resetCamera();
+    }
+    this.cameraState = { status: 'inactive' };
+  }
+
+  /**
+   * Request camera access (useful when component becomes visible from modal)
+   */
+  @Method()
+  async requestCamera(): Promise<void> {
+    if (!this.disabled && !this.isDestroyed) {
+      await this.startCamera();
+    }
+  }
+
+  /**
+   * Toggle between front and back camera
+   */
+  @Method()
+  async toggleCamera(): Promise<void> {
     await this.__toogleFacingMode();
   }
 
@@ -165,6 +428,35 @@ export class InputFileFromWebcam {
     cancelable: false,
     bubbles: true,
   }) pictureTaken: EventEmitter<Blob>;
+
+  /**
+   * Standard form input events
+   */
+
+  /**
+   * Standard input event when value changes
+   */
+  @Event() inputChange: EventEmitter<Event>;
+
+  /**
+   * Standard change event when value is committed
+   */
+  @Event() valueChange: EventEmitter<Event>;
+
+  /**
+   * Standard focus event
+   */
+  @Event() focusGained: EventEmitter<FocusEvent>;
+
+  /**
+   * Standard blur event
+   */
+  @Event() focusLost: EventEmitter<FocusEvent>;
+
+  /**
+   * Standard invalid event for form validation
+   */
+  @Event() validationFailed: EventEmitter<Event>;
 
   /**
    * Event emitted when facing mode changes
@@ -209,16 +501,13 @@ export class InputFileFromWebcam {
 
 
   @Listen('click')
-  onClickHandler() {
-    if (this.cameraState.status === 'ready') {
-      this.takePic();
-    }
-  }
-
-  @Watch('facingMode')
-  async onFacingModeChange() {
-    if (this.cameraState.status === 'ready') {
-      await this.resetCamera();
+  onClickHandler(event: Event) {
+    // Solo tomar foto si se hace click directamente en el canvas/host, no en los botones
+    const target = event.target as HTMLElement;
+    if (target === this.el || target.tagName === 'CANVAS') {
+      if (this.cameraState.status === 'ready') {
+        this.takePic();
+      }
     }
   }
 
@@ -263,7 +552,8 @@ export class InputFileFromWebcam {
   /**
    * Handle capture button click
    */
-  private async handleCaptureClick() {
+  private async handleCaptureClick(event: Event) {
+    event.stopPropagation();
     if (this.cameraState.status === 'ready') {
       await this.takePic();
     }
@@ -272,7 +562,8 @@ export class InputFileFromWebcam {
   /**
    * Handle flip button click
    */
-  private async handleFlipClick() {
+  private async handleFlipClick(event: Event) {
+    event.stopPropagation();
     await this.__toogleFacingMode();
   }
 
@@ -283,13 +574,44 @@ export class InputFileFromWebcam {
     await this.startCamera();
   }
 
- 
+  /**
+   * Handle visibility change (tab focus/blur)
+   */
+  private async handleVisibilityChange() {
+    if (document.hidden) {
+      // Tab is hidden or not focused
+      if (this.cameraState.status === 'ready' || this.cameraState.status === 'capturing') {
+        this.wasActiveBeforeHidden = true;
+        await this.stopCamera();
+      }
+    } else {
+      // Tab is visible and focused
+      if (this.wasActiveBeforeHidden && this.cameraState.status === 'inactive') {
+        this.wasActiveBeforeHidden = false;
+        setTimeout(async () => {
+          try {
+            await this.startCamera();
+          } catch (error) {
+            console.warn('Failed to restart camera after visibility change:', error);
+          }
+        }, 100);
+      }
+    }
+  }
+
+
 
   componentWillLoad() {
     this.isFlipped = this.facingMode === CameraDirection.Front;
+
+    // Generar ID único para este componente
+    this.componentId = `webcam-${Math.random().toString(36).substr(2, 9)}-${Date.now()}`;
   }
-  
+
   async componentDidLoad() {
+    // Add visibility change listener
+    document.addEventListener('visibilitychange', this.visibilityChangeHandler);
+
     // Auto-start moved to componentWillLoad to avoid state change during componentDidLoad
     // The camera will be started after component is fully loaded if autoStart is true
     if (this.autoStart) {
@@ -305,10 +627,20 @@ export class InputFileFromWebcam {
   }
 
   async disconnectedCallback() {
+    // Remove visibility change listener
+    document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+
     // Prevent camera operations when component is disconnecting
     if (this.cameraState.status !== 'inactive') {
-      camera.resetCamera();
+      if (this.cameraInstance) {
+        this.cameraInstance.resetCamera();
+      }
       this.cameraState = { status: 'inactive' };
+    }
+
+    // Limpiar instancia del manager
+    if (this.componentId) {
+      CameraInstanceManager.removeInstance(this.componentId);
     }
   }
 
@@ -384,7 +716,7 @@ export class InputFileFromWebcam {
    * Render camera controls
    */
   private renderControls() {
-    if (!this.showControls || (this.cameraState.status !== 'ready' && this.cameraState.status !== 'capturing')) {
+    if (!this.showControls || !this.showActionButtons || (this.cameraState.status !== 'ready' && this.cameraState.status !== 'capturing')) {
       return null;
     }
 
@@ -392,21 +724,33 @@ export class InputFileFromWebcam {
 
     return (
       <div class="camera-controls">
-        <button 
-          class="control-button flip-button" 
-          onClick={() => this.handleFlipClick()}
+        <button
+          class="control-button flip-button"
+          onClick={(e) => this.handleFlipClick(e)}
           title="Cambiar cámara"
           disabled={isCapturing}
         >
-          {this.flipButtonText}
+          <svg class="flip-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16 1l4 4h-3v11h-2V5h-3l4-4zm-6 3a7 7 0 0 1 7 7 7 7 0 0 1-7 7 7 7 0 0 1-7-7h2a5 5 0 0 0 5 5 5 5 0 0 0 5-5 5 5 0 0 0-5-5V1.7A7.1 7.1 0 0 1 17 8v2h-2V8a5 5 0 0 0-5-5z"/>
+          </svg>
         </button>
-        <button 
-          class="control-button capture-button" 
-          onClick={() => this.handleCaptureClick()}
+        <button
+          class="control-button capture-button"
+          onClick={(e) => this.handleCaptureClick(e)}
           title="Tomar foto"
           disabled={isCapturing}
         >
-          {isCapturing ? '⏳' : this.captureButtonText}
+          {isCapturing ? (
+            <svg class="capture-icon loading" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M12 1v6l-1.5-1.5M12 1v6l1.5-1.5M23 12h-6l1.5-1.5M23 12h-6l1.5 1.5M12 23v-6l1.5 1.5M12 23v-6l-1.5 1.5M1 12h6l-1.5 1.5M1 12h6l-1.5-1.5"/>
+            </svg>
+          ) : (
+            <svg class="capture-icon" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+            </svg>
+          )}
         </button>
       </div>
     );
@@ -423,21 +767,21 @@ export class InputFileFromWebcam {
     };
 
     return (
-      <Host 
+      <Host
         style={{height: this.height+"px", width: this.width+"px"}}
         class={hostClasses}
       >
         <slot name='before'></slot>
-        
+
         {this.cameraState.status === 'loading' && this.renderLoadingState()}
         {this.cameraState.status === 'error' && this.renderErrorState()}
         {this.cameraState.status === 'inactive' && this.renderInactiveState()}
-        
+
         <slot></slot>
-        
+
         {this.flashEffect && <div class="flash-effect"></div>}
         {this.renderControls()}
-        
+
         <slot name='after'></slot>
       </Host>
     );

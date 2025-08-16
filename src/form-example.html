@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0" />
+  <title>AV-Inputs Form Integration Example</title>
+  <script type="module" src="/build/av-inputs.esm.js"></script>
+  <script nomodule src="/build/av-inputs.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1, h2 {
+      color: #333;
+    }
+
+    .form-section {
+      margin-bottom: 40px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #555;
+    }
+
+    .help-text {
+      font-size: 0.875rem;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="email"] {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    input:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    input:invalid {
+      border-color: #dc3545;
+    }
+
+    .submit-btn {
+      background: #007bff;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+
+    .submit-btn:hover {
+      background: #0056b3;
+    }
+
+    .reset-btn {
+      background: #6c757d;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .reset-btn:hover {
+      background: #545b62;
+    }
+
+    .error-message {
+      color: #dc3545;
+      font-size: 0.875rem;
+      margin-top: 5px;
+    }
+
+    .success-message {
+      color: #28a745;
+      font-size: 0.875rem;
+      margin-top: 5px;
+    }
+
+    .form-data {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      font-family: monospace;
+      font-size: 0.875rem;
+      margin-top: 20px;
+      border: 1px solid #dee2e6;
+    }
+
+    /* Component styling */
+    input-barcode,
+    input-scan-reader,
+    input-file-from-webcam,
+    input-face-api-webcam {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      min-height: 200px;
+    }
+
+    input-barcode:focus,
+    input-scan-reader:focus,
+    input-file-from-webcam:focus,
+    input-face-api-webcam:focus {
+      border-color: #007bff;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+
+    input-barcode:invalid,
+    input-scan-reader:invalid,
+    input-file-from-webcam:invalid,
+    input-face-api-webcam:invalid {
+      border-color: #dc3545;
+    }
+
+    input-barcode[disabled],
+    input-scan-reader[disabled],
+    input-file-from-webcam[disabled],
+    input-face-api-webcam[disabled] {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AV-Inputs Form Integration Examples</h1>
+    <p>This page demonstrates how to use AV-Inputs components as standard HTML form inputs with validation, events, and form submission.</p>
+
+    <!-- Employee Check-in Form -->
+    <div class="form-section">
+      <h2>Employee Check-in Form</h2>
+      <form id="checkinForm">
+        <div class="form-group">
+          <label for="employeeId">Employee ID</label>
+          <input-scan-reader
+            id="employeeId"
+            name="employeeId"
+            required
+            pattern="[A-Z]{2}[0-9]{6}"
+            minlength="8"
+            maxlength="8"
+            placeholder="Scan employee badge or enter manually"
+            aria-describedby="employee-help"
+            validation-message="Employee ID must be 2 letters followed by 6 numbers (e.g., AB123456)">
+          </input-scan-reader>
+          <div id="employee-help" class="help-text">Scan your employee badge or enter your ID manually</div>
+        </div>
+
+        <div class="form-group">
+          <label for="employeePhoto">Current Photo</label>
+          <input-file-from-webcam
+            id="employeePhoto"
+            name="employeePhoto"
+            required
+            accept="image/jpeg,image/png"
+            placeholder="Take a current photo"
+            aria-describedby="photo-help">
+          </input-file-from-webcam>
+          <div id="photo-help" class="help-text">Take a current photo for attendance verification</div>
+        </div>
+
+        <div class="form-group">
+          <label for="location">Location</label>
+          <input type="text" id="location" name="location" required placeholder="Enter work location">
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="submit-btn">Check In</button>
+          <button type="reset" class="reset-btn">Reset</button>
+        </div>
+
+        <div id="checkin-result" class="form-data" style="display: none;"></div>
+      </form>
+    </div>
+
+    <!-- Inventory Management Form -->
+    <div class="form-section">
+      <h2>Inventory Management Form</h2>
+      <form id="inventoryForm">
+        <div class="form-group">
+          <label for="productBarcode">Product Barcode</label>
+          <input-barcode
+            id="productBarcode"
+            name="productBarcode"
+            required
+            minlength="8"
+            maxlength="20"
+            placeholder="Scan product barcode"
+            aria-describedby="barcode-help">
+          </input-barcode>
+          <div id="barcode-help" class="help-text">Point camera at product barcode to scan automatically</div>
+        </div>
+
+        <div class="form-group">
+          <label for="quantity">Quantity</label>
+          <input type="number" id="quantity" name="quantity" required min="1" max="1000" placeholder="Enter quantity">
+        </div>
+
+        <div class="form-group">
+          <label for="warehouse">Warehouse Location</label>
+          <input type="text" id="warehouse" name="warehouse" required placeholder="Enter warehouse location">
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="submit-btn">Update Inventory</button>
+          <button type="reset" class="reset-btn">Reset</button>
+        </div>
+
+        <div id="inventory-result" class="form-data" style="display: none;"></div>
+      </form>
+    </div>
+
+    <!-- Security Access Form -->
+    <div class="form-section">
+      <h2>Security Access Form</h2>
+      <form id="securityForm">
+        <div class="form-group">
+          <label for="accessCard">Access Card</label>
+          <input-scan-reader
+            id="accessCard"
+            name="accessCard"
+            required
+            minlength="6"
+            placeholder="Scan access card"
+            aria-describedby="card-help">
+          </input-scan-reader>
+          <div id="card-help" class="help-text">Scan your access card for security verification</div>
+        </div>
+
+        <div class="form-group">
+          <label for="faceVerification">Face Verification</label>
+          <input-face-api-webcam
+            id="faceVerification"
+            name="faceVerification"
+            required
+            capture-threshold="0.8"
+            auto-capture="true"
+            placeholder="Face recognition in progress"
+            aria-describedby="face-help">
+          </input-face-api-webcam>
+          <div id="face-help" class="help-text">Look at the camera for face recognition verification</div>
+        </div>
+
+        <div class="form-group">
+          <label for="accessReason">Access Reason</label>
+          <input type="text" id="accessReason" name="accessReason" required placeholder="Enter reason for access">
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="submit-btn">Request Access</button>
+          <button type="reset" class="reset-btn">Reset</button>
+        </div>
+
+        <div id="security-result" class="form-data" style="display: none;"></div>
+      </form>
+    </div>
+
+    <!-- Validation Test Form -->
+    <div class="form-section">
+      <h2>Validation Test Form</h2>
+      <form id="validationForm">
+        <div class="form-group">
+          <label for="requiredBarcode">Required Barcode (EAN-13 format)</label>
+          <input-barcode
+            id="requiredBarcode"
+            name="requiredBarcode"
+            required
+            pattern="[0-9]{13}"
+            minlength="13"
+            maxlength="13"
+            placeholder="Scan 13-digit barcode"
+            validation-message="Please scan a valid 13-digit EAN-13 barcode">
+          </input-barcode>
+        </div>
+
+        <div class="form-group">
+          <label for="optionalPhoto">Optional Photo (JPEG only)</label>
+          <input-file-from-webcam
+            id="optionalPhoto"
+            name="optionalPhoto"
+            accept="image/jpeg"
+            placeholder="Take optional JPEG photo">
+          </input-file-from-webcam>
+        </div>
+
+        <div class="form-group">
+          <button type="submit" class="submit-btn">Validate</button>
+          <button type="reset" class="reset-btn">Reset</button>
+          <button type="button" id="checkValidity" class="submit-btn">Check Validity</button>
+        </div>
+
+        <div id="validation-result" class="form-data" style="display: none;"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Initialize forms
+    document.addEventListener('DOMContentLoaded', function() {
+
+      // Employee Check-in Form
+      const checkinForm = document.getElementById('checkinForm');
+      checkinForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(checkinForm);
+        const result = {
+          employeeId: formData.get('employeeId'),
+          employeePhoto: formData.get('employeePhoto') ? 'Base64 image data captured' : null,
+          location: formData.get('location'),
+          timestamp: new Date().toISOString()
+        };
+
+        document.getElementById('checkin-result').style.display = 'block';
+        document.getElementById('checkin-result').textContent = JSON.stringify(result, null, 2);
+      });
+
+      // Inventory Management Form
+      const inventoryForm = document.getElementById('inventoryForm');
+      inventoryForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(inventoryForm);
+        const result = {
+          productBarcode: formData.get('productBarcode'),
+          quantity: parseInt(formData.get('quantity')),
+          warehouse: formData.get('warehouse'),
+          timestamp: new Date().toISOString()
+        };
+
+        document.getElementById('inventory-result').style.display = 'block';
+        document.getElementById('inventory-result').textContent = JSON.stringify(result, null, 2);
+      });
+
+      // Security Access Form
+      const securityForm = document.getElementById('securityForm');
+      securityForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(securityForm);
+        let faceData = null;
+        try {
+          faceData = JSON.parse(formData.get('faceVerification') || '{}');
+        } catch (e) {
+          faceData = { error: 'Invalid face data' };
+        }
+
+        const result = {
+          accessCard: formData.get('accessCard'),
+          faceVerification: faceData,
+          accessReason: formData.get('accessReason'),
+          timestamp: new Date().toISOString()
+        };
+
+        document.getElementById('security-result').style.display = 'block';
+        document.getElementById('security-result').textContent = JSON.stringify(result, null, 2);
+      });
+
+      // Validation Test Form
+      const validationForm = document.getElementById('validationForm');
+      validationForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // Check validity of all components
+        const components = validationForm.querySelectorAll('input-barcode, input-file-from-webcam');
+        let isFormValid = true;
+        const validationResults = {};
+
+        for (const component of components) {
+          const isValid = await component.checkValidity();
+          const message = await component.getValidationMessage();
+          validationResults[component.name] = {
+            valid: isValid,
+            message: message || 'Valid'
+          };
+          if (!isValid) isFormValid = false;
+        }
+
+        const formData = new FormData(validationForm);
+        const result = {
+          formValid: isFormValid,
+          validationResults: validationResults,
+          data: {
+            requiredBarcode: formData.get('requiredBarcode'),
+            optionalPhoto: formData.get('optionalPhoto') ? 'Photo captured' : null
+          }
+        };
+
+        document.getElementById('validation-result').style.display = 'block';
+        document.getElementById('validation-result').textContent = JSON.stringify(result, null, 2);
+      });
+
+      // Check validity button
+      document.getElementById('checkValidity').addEventListener('click', async function() {
+        const components = validationForm.querySelectorAll('input-barcode, input-file-from-webcam');
+        const results = {};
+
+        for (const component of components) {
+          const isValid = await component.checkValidity();
+          const message = await component.getValidationMessage();
+          results[component.name] = {
+            valid: isValid,
+            message: message || 'Valid',
+            value: await component.getFormValue()
+          };
+        }
+
+        document.getElementById('validation-result').style.display = 'block';
+        document.getElementById('validation-result').textContent = 'Validation Check:\n' + JSON.stringify(results, null, 2);
+      });
+
+      // Add event listeners for input events
+      document.querySelectorAll('input-barcode, input-scan-reader, input-file-from-webcam, input-face-api-webcam').forEach(component => {
+        component.addEventListener('inputChange', function(e) {
+          console.log('Input event:', e.target.name, 'value:', e.target.value);
+        });
+
+        component.addEventListener('valueChange', function(e) {
+          console.log('Change event:', e.target.name, 'value:', e.target.value);
+        });
+
+        component.addEventListener('validationFailed', function(e) {
+          console.log('Invalid event:', e.target.name);
+
+          // Show custom validation message
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'error-message';
+          errorDiv.textContent = e.target.validationMessage || 'This field is invalid';
+
+          // Remove any existing error message
+          const existingError = e.target.parentNode.querySelector('.error-message');
+          if (existingError) {
+            existingError.remove();
+          }
+
+          e.target.parentNode.appendChild(errorDiv);
+        });
+
+        component.addEventListener('focusGained', function(e) {
+          console.log('Focus event:', e.target.name);
+        });
+
+        component.addEventListener('focusLost', function(e) {
+          console.log('Blur event:', e.target.name);
+        });
+      });      console.log('AV-Inputs Form Integration Demo loaded');
+      console.log('Open browser console to see form events in real-time');
+    });
+  </script>
+</body>
+</html>
