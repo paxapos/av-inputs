@@ -1,4 +1,12 @@
-# Changelog - AV-Inputs Professional Optimization
+# Changelog
+
+## [1.0.13] - 2025-08-17
+
+### Changes
+- fix: Add mutable properties to props across components to eliminate prop mutability warnings and improve test reliability
+- Merge branch 'main' of github.com:paxapos/av-inputs
+- feat: Add multiple camera modal test page and integrate webcam functionalities
+
 
 All notable changes to the AV-Inputs library will be documented in this file.
 
