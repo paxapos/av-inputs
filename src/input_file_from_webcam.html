@@ -9,7 +9,6 @@
     <script nomodule src="/build/av-inputs.js"></script>
   </head>
   <body>
-
     <h1>Elements for Input Data</h1>
 
     <ul>
@@ -18,50 +17,455 @@
       <li><a href="/input_scan_reader.html">Input Scan on ENTER</a></li>
       <li><a href="/input_barcode.html">Input Scan Bar Code</a></li>
     </ul>
-   
-    <hr />
 
+    <hr />
 
     <h1>Simple webcam viewer</h1>
 
-
     <code>
-      <!-- escribir codigo HTML usando un ejemploi de como escribiur un <div> que se muestre en la pagina web como string-->
-      input-file-from-webcam id="faceapi-input" /input-file-from-webcam
+      &lt;input-file-from-webcam id="my-input"&gt;&lt;/input-file-from-webcam&gt;
     </code>
 
-    <button id="fm_change">Change facing mode</button>  
-      <br>
+    <hr />
+
+    <!-- Test Controls Section -->
+    <div class="test-controls">
+      <h2>Test Controls</h2>
+
+      <div class="control-group">
+        <h3>Camera Controls</h3>
+        <button id="btn-start-camera">Start Camera</button>
+        <button id="btn-stop-camera">Stop Camera</button>
+        <button id="btn-toggle-camera">Toggle Camera (Front/Back)</button>
+        <button id="btn-toggle-facing-mode">Toggle Facing Mode</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Picture Actions</h3>
+        <button id="btn-take-pic">Take Picture</button>
+        <button id="btn-take-pic-manual">Take Picture (Manual Click)</button>
+        <button id="btn-retake">Retake Picture</button>
+        <button id="btn-clear">Clear Picture</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Component State</h3>
+        <button id="btn-get-state">Get Component State</button>
+        <button id="btn-is-active">Check if Active</button>
+        <button id="btn-has-picture">Check if Has Picture</button>
+        <button id="btn-get-facing-mode">Get Current Facing Mode</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Configuration</h3>
+        <button id="btn-enable">Enable Component</button>
+        <button id="btn-disable">Disable Component</button>
+        <button id="btn-set-quality-high">Set High Quality</button>
+        <button id="btn-set-quality-low">Set Low Quality</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Advanced Camera Controls</h3>
+        <button id="btn-release-camera">Release Camera</button>
+        <button id="btn-request-camera">Request Camera</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Reset & Reload</h3>
+        <button id="btn-reset">Reset Component</button>
+        <button id="btn-reload">Reload Component</button>
+      </div>
+    </div>
+
+    <hr />
 
     <input-file-from-webcam id="my-input"></input-file-from-webcam>
 
+    <!-- Results Display -->
+    <div class="results">
+      <h3>Results & Logs</h3>
+      <div id="console-output"></div>
+      <div id="picture-preview"></div>
+    </div>
 
     <script>
       const elInputFileFromWebcam = document.getElementById("my-input");
-      if ( elInputFileFromWebcam ) {
+      const consoleOutput = document.getElementById("console-output");
+      const picturePreview = document.getElementById("picture-preview");
 
-        elInputFileFromWebcam.addEventListener("click", (ev) => {
-  
-          elInputFileFromWebcam.takePic().then( (pic) => console.info("I clicked and get this picture", pic))
-        });
-  
-  
-        elInputFileFromWebcam.addEventListener("pictureTaken", (pic) => console.info("here is my pic from callback", pic))
-  
-        elInputFileFromWebcam.addEventListener("facingModeChanged", (fm) => console.info("here is your facing Mode now", fm))
-  
-  
-        document.getElementById("fm_change").addEventListener("click", (e) =>  {
-          elInputFileFromWebcam.toggleCamera();
-        })
+      // Helper function to log messages
+      function logMessage(message, data = null) {
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.className = 'log-entry';
+        logEntry.innerHTML = `<strong>${timestamp}:</strong> ${message}`;
+        if (data) {
+          logEntry.innerHTML += `<br><pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+        consoleOutput.appendChild(logEntry);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        console.info(message, data);
       }
 
-   
+      // Helper function to display picture
+      function displayPicture(pictureData) {
+        if (pictureData && pictureData.detail) {
+          const img = document.createElement('img');
+          img.src = pictureData.detail;
+          img.style.maxWidth = '300px';
+          img.style.border = '2px solid #ccc';
+          picturePreview.innerHTML = '';
+          picturePreview.appendChild(img);
+        }
+      }
+
+      if (elInputFileFromWebcam) {
+        // Original event listeners
+        elInputFileFromWebcam.addEventListener("click", (ev) => {
+          elInputFileFromWebcam.takePic().then((pic) => {
+            logMessage("Picture taken via click", pic);
+            displayPicture(pic);
+          }).catch((error) => {
+            logMessage("Error taking picture via click", error);
+          });
+        });
+
+        elInputFileFromWebcam.addEventListener("pictureTaken", (pic) => {
+          logMessage("Picture taken event fired", pic.detail);
+          displayPicture(pic);
+        });
+
+        elInputFileFromWebcam.addEventListener("facingModeChanged", (fm) => {
+          logMessage("Facing mode changed", fm.detail);
+        });
+
+        // New test button event listeners
+        document.getElementById("btn-start-camera")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.startCamera) {
+              elInputFileFromWebcam.startCamera();
+              logMessage("Camera started");
+            } else {
+              logMessage("startCamera method not available");
+            }
+          } catch (error) {
+            logMessage("Error starting camera", error);
+          }
+        });
+
+        document.getElementById("btn-stop-camera")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.stopCamera) {
+              elInputFileFromWebcam.stopCamera();
+              logMessage("Camera stopped");
+            } else {
+              logMessage("stopCamera method not available");
+            }
+          } catch (error) {
+            logMessage("Error stopping camera", error);
+          }
+        });
+
+        document.getElementById("btn-toggle-camera")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.toggleCamera) {
+              elInputFileFromWebcam.toggleCamera();
+              logMessage("Camera toggled");
+            } else {
+              logMessage("toggleCamera method not available");
+            }
+          } catch (error) {
+            logMessage("Error toggling camera", error);
+          }
+        });
+
+        document.getElementById("btn-toggle-facing-mode")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.toggleFacingMode) {
+              elInputFileFromWebcam.toggleFacingMode();
+              logMessage("Facing mode toggled");
+            } else {
+              logMessage("toggleFacingMode method not available");
+            }
+          } catch (error) {
+            logMessage("Error toggling facing mode", error);
+          }
+        });
+
+        document.getElementById("btn-take-pic")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.takePic) {
+              elInputFileFromWebcam.takePic().then((pic) => {
+                logMessage("Picture taken programmatically", pic);
+                displayPicture({ detail: pic });
+              }).catch((error) => {
+                logMessage("Error taking picture", error);
+              });
+            } else {
+              logMessage("takePic method not available");
+            }
+          } catch (error) {
+            logMessage("Error in takePic", error);
+          }
+        });
+
+        document.getElementById("btn-take-pic-manual")?.addEventListener("click", () => {
+          elInputFileFromWebcam.click();
+          logMessage("Manual click triggered");
+        });
+
+        document.getElementById("btn-retake")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.retake) {
+              elInputFileFromWebcam.retake();
+              logMessage("Picture retaken");
+            } else {
+              logMessage("retake method not available");
+            }
+          } catch (error) {
+            logMessage("Error retaking picture", error);
+          }
+        });
+
+        document.getElementById("btn-clear")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.clear) {
+              elInputFileFromWebcam.clear();
+              logMessage("Picture cleared");
+              picturePreview.innerHTML = '';
+            } else {
+              logMessage("clear method not available");
+            }
+          } catch (error) {
+            logMessage("Error clearing picture", error);
+          }
+        });
+
+        document.getElementById("btn-get-state")?.addEventListener("click", () => {
+          try {
+            const state = {
+              disabled: elInputFileFromWebcam.disabled,
+              facingMode: elInputFileFromWebcam.facingMode,
+              quality: elInputFileFromWebcam.quality,
+              active: elInputFileFromWebcam.active,
+              hasPicture: elInputFileFromWebcam.hasPicture
+            };
+            logMessage("Component state", state);
+          } catch (error) {
+            logMessage("Error getting state", error);
+          }
+        });
+
+        document.getElementById("btn-is-active")?.addEventListener("click", () => {
+          try {
+            const isActive = elInputFileFromWebcam.active || elInputFileFromWebcam.isActive;
+            logMessage("Is component active", isActive);
+          } catch (error) {
+            logMessage("Error checking if active", error);
+          }
+        });
+
+        document.getElementById("btn-has-picture")?.addEventListener("click", () => {
+          try {
+            const hasPicture = elInputFileFromWebcam.hasPicture || elInputFileFromWebcam.hasPhoto;
+            logMessage("Has picture", hasPicture);
+          } catch (error) {
+            logMessage("Error checking if has picture", error);
+          }
+        });
+
+        document.getElementById("btn-get-facing-mode")?.addEventListener("click", () => {
+          try {
+            const facingMode = elInputFileFromWebcam.facingMode;
+            logMessage("Current facing mode", facingMode);
+          } catch (error) {
+            logMessage("Error getting facing mode", error);
+          }
+        });
+
+        document.getElementById("btn-enable")?.addEventListener("click", () => {
+          try {
+            elInputFileFromWebcam.disabled = false;
+            logMessage("Component enabled");
+          } catch (error) {
+            logMessage("Error enabling component", error);
+          }
+        });
+
+        document.getElementById("btn-disable")?.addEventListener("click", () => {
+          try {
+            elInputFileFromWebcam.disabled = true;
+            logMessage("Component disabled");
+          } catch (error) {
+            logMessage("Error disabling component", error);
+          }
+        });
+
+        document.getElementById("btn-set-quality-high")?.addEventListener("click", () => {
+          try {
+            elInputFileFromWebcam.quality = 'high';
+            logMessage("Quality set to high");
+          } catch (error) {
+            logMessage("Error setting quality to high", error);
+          }
+        });
+
+        document.getElementById("btn-set-quality-low")?.addEventListener("click", () => {
+          try {
+            elInputFileFromWebcam.quality = 'low';
+            logMessage("Quality set to low");
+          } catch (error) {
+            logMessage("Error setting quality to low", error);
+          }
+        });
+
+        document.getElementById("btn-release-camera")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.releaseCamera) {
+              elInputFileFromWebcam.releaseCamera();
+              logMessage("Camera released");
+            } else {
+              logMessage("releaseCamera method not available");
+            }
+          } catch (error) {
+            logMessage("Error releasing camera", error);
+          }
+        });
+
+        document.getElementById("btn-request-camera")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.requestCamera) {
+              elInputFileFromWebcam.requestCamera();
+              logMessage("Camera requested");
+            } else {
+              logMessage("requestCamera method not available");
+            }
+          } catch (error) {
+            logMessage("Error requesting camera", error);
+          }
+        });
+
+        document.getElementById("btn-reset")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.resetCamera) {
+              elInputFileFromWebcam.resetCamera();
+              logMessage("Component reset");
+              picturePreview.innerHTML = '';
+            } else {
+              logMessage("resetCamera method not available");
+            }
+          } catch (error) {
+            logMessage("Error resetting component", error);
+          }
+        });
+
+        document.getElementById("btn-reload")?.addEventListener("click", () => {
+          try {
+            if (elInputFileFromWebcam.reload) {
+              elInputFileFromWebcam.reload();
+              logMessage("Component reloaded");
+            } else {
+              logMessage("reload method not available");
+            }
+          } catch (error) {
+            logMessage("Error reloading component", error);
+          }
+        });
+
+        // Log initial state
+        logMessage("Component initialized");
+      } else {
+        logMessage("Component not found!");
+      }
     </script>
 
     <style>
-      input-file-from-webcam{
+      input-file-from-webcam {
         border: 3px solid silver;
+        display: block;
+        margin: 20px 0;
+      }
+
+      .test-controls {
+        background: #f5f5f5;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+
+      .control-group {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: white;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+      }
+
+      .control-group h3 {
+        margin-top: 0;
+        color: #333;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+      }
+
+      .control-group button {
+        margin: 5px;
+        padding: 8px 12px;
+        background: #007cba;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .control-group button:hover {
+        background: #005a87;
+      }
+
+      .control-group button:active {
+        background: #004068;
+      }
+
+      .results {
+        margin: 20px 0;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 8px;
+      }
+
+      #console-output {
+        max-height: 300px;
+        overflow-y: auto;
+        background: #000;
+        color: #0f0;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 12px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+      }
+
+      .log-entry {
+        margin-bottom: 5px;
+        word-wrap: break-word;
+      }
+
+      .log-entry pre {
+        background: #222;
+        padding: 5px;
+        border-radius: 3px;
+        margin: 5px 0;
+        white-space: pre-wrap;
+      }
+
+      #picture-preview {
+        text-align: center;
+      }
+
+      #picture-preview img {
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       }
     </style>
   </body>

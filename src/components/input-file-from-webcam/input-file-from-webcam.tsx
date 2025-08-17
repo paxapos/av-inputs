@@ -206,7 +206,8 @@ export class InputFileFromWebcam {
    */
   @Method()
   async stopCamera(): Promise<void> {
-    this.isDestroyed = true;
+    // Don't mark as destroyed when manually stopping - allow restart
+    // this.isDestroyed = true;
 
     if (this.cameraInstance) {
       this.cameraInstance.resetCamera();
@@ -382,10 +383,22 @@ export class InputFileFromWebcam {
    */
   @Method()
   async resetCamera(): Promise<void> {
-    await this.stopCamera();
-    if (this.autoStart && !this.isDestroyed) {
-      this.isDestroyed = false;
-      await this.startCamera();
+    // Ensure component is not marked as destroyed for reset
+    this.isDestroyed = false;
+
+    // Stop camera first
+    if (this.cameraInstance) {
+      this.cameraInstance.resetCamera();
+    }
+    this.cameraState = { status: 'inactive' };
+
+    // Restart if autoStart is enabled or if we want to force restart
+    if (this.autoStart) {
+      try {
+        await this.startCamera();
+      } catch (error) {
+        console.warn('Failed to restart camera after reset:', error);
+      }
     }
   }
 
@@ -571,6 +584,8 @@ export class InputFileFromWebcam {
    * Handle retry button click
    */
   private async handleRetryClick() {
+    // Ensure component can be restarted
+    this.isDestroyed = false;
     await this.startCamera();
   }
 
@@ -629,6 +644,9 @@ export class InputFileFromWebcam {
   async disconnectedCallback() {
     // Remove visibility change listener
     document.removeEventListener('visibilitychange', this.visibilityChangeHandler);
+
+    // Mark as destroyed only when component is being removed from DOM
+    this.isDestroyed = true;
 
     // Prevent camera operations when component is disconnecting
     if (this.cameraState.status !== 'inactive') {
@@ -705,7 +723,10 @@ export class InputFileFromWebcam {
       <div class="camera-state inactive">
         <div class="inactive-icon">📹</div>
         <p>Cámara inactiva</p>
-        <button class="start-button" onClick={() => this.startCamera()}>
+        <button class="start-button" onClick={() => {
+          this.isDestroyed = false; // Ensure component can start
+          this.startCamera();
+        }}>
           Iniciar Cámara
         </button>
       </div>

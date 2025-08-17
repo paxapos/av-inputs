@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         node-version: [16, 18, 20]
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +41,7 @@ jobs:
         run: npm run build
 
       - name: Check TypeScript types
-        run: npx tsc --noEmit --skipLibCheck
+        run: npm run type-check
 
   build-check:
     runs-on: ubuntu-latest
@@ -66,12 +66,12 @@ jobs:
             echo "❌ Build failed: dist directory not found"
             exit 1
           fi
-          
+
           if [ ! -f "dist/index.js" ]; then
             echo "❌ Build failed: main entry point not found"
             exit 1
           fi
-          
+
           echo "✅ Build successful: all required files generated"
           ls -la dist/
 
@@ -96,7 +96,7 @@ jobs:
         run: |
           echo "📦 Bundle sizes:"
           du -h dist/* | sort -hr
-          
+
           # Check if main bundle is reasonable size (adjust as needed)
           MAIN_SIZE=$(du -k dist/av-inputs/av-inputs.esm.js | cut -f1)
           if [ $MAIN_SIZE -gt 2048 ]; then

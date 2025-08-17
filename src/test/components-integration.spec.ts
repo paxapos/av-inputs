@@ -48,11 +48,11 @@ describe('AV-Inputs Components Integration', () => {
 
       // Check basic structure
       expect(page.root).toBeTruthy();
-      
+
       // For shadow DOM components, check if the component instance exists and is properly initialized
       const component = page.rootInstance as InputScanReader;
       expect(component).toBeTruthy();
-      
+
       // Check if the component has the expected default state
       expect(component.placeholder).toBeDefined();
     });
