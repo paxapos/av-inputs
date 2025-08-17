@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.14] - 2025-08-17
+
+### Changes
+- Merge branch 'main' of github.com:paxapos/av-inputs
+- feat: Enhance webcam component functionality and improve test reliability with environment detection and auto-start prevention
+
+
 ## [1.0.13] - 2025-08-17
 
 ### Changes
