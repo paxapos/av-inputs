@@ -54,27 +54,27 @@ export class InputFileFromWebcam {
   /**
    * Whether the input is disabled
    */
-  @Prop({ reflect: true }) disabled?: boolean = false;
+  @Prop({ reflect: true, mutable: true }) disabled?: boolean = false;
 
   /**
    * Whether the input is readonly
    */
-  @Prop({ reflect: true }) readonly?: boolean = false;
+  @Prop({ reflect: true, mutable: true }) readonly?: boolean = false;
 
   /**
    * Whether the input is required for form validation
    */
-  @Prop({ reflect: true }) required?: boolean = false;
+  @Prop({ reflect: true, mutable: true }) required?: boolean = false;
 
   /**
    * Placeholder text when no image is captured
    */
-  @Prop() placeholder?: string = 'No image captured';
+  @Prop({ mutable: true }) placeholder?: string = 'No image captured';
 
   /**
    * Accept attribute for file type validation
    */
-  @Prop() accept?: string = 'image/*';
+  @Prop({ mutable: true }) accept?: string = 'image/*';
 
   /**
    * Form validation message
@@ -84,7 +84,7 @@ export class InputFileFromWebcam {
   /**
    * Auto-focus the camera when component loads
    */
-  @Prop() autoFocus?: boolean = false;
+  @Prop({ mutable: true }) autoFocus?: boolean = false;
 
   /**
    * Tab order for keyboard navigation
@@ -94,7 +94,7 @@ export class InputFileFromWebcam {
   /**
    * ARIA label for accessibility
    */
-  @Prop() accessibilityLabel?: string = 'Webcam photo capture input';
+  @Prop({ mutable: true }) accessibilityLabel?: string = 'Webcam photo capture input';
 
   /**
    * ARIA description for accessibility
@@ -122,48 +122,48 @@ export class InputFileFromWebcam {
   /**
    * Show camera control buttons (flip, capture, etc.)
    */
-  @Prop() showControls?: boolean = true;
+  @Prop({ mutable: true }) showControls?: boolean = true;
 
   /**
    * Show action buttons (capture and flip camera buttons)
    */
-  @Prop() showActionButtons?: boolean = true;
+  @Prop({ mutable: true }) showActionButtons?: boolean = true;
 
   /**
    * Auto-start camera when component loads
    */
-  @Prop() autoStart?: boolean = true;
+  @Prop({ mutable: true }) autoStart?: boolean = true;
 
   /**
    * Image quality for captured photos (0.1 to 1.0)
    */
-  @Prop() imageQuality?: number = 0.85;
+  @Prop({ mutable: true }) imageQuality?: number = 0.85;
 
   /**
    * Maximum file size in bytes (0 = no limit)
    */
-  @Prop() maxFileSize?: number = 0;
+  @Prop({ mutable: true }) maxFileSize?: number = 0;
 
   /**
    * Enable flash effect animation when taking picture
    */
-  @Prop() flashEffect?: boolean = true;
+  @Prop({ mutable: true }) flashEffect?: boolean = true;
 
   /**
    * Text for the capture button
    */
-  @Prop() captureButtonText?: string = '';
+  @Prop({ mutable: true }) captureButtonText?: string = '';
 
   /**
    * Text for the flip camera button
    */
-  @Prop() flipButtonText?: string = '';
+  @Prop({ mutable: true }) flipButtonText?: string = '';
 
   /**
    * Custom canvas drawing function for image processing
    * Override to add filters or effects to captured images
    */
-  @Prop() drawImageCb?: Function = null;
+  @Prop({ mutable: true }) drawImageCb?: Function = null;
 
   /**
    * Start the camera with error handling

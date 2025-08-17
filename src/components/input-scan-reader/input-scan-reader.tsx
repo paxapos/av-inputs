@@ -39,22 +39,22 @@ export class InputScanReader {
   /**
    * Whether the input is disabled
    */
-  @Prop({ reflect: true }) disabled?: boolean = false;
+  @Prop({ reflect: true, mutable: true }) disabled?: boolean = false;
 
   /**
    * Whether the input is readonly
    */
-  @Prop({ reflect: true }) readonly?: boolean = false;
+  @Prop({ reflect: true, mutable: true }) readonly?: boolean = false;
 
   /**
    * Whether the input is required for form validation
    */
-  @Prop({ reflect: true }) required?: boolean = false;
+  @Prop({ reflect: true, mutable: true }) required?: boolean = false;
 
   /**
    * Placeholder text when no value is present
    */
-  @Prop() placeholder?: string = 'Scanned text will appear here...';
+  @Prop({ mutable: true }) placeholder?: string = 'Scanned text will appear here...';
 
   /**
    * Pattern for input validation (regex)
@@ -79,7 +79,7 @@ export class InputScanReader {
   /**
    * Auto-focus the scanner when component loads
    */
-  @Prop() autoFocus?: boolean = true;
+  @Prop({ mutable: true }) autoFocus?: boolean = true;
 
   /**
    * Tab order for keyboard navigation
@@ -89,7 +89,7 @@ export class InputScanReader {
   /**
    * ARIA label for accessibility
    */
-  @Prop() accessibilityLabel?: string = 'Hardware barcode scanner input';
+  @Prop({ mutable: true }) accessibilityLabel?: string = 'Hardware barcode scanner input';
 
   /**
    * ARIA description for accessibility
@@ -99,22 +99,22 @@ export class InputScanReader {
   /**
    * Duration in milliseconds to show confirmation modal after successful scan
    */
-  @Prop() modalTimer?: number = 0;
+  @Prop({ mutable: true }) modalTimer?: number = 0;
 
   /**
    * Title text displayed during scanning operation
    */
-  @Prop() scanTitle?: string = 'Scanning Text';
+  @Prop({ mutable: true }) scanTitle?: string = 'Scanning Text';
 
   /**
    * Timeout duration in milliseconds before clearing incomplete input
    */
-  @Prop() inputTimeout?: number = 5000;
+  @Prop({ mutable: true }) inputTimeout?: number = 5000;
 
   /**
    * Minimum input length to consider valid scanner input
    */
-  @Prop() minInputLength?: number = 3;
+  @Prop({ mutable: true }) minInputLength?: number = 3;
 
   /**
    * Display confirmation modal with scanned text
