@@ -59,15 +59,15 @@ export declare interface InputBarcode extends Components.InputBarcode {
 
 
 @ProxyCmp({
-  inputs: ['accessibilityLabel', 'ariaDescribedby', 'autoCapture', 'autoFocus', 'autoStart', 'captureDelay', 'captureThreshold', 'customValidation', 'detectionTimer', 'disabled', 'enableDetection', 'facingMode', 'flipButtonText', 'height', 'name', 'placeholder', 'readonly', 'required', 'scoreThreshold', 'showBoundingBoxes', 'showControls', 'showLandmarks', 'startButtonText', 'stopButtonText', 'tabOrder', 'trainedModel', 'validationMessage', 'value', 'width'],
-  methods: ['stopDetection', 'startDetection', 'toggleCamera', 'initializeCamera', 'getBlobImageDescriptors', 'getFaceLandMarks', 'predictBestMatch', 'getDiagnosticInfo', 'getFormValue', 'setFormValue', 'checkValidity', 'getValidationMessage', 'setCustomValidity', 'setFocus', 'setBlur']
+  inputs: ['accessibilityLabel', 'ariaDescribedby', 'autoCapture', 'autoFocus', 'autoStart', 'captureDelay', 'captureThreshold', 'customValidation', 'detectionMode', 'detectionTimer', 'disabled', 'enableDetection', 'facingMode', 'flipButtonText', 'height', 'name', 'placeholder', 'readonly', 'required', 'scoreThreshold', 'showBoundingBoxes', 'showControls', 'showLandmarks', 'startButtonText', 'stopButtonText', 'tabOrder', 'trainedModel', 'useOptimizedDetection', 'validationMessage', 'value', 'width'],
+  methods: ['detectFaceManually', 'stopDetection', 'startDetection', 'toggleCamera', 'initializeCamera', 'getCurrentLandmarks', 'getCurrentConfidence', 'setDetectionMode', 'getBlobImageDescriptors', 'getFaceLandMarks', 'predictBestMatch', 'getDiagnosticInfo', 'getFormValue', 'setFormValue', 'checkValidity', 'getValidationMessage', 'setCustomValidity', 'setFocus', 'setBlur']
 })
 @Component({
   selector: 'input-face-api-webcam',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content></ng-content>',
   // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
-  inputs: ['accessibilityLabel', 'ariaDescribedby', 'autoCapture', 'autoFocus', 'autoStart', 'captureDelay', 'captureThreshold', 'customValidation', 'detectionTimer', 'disabled', 'enableDetection', 'facingMode', 'flipButtonText', 'height', 'name', 'placeholder', 'readonly', 'required', 'scoreThreshold', 'showBoundingBoxes', 'showControls', 'showLandmarks', 'startButtonText', 'stopButtonText', 'tabOrder', 'trainedModel', 'validationMessage', 'value', 'width'],
+  inputs: ['accessibilityLabel', 'ariaDescribedby', 'autoCapture', 'autoFocus', 'autoStart', 'captureDelay', 'captureThreshold', 'customValidation', 'detectionMode', 'detectionTimer', 'disabled', 'enableDetection', 'facingMode', 'flipButtonText', 'height', 'name', 'placeholder', 'readonly', 'required', 'scoreThreshold', 'showBoundingBoxes', 'showControls', 'showLandmarks', 'startButtonText', 'stopButtonText', 'tabOrder', 'trainedModel', 'useOptimizedDetection', 'validationMessage', 'value', 'width'],
 })
 export class InputFaceApiWebcam {
   protected el: HTMLInputFaceApiWebcamElement;
@@ -79,7 +79,7 @@ export class InputFaceApiWebcam {
 }
 
 
-import type { DetectionImg as IInputFaceApiWebcamDetectionImg } from 'av-inputs';
+import type { iFaceDetected as IInputFaceApiWebcamiFaceDetected } from 'av-inputs';
 import type { FaceDetectionError as IInputFaceApiWebcamFaceDetectionError } from 'av-inputs';
 import type { CameraDirection as IInputFaceApiWebcamCameraDirection } from 'av-inputs';
 import type { Event as IInputFaceApiWebcamEvent } from 'av-inputs';
@@ -88,7 +88,7 @@ export declare interface InputFaceApiWebcam extends Components.InputFaceApiWebca
   /**
    * Event emitted when a face is detected in video stream
    */
-  faceDetected: EventEmitter<CustomEvent<IInputFaceApiWebcamDetectionImg>>;
+  faceDetected: EventEmitter<CustomEvent<IInputFaceApiWebcamiFaceDetected>>;
   /**
    * Event emitted when face detection was stopped
    */

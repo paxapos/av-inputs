@@ -1,13 +1,25 @@
 import { Config } from '@stencil/core';
 import { angularOutputTarget } from '@stencil/angular-output-target';
 import { JsonDocs } from '@stencil/core/internal';
-import nodePolyfills from 'rollup-plugin-node-polyfills'; // Change this line
+import nodePolyfills from 'rollup-plugin-node-polyfills';
 
 export const config: Config = {
   namespace: 'av-inputs',
-  plugins: [ // Add the plugins array here
-    nodePolyfills(), // Add the polyfills plugin
+  plugins: [
+    nodePolyfills(),
   ],
+  rollupPlugins: {
+    after: []
+  },
+  buildEs5: 'prod',
+  extras: {
+    enableImportInjection: true
+  },
+  devServer: {
+    reloadStrategy: 'pageReload',
+    port: 3334,
+    openBrowser: false
+  },
   testing: {
     setupFilesAfterEnv: ['<rootDir>/jest-setup.js']
   },
@@ -37,6 +49,8 @@ export const config: Config = {
         { src: 'input_face_api.html', dest: 'input_face_api.html' },
         { src: 'input_scan_reader.html', dest: 'input_scan_reader.html' },
         { src: 'input_barcode.html', dest: 'input_barcode.html' },
+        { src: 'face-detection-example.html', dest: 'face-detection-example.html' },
+        { src: 'assets/**/*', dest: 'assets/' },
       ],
       serviceWorker: null, // disable service workers
     },

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Detection Example - Landmarks</title>
+    <script type="module" src="/build/av-inputs.esm.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .video-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .data-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .mode-controls {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 4px;
+        }
+        .landmarks-data {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .confidence-display {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .confidence-high { background: #d4edda; color: #155724; }
+        .confidence-medium { background: #fff3cd; color: #856404; }
+        .confidence-low { background: #f8d7da; color: #721c24; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .manual-controls {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .status-info {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="video-section">
+            <h2>Face Detection Component</h2>
+
+            <div class="mode-controls">
+                <h3>Detection Mode</h3>
+                <button id="intervalMode" class="btn-primary">Interval Mode (Auto)</button>
+                <button id="manualMode" class="btn-secondary">Manual Mode</button>
+                <p><strong>Current Mode:</strong> <span id="currentMode">interval</span></p>
+
+                <h3>Performance Mode</h3>
+                <button id="optimizedMode" class="btn-success">Optimized (Web Worker)</button>
+                <button id="standardMode" class="btn-secondary">Standard</button>
+                <p><strong>Current Performance:</strong> <span id="currentPerformance">optimized</span></p>
+            </div>
+
+            <!-- Face Detection Component -->
+            <input-face-api-webcam
+                id="faceDetector"
+                width="400"
+                height="400"
+                detection-mode="interval"
+                use-optimized-detection="true"
+                detection-timer="1000"
+                score-threshold="0.5"
+                show-controls="true"
+                auto-start="true">
+            </input-face-api-webcam>
+
+            <div class="manual-controls">
+                <h3>Manual Controls</h3>
+                <button id="detectManually" class="btn-success">Detect Face Now</button>
+                <button id="getLandmarks" class="btn-secondary">Get Current Landmarks</button>
+                <button id="getConfidence" class="btn-secondary">Get Current Confidence</button>
+            </div>
+        </div>
+
+        <div class="data-section">
+            <h2>Detection Results</h2>
+
+            <div class="confidence-display" id="confidenceDisplay">
+                <strong>Confidence Score:</strong> <span id="confidenceValue">No detection</span>
+            </div>
+
+            <div class="status-info">
+                <h3>Detection Info</h3>
+                <p><strong>Detection Count:</strong> <span id="detectionCount">0</span></p>
+                <p><strong>Last Detection:</strong> <span id="lastDetection">Never</span></p>
+                <p><strong>Landmarks Count:</strong> <span id="landmarksCount">0</span></p>
+            </div>
+
+            <h3>Landmarks Data</h3>
+            <div class="landmarks-data" id="landmarksData">
+                No landmarks detected yet...
+            </div>
+
+            <h3>Raw Detection Data</h3>
+            <div class="landmarks-data" id="rawData">
+                No detection data yet...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get component reference
+        const faceDetector = document.getElementById('faceDetector');
+
+        // UI Elements
+        const intervalModeBtn = document.getElementById('intervalMode');
+        const manualModeBtn = document.getElementById('manualMode');
+        const optimizedModeBtn = document.getElementById('optimizedMode');
+        const standardModeBtn = document.getElementById('standardMode');
+        const currentModeSpan = document.getElementById('currentMode');
+        const currentPerformanceSpan = document.getElementById('currentPerformance');
+        const detectManuallyBtn = document.getElementById('detectManually');
+        const getLandmarksBtn = document.getElementById('getLandmarks');
+        const getConfidenceBtn = document.getElementById('getConfidence');
+
+        // Data display elements
+        const confidenceDisplay = document.getElementById('confidenceDisplay');
+        const confidenceValue = document.getElementById('confidenceValue');
+        const detectionCountSpan = document.getElementById('detectionCount');
+        const lastDetectionSpan = document.getElementById('lastDetection');
+        const landmarksCountSpan = document.getElementById('landmarksCount');
+        const landmarksDataDiv = document.getElementById('landmarksData');
+        const rawDataDiv = document.getElementById('rawData');
+
+        let detectionCount = 0;
+
+        // Mode control handlers
+        intervalModeBtn.addEventListener('click', async () => {
+            await faceDetector.setDetectionMode('interval');
+            updateModeUI('interval');
+        });
+
+        manualModeBtn.addEventListener('click', async () => {
+            await faceDetector.setDetectionMode('manual');
+            updateModeUI('manual');
+        });
+
+        // Performance mode handlers
+        optimizedModeBtn.addEventListener('click', () => {
+            faceDetector.useOptimizedDetection = true;
+            updatePerformanceUI('optimized');
+        });
+
+        standardModeBtn.addEventListener('click', () => {
+            faceDetector.useOptimizedDetection = false;
+            updatePerformanceUI('standard');
+        });
+
+        function updateModeUI(mode) {
+            currentModeSpan.textContent = mode;
+            if (mode === 'interval') {
+                intervalModeBtn.className = 'btn-primary';
+                manualModeBtn.className = 'btn-secondary';
+            } else {
+                intervalModeBtn.className = 'btn-secondary';
+                manualModeBtn.className = 'btn-primary';
+            }
+        }
+
+        function updatePerformanceUI(performance) {
+            currentPerformanceSpan.textContent = performance;
+            if (performance === 'optimized') {
+                optimizedModeBtn.className = 'btn-success';
+                standardModeBtn.className = 'btn-secondary';
+            } else {
+                optimizedModeBtn.className = 'btn-secondary';
+                standardModeBtn.className = 'btn-success';
+            }
+        }
+
+        // Manual detection button
+        detectManuallyBtn.addEventListener('click', async () => {
+            console.log('Triggering manual detection...');
+            const result = await faceDetector.detectFaceManually();
+            if (result) {
+                console.log('Manual detection result:', result);
+            } else {
+                console.log('No face detected manually');
+            }
+        });
+
+        // Get current landmarks button
+        getLandmarksBtn.addEventListener('click', async () => {
+            const landmarks = await faceDetector.getCurrentLandmarks();
+            if (landmarks) {
+                console.log('Current landmarks:', landmarks);
+                updateLandmarksDisplay(landmarks);
+            } else {
+                console.log('No landmarks available');
+                landmarksDataDiv.textContent = 'No landmarks currently detected';
+            }
+        });
+
+        // Get current confidence button
+        getConfidenceBtn.addEventListener('click', async () => {
+            const confidence = await faceDetector.getCurrentConfidence();
+            if (confidence !== null) {
+                console.log('Current confidence:', confidence);
+                updateConfidenceDisplay(confidence);
+            } else {
+                console.log('No confidence score available');
+                confidenceValue.textContent = 'No detection';
+            }
+        });
+
+        // Face detection event listener
+        faceDetector.addEventListener('faceDetected', (event) => {
+            console.log('Face detected event:', event.detail);
+            detectionCount++;
+
+            const data = event.detail;
+
+            // Update detection info
+            detectionCountSpan.textContent = detectionCount;
+            lastDetectionSpan.textContent = new Date(data.timestamp).toLocaleTimeString();
+            landmarksCountSpan.textContent = data.landmarks ? data.landmarks.length : 0;
+
+            // Update confidence display
+            updateConfidenceDisplay(data.confidence);
+
+            // Update landmarks display
+            if (data.landmarks && data.landmarks.length > 0) {
+                updateLandmarksDisplay(data.landmarks);
+            }
+
+            // Update raw data display
+            rawDataDiv.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        });
+
+        // Face detection stopped event
+        faceDetector.addEventListener('faceStopDetection', () => {
+            console.log('Face detection stopped');
+            confidenceValue.textContent = 'No detection';
+            confidenceDisplay.className = 'confidence-display';
+            landmarksDataDiv.textContent = 'No landmarks detected';
+        });
+
+        function updateConfidenceDisplay(confidence) {
+            const percentage = Math.round(confidence * 100);
+            confidenceValue.textContent = `${percentage}%`;
+
+            // Update confidence display styling based on score
+            if (confidence >= 0.8) {
+                confidenceDisplay.className = 'confidence-display confidence-high';
+            } else if (confidence >= 0.5) {
+                confidenceDisplay.className = 'confidence-display confidence-medium';
+            } else {
+                confidenceDisplay.className = 'confidence-display confidence-low';
+            }
+        }
+
+        function updateLandmarksDisplay(landmarks) {
+            if (landmarks && landmarks.length > 0) {
+                const landmarksText = landmarks.map((landmark, index) => {
+                    return `Point ${index}: x=${landmark.x?.toFixed(3) || 'N/A'}, y=${landmark.y?.toFixed(3) || 'N/A'}`;
+                }).join('\n');
+                landmarksDataDiv.innerHTML = `<pre>${landmarksText}</pre>`;
+            } else {
+                landmarksDataDiv.textContent = 'No landmarks detected';
+            }
+        }
+
+        // Component ready check
+        window.addEventListener('load', () => {
+            console.log('Face detection component loaded');
+            updateModeUI('interval'); // Set initial mode UI
+            updatePerformanceUI('optimized'); // Set initial performance UI
+        });
+    </script>
+</body>
+</html>

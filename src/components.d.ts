@@ -8,16 +8,16 @@ import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
 import { Event } from "@stencil/core";
 import { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 import { CameraDirection } from "./utils/camera.service";
+import { FaceDetectionError, iFaceDetected } from "./components/input-face-api-webcam/input-face-api-webcam";
 import { DetectionImg } from "./utils/facepi.service";
-import { FaceDetectionError } from "./components/input-face-api-webcam/input-face-api-webcam";
 import { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { WebcamError } from "./components/input-file-from-webcam/input-file-from-webcam";
 import { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export { Event } from "@stencil/core";
 export { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 export { CameraDirection } from "./utils/camera.service";
+export { FaceDetectionError, iFaceDetected } from "./components/input-face-api-webcam/input-face-api-webcam";
 export { DetectionImg } from "./utils/facepi.service";
-export { FaceDetectionError } from "./components/input-face-api-webcam/input-face-api-webcam";
 export { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 export { WebcamError } from "./components/input-file-from-webcam/input-file-from-webcam";
 export { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
@@ -191,6 +191,15 @@ export namespace Components {
         "checkValidity": () => Promise<boolean>;
         "customValidation"?: (value: string) => boolean;
         /**
+          * Manually trigger a single face detection
+          * @returns Promise with detection result including landmarks
+         */
+        "detectFaceManually": () => Promise<iFaceDetected | null>;
+        /**
+          * Detection mode: 'interval' for automatic detection every X ms, 'manual' for on-demand detection
+         */
+        "detectionMode": 'interval' | 'manual';
+        /**
           * Detection timer interval in milliseconds
          */
         "detectionTimer"?: number;
@@ -215,6 +224,16 @@ export namespace Components {
           * @returns face landmarks
          */
         "getBlobImageDescriptors": (blob: Blob) => Promise<FaceLandmarkerResult>;
+        /**
+          * Get current face confidence score
+          * @returns Confidence score (0-1) or null if no face detected
+         */
+        "getCurrentConfidence": () => Promise<number | null>;
+        /**
+          * Get current face landmarks if a face is detected
+          * @returns Array of landmark points or null if no face detected
+         */
+        "getCurrentLandmarks": () => Promise<any[] | null>;
         /**
           * Diagnostic method to check detection status
          */
@@ -275,6 +294,11 @@ export namespace Components {
          */
         "setCustomValidity": (message: string) => Promise<void>;
         /**
+          * Set detection mode programmatically
+          * @param mode 'interval' for automatic detection, 'manual' for on-demand
+         */
+        "setDetectionMode": (mode: "interval" | "manual") => Promise<void>;
+        /**
           * Focus the component (start camera and detection)
          */
         "setFocus": () => Promise<void>;
@@ -322,6 +346,10 @@ export namespace Components {
           * Trained models to use for recognition and best match
          */
         "trainedModel"?: LabeledDescriptorsArray;
+        /**
+          * Use optimized Web Worker for face detection (recommended for better performance)
+         */
+        "useOptimizedDetection": boolean;
         /**
           * Form validation message
          */
@@ -649,7 +677,7 @@ declare global {
         new (): HTMLInputBarcodeElement;
     };
     interface HTMLInputFaceApiWebcamElementEventMap {
-        "faceDetected": DetectionImg;
+        "faceDetected": iFaceDetected;
         "faceStopDetection": void;
         "detectionStarted": void;
         "detectionStopped": void;
@@ -903,6 +931,10 @@ declare namespace LocalJSX {
         "captureThreshold"?: number;
         "customValidation"?: (value: string) => boolean;
         /**
+          * Detection mode: 'interval' for automatic detection every X ms, 'manual' for on-demand detection
+         */
+        "detectionMode"?: 'interval' | 'manual';
+        /**
           * Detection timer interval in milliseconds
          */
         "detectionTimer"?: number;
@@ -953,7 +985,7 @@ declare namespace LocalJSX {
         /**
           * Event emitted when a face is detected in video stream
          */
-        "onFaceDetected"?: (event: InputFaceApiWebcamCustomEvent<DetectionImg>) => void;
+        "onFaceDetected"?: (event: InputFaceApiWebcamCustomEvent<iFaceDetected>) => void;
         /**
           * Event emitted when face detection was stopped
          */
@@ -1030,6 +1062,10 @@ declare namespace LocalJSX {
           * Trained models to use for recognition and best match
          */
         "trainedModel"?: LabeledDescriptorsArray;
+        /**
+          * Use optimized Web Worker for face detection (recommended for better performance)
+         */
+        "useOptimizedDetection"?: boolean;
         /**
           * Form validation message
          */

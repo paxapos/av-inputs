@@ -1,14 +1,21 @@
 import { Component, Host, h, Element, Prop, Event, EventEmitter, Method, State, Watch } from '@stencil/core';
 import { DetectionImg, faceapiService } from '../../utils/facepi.service';
+import { optimizedFaceDetectionService } from '../../utils/optimized-face-detection.service';
+import { simplifiedOptimizedFaceDetectionService } from '../../utils/simplified-optimized-face-detection.service';
 import { CameraDirection, createCanvas, createVideo, initWebcamToVideo, renderToCanvas } from '../../utils/camera.service';
 import { Detection, FaceLandmarkerResult } from '@mediapipe/tasks-vision';
 import { pxTimer } from 'src/utils/utils';
 import { LabeledDescriptorsArray } from './TrainedModel';
 import { getBestMatch } from './distance.worker';
+import { ModernIcons } from '../../utils/modern-icons';
 
 export interface iFaceDetected {
   blob: Blob;
+  blobUrl?: string; // URL for the blob (for events)
   result: Detection;
+  landmarks?: any[]; // Face landmark points
+  confidence: number; // Confidence score (0-1)
+  timestamp: number;
 }
 
 export interface FaceDetectionError {
@@ -18,6 +25,26 @@ export interface FaceDetectionError {
 }
 
 type CameraState = 'inactive' | 'loading' | 'ready' | 'detecting' | 'error';
+
+/**
+ * Renders a modern SVG icon with glassmorphism styling
+ */
+const renderModernIcon = (iconName: keyof typeof ModernIcons, size: number = 24, className: string = '') => {
+  const iconSvg = ModernIcons[iconName];
+  return (
+    <div
+      class={`modern-icon ${className}`}
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}
+      innerHTML={iconSvg}
+    ></div>
+  );
+};
 
 /**
  * AI-powered face detection and recognition component
@@ -44,6 +71,7 @@ export class InputFaceApiWebcam {
   @State() currentError: FaceDetectionError | null = null;
   @State() detectedFacesCount: number = 0;
   @State() isRecognizing: boolean = false;
+  @State() actualOptimizationMode: 'worker' | 'simplified' | 'standard' = 'standard';
 
   /**
    * Standard form input properties
@@ -115,7 +143,18 @@ export class InputFaceApiWebcam {
   detectionResultChangedHandler(newValue: DetectionImg, oldValue: DetectionImg) {
     if (newValue?.blobImg) {
       this.detectedFacesCount = newValue.detection ? 1 : 0;
-      this.faceDetected.emit(newValue);
+
+      // Prepare enhanced face detection data with landmarks
+      const faceDetectedData: iFaceDetected = {
+        blob: newValue.blobImg,
+        blobUrl: URL.createObjectURL(newValue.blobImg),
+        result: newValue.detection,
+        landmarks: newValue.detection?.keypoints || [],
+        confidence: newValue.detection?.categories?.[0]?.score || 0,
+        timestamp: newValue.timestamp || Date.now()
+      };
+
+      this.faceDetected.emit(faceDetectedData);
 
       // Update form value with detection data
       if (newValue.detection) {
@@ -145,7 +184,16 @@ export class InputFaceApiWebcam {
     }
   }
 
-  // Enhanced Properties
+  /**
+   * Detection mode: 'interval' for automatic detection every X ms, 'manual' for on-demand detection
+   */
+  @Prop({ mutable: true }) detectionMode: 'interval' | 'manual' = 'interval';
+
+  /**
+   * Use optimized Web Worker for face detection (recommended for better performance)
+   */
+  @Prop({ mutable: true }) useOptimizedDetection: boolean = true;
+
   /**
    * Enable or disable face detection
    */
@@ -233,7 +281,53 @@ export class InputFaceApiWebcam {
   @Prop({ mutable: true }) captureDelay: number = 3000;
 
 
-  // Enhanced Methods
+  /**
+   * Manually trigger a single face detection
+   * @returns Promise with detection result including landmarks
+   */
+  @Method()
+  async detectFaceManually(): Promise<iFaceDetected | null> {
+    if (!this.isVideoElementReady()) {
+      console.warn('Video element not ready for manual detection');
+      return null;
+    }
+
+    try {
+      const startTimeMs = performance.now();
+      let detectionResult: DetectionImg | null;
+
+      // Use appropriate service based on what was successfully initialized
+      if (this.actualOptimizationMode === 'worker') {
+        detectionResult = await optimizedFaceDetectionService.detectFaceOptimized(this.video, startTimeMs);
+      } else if (this.actualOptimizationMode === 'simplified') {
+        detectionResult = await simplifiedOptimizedFaceDetectionService.detectFaceOptimized(this.video, startTimeMs);
+      } else {
+        detectionResult = await faceapiService.detectFaceOptimized(this.video, startTimeMs);
+      }
+
+      if (detectionResult && detectionResult.detection) {
+        const faceDetectedData: iFaceDetected = {
+          blob: detectionResult.blobImg,
+          blobUrl: URL.createObjectURL(detectionResult.blobImg),
+          result: detectionResult.detection,
+          landmarks: detectionResult.detection.keypoints || [],
+          confidence: detectionResult.detection.categories?.[0]?.score || 0,
+          timestamp: detectionResult.timestamp || Date.now()
+        };
+
+        // Emit the detection event
+        this.faceDetected.emit(faceDetectedData);
+
+        return faceDetectedData;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error in manual face detection:', error);
+      return null;
+    }
+  }
+
   /**
    * Stop face detection
    */
@@ -303,12 +397,54 @@ export class InputFaceApiWebcam {
 
 
   /**
+   * Get current face landmarks if a face is detected
+   * @returns Array of landmark points or null if no face detected
+   */
+  @Method()
+  async getCurrentLandmarks(): Promise<any[] | null> {
+    if (this.detectionResult?.detection?.keypoints) {
+      return this.detectionResult.detection.keypoints;
+    }
+    return null;
+  }
+
+  /**
+   * Get current face confidence score
+   * @returns Confidence score (0-1) or null if no face detected
+   */
+  @Method()
+  async getCurrentConfidence(): Promise<number | null> {
+    if (this.detectionResult?.detection?.categories?.[0]?.score !== undefined) {
+      return this.detectionResult.detection.categories[0].score;
+    }
+    return null;
+  }
+
+  /**
+   * Set detection mode programmatically
+   * @param mode 'interval' for automatic detection, 'manual' for on-demand
+   */
+  @Method()
+  async setDetectionMode(mode: 'interval' | 'manual'): Promise<void> {
+    this.detectionMode = mode;
+    if (mode === 'manual' && this.cameraState === 'detecting') {
+      await this.stopDetection();
+    }
+  }
+
+  /**
    * Giving a blob image, get the face landmarks
    * @returns face landmarks
    */
   @Method()
   async getBlobImageDescriptors(blob: Blob): Promise<FaceLandmarkerResult> {
-    return await faceapiService.getFaceLandmarksFromBlob( blob )
+    if (this.actualOptimizationMode === 'worker') {
+      return await optimizedFaceDetectionService.getLandmarksFromBlob(blob);
+    } else if (this.actualOptimizationMode === 'simplified') {
+      return await simplifiedOptimizedFaceDetectionService.getLandmarksFromBlob(blob);
+    } else {
+      return await faceapiService.getFaceLandmarksFromBlob(blob);
+    }
   }
 
   /**
@@ -317,10 +453,16 @@ export class InputFaceApiWebcam {
    */
   @Method()
   async getFaceLandMarks(): Promise<FaceLandmarkerResult> {
-    if ( this.detectionResult && this.detectionResult.blobImg ) {
-      return await faceapiService.getFaceLandmarksFromBlob( this.detectionResult.blobImg )
+    if (this.detectionResult && this.detectionResult.blobImg) {
+      if (this.actualOptimizationMode === 'worker') {
+        return await optimizedFaceDetectionService.getLandmarksFromBlob(this.detectionResult.blobImg);
+      } else if (this.actualOptimizationMode === 'simplified') {
+        return await simplifiedOptimizedFaceDetectionService.getLandmarksFromBlob(this.detectionResult.blobImg);
+      } else {
+        return await faceapiService.getFaceLandmarksFromBlob(this.detectionResult.blobImg);
+      }
     } else {
-      return null
+      return null;
     }
   }
 
@@ -394,7 +536,7 @@ export class InputFaceApiWebcam {
     composed: true,
     cancelable: false,
     bubbles: true,
-  }) faceDetected: EventEmitter<DetectionImg>;
+  }) faceDetected: EventEmitter<iFaceDetected>;
 
   /**
    * Event emitted when face detection was stopped
@@ -583,8 +725,43 @@ export class InputFaceApiWebcam {
       this.canvas.height = this.height
       this.el.appendChild(this.canvas)
 
-      await faceapiService.initialize()
-      console.info("el faceapi es", faceapiService);
+      // Initialize the appropriate service with fallback chain
+      if (this.useOptimizedDetection) {
+        try {
+          // Try Web Worker first
+          await optimizedFaceDetectionService.initialize({
+            minDetectionConfidence: this.scoreThreshold,
+            maxNumFaces: 1,
+            useGPU: false,
+            throttleMs: this.detectionTimer
+          });
+          this.actualOptimizationMode = 'worker';
+          console.info("Web Worker face detection service initialized");
+        } catch (workerError) {
+          console.warn("Web Worker failed, trying simplified optimization:", workerError);
+          try {
+            // Fallback to simplified optimization
+            await simplifiedOptimizedFaceDetectionService.initialize({
+              minDetectionConfidence: this.scoreThreshold,
+              maxNumFaces: 1,
+              useGPU: false,
+              throttleMs: this.detectionTimer
+            });
+            this.actualOptimizationMode = 'simplified';
+            console.info("Simplified optimized face detection service initialized");
+          } catch (simplifiedError) {
+            console.warn("Simplified optimization failed, using standard mode:", simplifiedError);
+            this.useOptimizedDetection = false;
+            await faceapiService.initialize();
+            this.actualOptimizationMode = 'standard';
+            console.info("Standard face API service initialized (fallback)");
+          }
+        }
+      } else {
+        await faceapiService.initialize();
+        this.actualOptimizationMode = 'standard';
+        console.info("Standard face API service initialized");
+      }
 
       const stream = await initWebcamToVideo(this.video, this.facingMode)
       this.cameraStarted.emit(stream as MediaStream);
@@ -613,6 +790,19 @@ export class InputFaceApiWebcam {
     }
   }
 
+  disconnectedCallback() {
+    // Clean up resources when component is removed
+    if (this.video && this.video.srcObject) {
+      const stream = this.video.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+    }
+
+    // Dispose services if using optimized detection
+    if (this.useOptimizedDetection) {
+      optimizedFaceDetectionService.dispose();
+    }
+  }
+
 
   async webcamRender () {
     const startTimeMs = performance.now();
@@ -633,23 +823,30 @@ export class InputFaceApiWebcam {
       return;
     }
 
-    // Detect faces using detectForVideo
-    if ( this.video.currentTime !== this.lastVideoTime ) {
+    // Only run automatic detection if in interval mode
+    if (this.detectionMode === 'interval' && this.video.currentTime !== this.lastVideoTime) {
       this.lastVideoTime = this.video.currentTime;
 
-      if ( this.enableDetection ) {
+      if (this.enableDetection) {
         try {
-          // get context of canvas and create paning and zoooming to center
-          this.detectionResult = await faceapiService.detectFaceOptimized( this.video, startTimeMs )
+          // Use appropriate service for detection
+          if (this.actualOptimizationMode === 'worker') {
+            this.detectionResult = await optimizedFaceDetectionService.detectFaceOptimized(this.video, startTimeMs);
+          } else if (this.actualOptimizationMode === 'simplified') {
+            this.detectionResult = await simplifiedOptimizedFaceDetectionService.detectFaceOptimized(this.video, startTimeMs);
+          } else {
+            this.detectionResult = await faceapiService.detectFaceOptimized(this.video, startTimeMs);
+          }
 
           // Add debugging
           if (this.detectionResult) {
-            console.log('✅ Face detected in component:', {
+            console.log('✅ Face detected in component (interval mode):', {
               confidence: this.detectionResult.confidence,
-              timestamp: this.detectionResult.timestamp
+              timestamp: this.detectionResult.timestamp,
+              optimizationMode: this.actualOptimizationMode
             });
           } else {
-            console.log('❌ No face detected in component');
+            console.log('❌ No face detected in component (interval mode)');
           }
         } catch (error) {
           console.error('❌ Error in webcamRender detection:', error);
@@ -657,11 +854,12 @@ export class InputFaceApiWebcam {
       }
     }
 
-    await pxTimer(this.detectionTimer)
+    // Always continue the render loop, even in manual mode (for video display)
+    await pxTimer(this.detectionTimer);
 
     requestAnimationFrame(() => {
-      this.webcamRender()
-    })
+      this.webcamRender();
+    });
   }
 
   // Helper method to check if video element is ready
@@ -868,7 +1066,7 @@ drawWebcamnToCanvas(ctx) {
       if (this.cameraState === 'inactive') {
         return (
           <div class="camera-state">
-            <div class="state-icon inactive-icon">📷</div>
+            {renderModernIcon('camera', 64, 'inactive-icon')}
             <h3>Camera Inactive</h3>
             <p>Click start to begin face detection</p>
           </div>
@@ -888,7 +1086,7 @@ drawWebcamnToCanvas(ctx) {
       if (this.cameraState === 'error') {
         return (
           <div class="camera-state">
-            <div class="state-icon error-icon">⚠️</div>
+            {renderModernIcon('warning', 64, 'error-icon')}
             <h3>Camera Error</h3>
             <p>{this.currentError?.message || 'Unable to access camera'}</p>
           </div>
@@ -902,6 +1100,26 @@ drawWebcamnToCanvas(ctx) {
       if (this.cameraState !== 'detecting' && this.cameraState !== 'ready') return null;
 
       return [
+        // Detection mode indicator
+        <div class="detection-mode-indicator">
+          {this.detectionMode === 'interval' ? 'AUTO DETECTION' : 'MANUAL DETECTION'}
+          {this.actualOptimizationMode === 'worker' && (
+            <span class="optimized-badge">
+              {renderModernIcon('lightning', 16)} WORKER
+            </span>
+          )}
+          {this.actualOptimizationMode === 'simplified' && (
+            <span class="optimized-badge">
+              {renderModernIcon('lightning', 16)} OPTIMIZED
+            </span>
+          )}
+          {this.actualOptimizationMode === 'standard' && (
+            <span class="standard-badge">
+              {renderModernIcon('camera', 16)} STANDARD
+            </span>
+          )}
+        </div>,
+
         // Auto-capture indicator
         this.autoCapture && (
           <div class="auto-capture-indicator">
@@ -913,6 +1131,20 @@ drawWebcamnToCanvas(ctx) {
         this.cameraState === 'detecting' && (
           <div class={`face-indicator ${this.detectedFacesCount > 0 ? 'detected' : 'not-detected'}`}>
             {this.detectedFacesCount > 0 ? `${this.detectedFacesCount} Face${this.detectedFacesCount !== 1 ? 's' : ''} Detected` : 'No Face Detected'}
+          </div>
+        ),
+
+        // Confidence score indicator
+        this.detectionResult?.detection && (
+          <div class="confidence-indicator">
+            Confidence: {Math.round((this.detectionResult.detection.categories?.[0]?.score || 0) * 100)}%
+          </div>
+        ),
+
+        // Performance indicator (only for optimized modes)
+        (this.actualOptimizationMode === 'worker' || this.actualOptimizationMode === 'simplified') && this.cameraState === 'detecting' && (
+          <div class="performance-indicator">
+            Performance: {this.actualOptimizationMode === 'worker' ? 'Web Worker' : 'Simplified Optimized'}
           </div>
         ),
 
@@ -932,35 +1164,64 @@ drawWebcamnToCanvas(ctx) {
 
       return (
         <div class="camera-controls">
-          {this.cameraState === 'inactive' || this.cameraState === 'ready' ? (
-            <button
-              class="control-button start-button"
-              onClick={() => this.startDetection()}
-              disabled={isLoading}
-              title={this.startButtonText}
-            >
-              ▶️
-            </button>
-          ) : this.cameraState === 'detecting' ? (
-            <button
-              class="control-button stop-button"
-              onClick={() => this.stopDetection()}
-              title={this.stopButtonText}
-            >
-              ⏹️
-            </button>
-          ) : null}
+          {this.detectionMode === 'interval' ? (
+            // Interval mode controls
+            this.cameraState === 'inactive' || this.cameraState === 'ready' ? (
+              <button
+                class="control-button start-button icon-button"
+                onClick={() => this.startDetection()}
+                disabled={isLoading}
+                title={this.startButtonText}
+              >
+                {renderModernIcon('play', 20)}
+              </button>
+            ) : this.cameraState === 'detecting' ? (
+              <button
+                class="control-button stop-button icon-button"
+                onClick={() => this.stopDetection()}
+                title={this.stopButtonText}
+              >
+                {renderModernIcon('stop', 20)}
+              </button>
+            ) : null
+          ) : (
+            // Manual mode controls
+            (this.cameraState === 'ready' || this.cameraState === 'detecting') && (
+              <button
+                class="control-button detect-button icon-button"
+                onClick={() => this.detectFaceManually()}
+                disabled={isLoading}
+                title="Detect Face Manually"
+              >
+                {renderModernIcon('search', 20)}
+              </button>
+            )
+          )}
 
           {(this.cameraState === 'ready' || this.cameraState === 'detecting') && (
             <button
-              class="control-button flip-button"
+              class="control-button flip-button icon-button"
               onClick={() => this.toggleCamera()}
               disabled={isLoading}
               title={this.flipButtonText}
             >
-              🔄
+              {renderModernIcon('flip', 20)}
             </button>
           )}
+
+          {/* Mode toggle button */}
+          <button
+            class="control-button mode-button icon-button"
+            onClick={() => {
+              this.detectionMode = this.detectionMode === 'interval' ? 'manual' : 'interval';
+              if (this.detectionMode === 'manual' && this.cameraState === 'detecting') {
+                this.stopDetection();
+              }
+            }}
+            title={`Switch to ${this.detectionMode === 'interval' ? 'Manual' : 'Interval'} Mode`}
+          >
+            {renderModernIcon('mode', 20)}
+          </button>
         </div>
       );
     };
