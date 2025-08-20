@@ -1,15 +1,14 @@
-import { Component, EventEmitter, Host, Event, Prop, h, Method } from '@stencil/core';
+import { Component, EventEmitter, Host, Event, Prop, h, Method, Element, State, Watch } from '@stencil/core';
 import { v4 as uuidv4 } from 'uuid';
 import { InputScanData } from '../input-scan-reader/input-scan-reader.types';
 import { processText } from 'src/utils/text.handler';
 
-// Dynamic import types - will be loaded at runtime
-type Html5Qrcode = any;
-
+// ZXing imports
+import { BrowserMultiFormatReader, DecodeHintType, BarcodeFormat, NotFoundException } from '@zxing/library';
 
 /**
- * Camera-based barcode scanner component optimized for real-time scanning
- * with intelligent duplicate prevention and error recovery
+ * Camera-based barcode scanner component using ZXing library
+ * Optimized for cross-browser compatibility and mobile support
  * Functions as a form input element with standard input properties
  */
 @Component({
@@ -19,6 +18,7 @@ type Html5Qrcode = any;
   formAssociated: true
 })
 export class InputBarcode {
+  @Element() hostElement: HTMLElement;
 
   /**
    * Standard form input properties
@@ -37,22 +37,22 @@ export class InputBarcode {
   /**
    * Whether the input is disabled
    */
-  @Prop({ reflect: true, mutable: true }) disabled?: boolean = false;
+  @Prop({ reflect: true }) disabled?: boolean = false;
 
   /**
    * Whether the input is readonly
    */
-  @Prop({ reflect: true, mutable: true }) readonly?: boolean = false;
+  @Prop({ reflect: true }) readonly?: boolean = false;
 
   /**
    * Whether the input is required for form validation
    */
-  @Prop({ reflect: true, mutable: true }) required?: boolean = false;
+  @Prop({ reflect: true }) required?: boolean = false;
 
   /**
    * Placeholder text when no value is present
    */
-  @Prop({ mutable: true }) placeholder?: string = 'Scan a barcode or QR code';
+  @Prop() placeholder?: string = 'Scan a barcode or QR code';
 
   /**
    * Pattern for input validation (regex)
@@ -77,7 +77,7 @@ export class InputBarcode {
   /**
    * Auto-focus the scanner when component loads
    */
-  @Prop({ mutable: true }) autoFocus?: boolean = false;
+  @Prop() autoFocus?: boolean = false;
 
   /**
    * Tab order for keyboard navigation
@@ -87,7 +87,7 @@ export class InputBarcode {
   /**
    * ARIA label for accessibility
    */
-  @Prop({ mutable: true }) accessibilityLabel?: string = 'Barcode scanner input';
+  @Prop() accessibilityLabel?: string = 'Barcode scanner input';
 
   /**
    * ARIA description for accessibility
@@ -102,88 +102,83 @@ export class InputBarcode {
   /**
    * Width of the camera viewport
    */
-  @Prop({ mutable: true }) width: string = '400px';
+  @Prop() width: string = '400px';
 
   /**
    * Height of the camera viewport
    */
-  @Prop({ mutable: true }) height: string = '200px';
+  @Prop() height: string = '200px';
+
   /**
    * Supported barcode and QR code formats for scanning
-   * Optimized selection for best performance
-   * Using format constants compatible with html5-qrcode v2.3.8+
    */
-  @Prop({ mutable: true }) supportedFormats: number[] = [
-    0,  // QR_CODE
-    1,  // CODE_128
-    2,  // EAN_13
-    3,  // EAN_8
-    4,  // UPC_A
-    5,  // UPC_E
-    6,  // CODE_39
-    7,  // CODE_93
-    8,  // CODABAR
-    9,  // ITF
-    10, // AZTEC
-    11, // DATA_MATRIX
-    12, // PDF_417
-    13, // MAXICODE
-    14, // RSS_14
-    15, // RSS_EXPANDED
-    16  // UPC_EAN_EXTENSION
+  @Prop() supportedFormats: BarcodeFormat[] = [
+    BarcodeFormat.QR_CODE,
+    BarcodeFormat.CODE_128,
+    BarcodeFormat.EAN_13,
+    BarcodeFormat.EAN_8,
+    BarcodeFormat.UPC_A,
+    BarcodeFormat.UPC_E,
+    BarcodeFormat.CODE_39,
+    BarcodeFormat.CODE_93,
+    BarcodeFormat.CODABAR,
+    BarcodeFormat.ITF,
+    BarcodeFormat.AZTEC,
+    BarcodeFormat.DATA_MATRIX,
+    BarcodeFormat.PDF_417
   ];
 
   /**
    * Camera facing mode: 'user' for front camera, 'environment' for back camera
    */
-  @Prop({ mutable: true }) facingMode: 'user' | 'environment' = 'environment';
+  @Prop() facingMode: 'user' | 'environment' = 'environment';
+
   /**
-   * Camera configuration for optimal performance
-   * 10 FPS provides good balance between performance and accuracy
+   * Scan interval in milliseconds
    */
-  @Prop({ mutable: true }) cameraConfig: any = {
-    fps: 10,
-    qrbox: { width: 250, height: 250 },
-    aspectRatio: 1.0
-  };
+  @Prop() scanInterval: number = 100;
 
   /**
    * Auto-start scanning when component loads
    */
-  @Prop({ mutable: true }) autoStart: boolean = true;
+  @Prop() autoStart: boolean = true;
 
   /**
-   * Dynamic imports for html5-qrcode classes to avoid initialization issues
+   * Show camera selection controls
    */
-  private Html5QrcodeClass: any = null;
-  private Html5QrcodeScannerStateEnum: any = null;
+  @Prop() showCameraSelector: boolean = false;
 
   /**
-   * Unique identifier for the scanner container
+   * Enable debug mode for troubleshooting
+   */
+  @Prop() debug?: boolean = false;
+
+  /**
+   * Component state
+   */
+  @State() isScanning: boolean = false;
+  @State() hasPermission: boolean = false;
+  @State() errorMessage: string = '';
+  @State() availableCameras: MediaDeviceInfo[] = [];
+  @State() selectedCameraId: string = '';
+  @State() debugInfo: string = '';
+
+  /**
+   * Private properties
    */
   private readonly uuidGeneric: string = uuidv4();
-
-  /**
-   * Html5Qrcode scanner instance
-   */
-  private html5QrCode: Html5Qrcode | null = null;
-
-  /**
-   * Last successfully scanned data for duplicate prevention
-   */
-  private lastScan: InputScanData | null = null;
-
-  /**
-   * Timer for resetting duplicate prevention
-   */
+  private codeReader: BrowserMultiFormatReader;
+  private videoElement: HTMLVideoElement;
+  private stream: MediaStream | null = null;
   private scanTimer: NodeJS.Timeout | null = null;
-
-  /**
-   * Component cleanup flag
-   */
+  private lastScan: InputScanData | null = null;
   private isDestroyed: boolean = false;
 
-    /**
+  /**
+   * Events
+   */
+
+  /**
    * Emitted when input value changes (standard form event)
    */
   @Event() inputChange: EventEmitter<Event>;
@@ -214,75 +209,302 @@ export class InputBarcode {
   @Event() scan: EventEmitter<string>;
 
   /**
-   * Get current scanner state
+   * Emitted when scanning starts
    */
-  @Method()
-  async getState(): Promise<any | null> {
-    return this.html5QrCode?.getState() || null;
+  @Event() scanStart: EventEmitter<void>;
+
+  /**
+   * Emitted when scanning stops
+   */
+  @Event() scanStop: EventEmitter<void>;
+
+  /**
+   * Emitted when camera permission is granted
+   */
+  @Event() permissionGranted: EventEmitter<void>;
+
+  /**
+   * Emitted when camera permission is denied
+   */
+  @Event() permissionDenied: EventEmitter<void>;
+
+  /**
+   * Emitted when an error occurs
+   */
+  @Event() scanError: EventEmitter<string>;
+
+  /**
+   * Watch for camera ID changes
+   */
+  @Watch('cameraId')
+  async onCameraIdChanged(newCameraId: string) {
+    if (this.isScanning) {
+      await this.stop();
+      this.selectedCameraId = newCameraId;
+      await this.start();
+    } else {
+      this.selectedCameraId = newCameraId;
+    }
   }
 
   /**
-   * Stop the scanner and clean up resources
+   * Component lifecycle - initialize
+   */
+  async componentDidLoad(): Promise<void> {
+    try {
+      console.log('Initializing ZXing barcode scanner...');
+
+      this.initializeCodeReader();
+      await this.requestCameraPermission();
+      await this.loadAvailableCameras();
+
+      if (this.autoStart && this.hasPermission) {
+        await this.start();
+      }
+
+      console.log('Barcode scanner initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize scanner:', error);
+      this.handleError(`Initialization failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Component cleanup
+   */
+  disconnectedCallback(): void {
+    this.isDestroyed = true;
+    this.cleanup();
+  }
+
+  /**
+   * Start scanning loop
+   */
+  private async startScanning(): Promise<void> {
+    if (!this.videoElement || this.isDestroyed) {
+      return;
+    }
+
+    const scanFrame = async () => {
+      if (!this.isScanning || this.isDestroyed || !this.videoElement) {
+        return;
+      }
+
+      try {
+        // Update debug info
+        if (this.debug) {
+          this.debugInfo = `Video: ${this.videoElement.videoWidth}x${this.videoElement.videoHeight}, Ready: ${this.videoElement.readyState >= 2}`;
+        }
+
+        // Ensure video is ready before scanning (readyState 2 = HAVE_CURRENT_DATA)
+        if (this.videoElement.readyState >= 2) {
+          const result = await this.codeReader.decodeFromVideoElement(this.videoElement);
+          if (result && result.getText()) {
+            console.log('Barcode detected:', result.getText(), 'Format:', result.getBarcodeFormat());
+            this.handleScanResult(result.getText());
+          }
+        }
+      } catch (error) {
+        // NotFoundException is expected when no barcode is found
+        if (!(error instanceof NotFoundException)) {
+          console.debug('Scan error:', error.message);
+          if (this.debug) {
+            this.debugInfo += ` | Error: ${error.message}`;
+          }
+        }
+      }
+
+      // Schedule next scan
+      if (this.isScanning && !this.isDestroyed) {
+        this.scanTimer = setTimeout(scanFrame, this.scanInterval);
+      }
+    };
+
+    // Wait for video to be ready (readyState 2 = HAVE_CURRENT_DATA)
+    if (this.videoElement.readyState >= 2) {
+      if (this.debug) console.log('Video ready, starting scan immediately');
+      scanFrame();
+    } else {
+      if (this.debug) console.log('Waiting for video to load...');
+      this.videoElement.addEventListener('loadeddata', () => {
+        console.log('Video loaded, starting scan loop');
+        scanFrame();
+      }, { once: true });
+    }
+  }
+
+  /**
+   * Initialize ZXing code reader with supported formats
+   */
+  private initializeCodeReader(): void {
+    try {
+      const hints = new Map();
+
+      // Set supported formats
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, this.supportedFormats);
+      hints.set(DecodeHintType.TRY_HARDER, true);
+
+      // Additional hints for better detection
+      hints.set(DecodeHintType.PURE_BARCODE, false);
+
+      this.codeReader = new BrowserMultiFormatReader(hints);
+      console.log('ZXing reader initialized with formats:', this.supportedFormats);
+    } catch (error) {
+      console.error('Failed to initialize ZXing reader:', error);
+      // Fallback to basic reader
+      this.codeReader = new BrowserMultiFormatReader();
+    }
+  }
+
+  /**
+   * Request camera permission
+   */
+  private async requestCameraPermission(): Promise<void> {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: this.facingMode }
+      });
+
+      // Stop the test stream immediately
+      stream.getTracks().forEach(track => track.stop());
+
+      this.hasPermission = true;
+      this.permissionGranted.emit();
+    } catch (error) {
+      console.error('Camera permission denied:', error);
+      this.hasPermission = false;
+      this.permissionDenied.emit();
+      this.handleError('Camera permission denied. Please allow camera access to scan barcodes.');
+    }
+  }
+
+  /**
+   * Load available cameras
+   */
+  private async loadAvailableCameras(): Promise<void> {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      this.availableCameras = devices.filter(device => device.kind === 'videoinput');
+
+      // Select default camera
+      if (!this.selectedCameraId && this.availableCameras.length > 0) {
+        // Try to find environment camera first, otherwise use first available
+        const environmentCamera = this.availableCameras.find(camera =>
+          camera.label.toLowerCase().includes('back') ||
+          camera.label.toLowerCase().includes('environment')
+        );
+        this.selectedCameraId = this.cameraId || environmentCamera?.deviceId || this.availableCameras[0].deviceId;
+      }
+    } catch (error) {
+      console.error('Failed to load cameras:', error);
+      this.handleError('Failed to access camera devices');
+    }
+  }
+
+  /**
+   * Start barcode scanning
+   */
+  @Method()
+  async start(): Promise<void> {
+    if (this.isScanning || !this.hasPermission || this.disabled) {
+      return;
+    }
+
+    try {
+      this.errorMessage = '';
+      await this.startCamera();
+      await this.startScanning();
+      this.isScanning = true;
+      this.scanStart.emit();
+      this.focusGained.emit();
+    } catch (error) {
+      console.error('Failed to start scanning:', error);
+      this.handleError(`Failed to start scanner: ${error.message}`);
+    }
+  }
+
+  /**
+   * Stop barcode scanning
    */
   @Method()
   async stop(): Promise<void> {
-    try {
-      if (this.html5QrCode && this.Html5QrcodeScannerStateEnum && this.html5QrCode.getState() === this.Html5QrcodeScannerStateEnum.SCANNING) {
-        await this.html5QrCode.stop();
+    this.isScanning = false;
+    this.cleanup();
+    this.scanStop.emit();
+    this.focusLost.emit();
+  }
+
+  /**
+   * Start camera stream
+   */
+  private async startCamera(): Promise<void> {
+    const constraints: MediaStreamConstraints = {
+      video: {
+        facingMode: this.facingMode,
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+        ...(this.selectedCameraId && { deviceId: { exact: this.selectedCameraId } })
       }
-      this.clearTimers();
+    };
+
+    try {
+      this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+      if (this.videoElement) {
+        this.videoElement.srcObject = this.stream;
+
+        // Wait for video to load
+        await new Promise<void>((resolve, reject) => {
+          this.videoElement.onloadedmetadata = () => {
+            this.videoElement.play()
+              .then(() => {
+                console.log('Video playing, dimensions:', this.videoElement.videoWidth, 'x', this.videoElement.videoHeight);
+                resolve();
+              })
+              .catch(reject);
+          };
+          this.videoElement.onerror = reject;
+        });
+      }
     } catch (error) {
-      console.warn('Error stopping scanner:', error);
+      throw new Error(`Camera initialization failed: ${error.message}`);
     }
   }
 
   /**
-   * Clear all active timers
+   * Handle successful scan result
    */
-  private clearTimers(): void {
-    if (this.scanTimer) {
-      clearTimeout(this.scanTimer);
-      this.scanTimer = null;
-    }
-  }
-  /**
-   * Handle successful barcode scan with intelligent duplicate prevention
-   * Prevents rapid duplicate scans of the same code
-   */
-  private handleDecodedText(decodedText: InputScanData): void {
+  private handleScanResult(decodedText: string): void {
     if (this.isDestroyed || this.disabled || this.readonly) return;
 
+    const scannedData = processText(decodedText);
+
     // Check for duplicate scans
-    if (this.lastScan?.text !== decodedText.text) {
-      // Update value
-      const newValue = decodedText.text;
+    if (this.lastScan?.text !== scannedData.text) {
       const oldValue = this.value;
-      this.value = newValue;
+      this.value = scannedData.text;
 
       // Validate input
-      if (!this.validateInput(newValue)) {
+      if (!this.validateInput(this.value)) {
         return;
       }
 
       // Emit events
-      this.scan.emit(decodedText.text);
-
-      // Create and emit standard input events
+      this.scan.emit(scannedData.text);
       this.inputChange.emit();
 
-      if (oldValue !== newValue) {
+      if (oldValue !== this.value) {
         this.valueChange.emit();
       }
 
-      this.lastScan = decodedText;
+      this.lastScan = scannedData;
 
-      // Clear previous timer and set new one
-      this.clearTimers();
-      this.scanTimer = setTimeout(() => {
+      // Reset duplicate prevention after 2 seconds
+      setTimeout(() => {
         if (!this.isDestroyed) {
           this.lastScan = null;
         }
-      }, 5000);
+      }, 2000);
     }
   }
 
@@ -330,6 +552,36 @@ export class InputBarcode {
   }
 
   /**
+   * Handle errors
+   */
+  private handleError(message: string): void {
+    this.errorMessage = message;
+    this.scanError.emit(message);
+  }
+
+  /**
+   * Cleanup resources
+   */
+  private cleanup(): void {
+    // Clear scan timer
+    if (this.scanTimer) {
+      clearTimeout(this.scanTimer);
+      this.scanTimer = null;
+    }
+
+    // Stop camera stream
+    if (this.stream) {
+      this.stream.getTracks().forEach(track => track.stop());
+      this.stream = null;
+    }
+
+    // Clear video element
+    if (this.videoElement) {
+      this.videoElement.srcObject = null;
+    }
+  }
+
+  /**
    * Form association methods
    */
 
@@ -364,7 +616,6 @@ export class InputBarcode {
   async setFocus(): Promise<void> {
     if (!this.disabled) {
       await this.start();
-      this.focusGained.emit();
     }
   }
 
@@ -374,244 +625,119 @@ export class InputBarcode {
   @Method()
   async setBlur(): Promise<void> {
     await this.stop();
-    this.focusLost.emit();
   }
 
   /**
-   * Start the barcode scanner
+   * Get available cameras
    */
   @Method()
-  async start(): Promise<void> {
-    try {
-      if (!this.html5QrCode) {
-        throw new Error('Scanner not initialized');
-      }
-
-      const cameraConstraints = this.cameraId
-        ? this.cameraId
-        : { facingMode: this.facingMode };
-
-      await this.html5QrCode.start(
-        cameraConstraints,
-        this.cameraConfig,
-        (decodedText: string) => {
-          if (!this.isDestroyed) {
-            const scannedData = processText(decodedText);
-            this.handleDecodedText(scannedData);
-          }
-        },
-        (errorMessage: string) => {
-          // Silent error handling - most scan errors are expected
-          console.debug('Scan error (normal):', errorMessage);
-        }
-      );
-    } catch (error) {
-      console.error('Failed to start scanner:', error);
-      throw new Error(`Scanner initialization failed: ${error.message}`);
-    }
-  }
-
-
-  /**
-   * Dynamically load html5-qrcode classes to avoid import issues
-   */
-  private async loadHtml5QrcodeClasses(): Promise<void> {
-    if (this.Html5QrcodeClass && this.Html5QrcodeScannerStateEnum) {
-      return; // Already loaded
-    }
-
-    try {
-      console.log('Loading html5-qrcode classes dynamically...');
-
-      // Strategy 1: Try to import the full module
-      const html5QrcodeModule = await import('html5-qrcode');
-
-      if (html5QrcodeModule.Html5Qrcode) {
-        this.Html5QrcodeClass = html5QrcodeModule.Html5Qrcode;
-        this.Html5QrcodeScannerStateEnum = html5QrcodeModule.Html5QrcodeScannerState || {
-          SCANNING: 1,
-          PAUSED: 2,
-          NOT_STARTED: 0,
-          STOPPED: 3
-        };
-        console.log('Successfully loaded html5-qrcode classes via standard import');
-        return;
-      }
-    } catch (error) {
-      console.warn('Standard import failed:', error.message);
-    }
-
-    try {
-      // Strategy 2: Try to access via window object (CDN fallback)
-      if (typeof window !== 'undefined' && (window as any).Html5Qrcode) {
-        this.Html5QrcodeClass = (window as any).Html5Qrcode;
-        this.Html5QrcodeScannerStateEnum = (window as any).Html5QrcodeScannerState || {
-          SCANNING: 1,
-          PAUSED: 2,
-          NOT_STARTED: 0,
-          STOPPED: 3
-        };
-        console.log('Successfully loaded html5-qrcode classes via window object');
-        return;
-      }
-    } catch (error) {
-      console.warn('Window object access failed:', error.message);
-    }
-
-    throw new Error('Failed to load html5-qrcode classes via all strategies');
+  async getCameras(): Promise<MediaDeviceInfo[]> {
+    return this.availableCameras;
   }
 
   /**
-   * Get available cameras for the device
-   * @returns Promise resolving to array of camera devices
+   * Switch camera
    */
   @Method()
-  async getCameras(): Promise<any[]> {
-    try {
-      await this.loadHtml5QrcodeClasses();
-      const devices = await this.Html5QrcodeClass.getCameras();
-      return devices || [];
-    } catch (error) {
-      console.error('Failed to get cameras:', error);
-      return [];
-    }
+  async switchCamera(cameraId: string): Promise<void> {
+    this.cameraId = cameraId;
   }
 
   /**
-   * Component lifecycle - initialize scanner
+   * Get current scanner state
    */
-  async componentDidLoad(): Promise<void> {
-    try {
-      console.log('Initializing barcode scanner...');
-      console.log('Supported formats:', this.supportedFormats);
-
-      // Try different initialization strategies
-      await this.initializeScanner();
-
-      if (this.autoStart) {
-        await this.start();
-      }
-
-      console.log('Barcode scanner initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize scanner:', error);
-      console.error('Error details:', {
-        errorName: error.name,
-        errorMessage: error.message,
-        stack: error.stack
-      });
-    }
+  @Method()
+  async getState(): Promise<{ isScanning: boolean; hasPermission: boolean; errorMessage: string }> {
+    return {
+      isScanning: this.isScanning,
+      hasPermission: this.hasPermission,
+      errorMessage: this.errorMessage
+    };
   }
 
   /**
-   * Initialize scanner with fallback strategies
+   * Handle camera selection change
    */
-  private async initializeScanner(): Promise<void> {
-    // Check if we're in a test environment and skip intensive initialization
-    if (typeof window !== 'undefined' && (window as any).__karma__ ||
-        typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
-      console.log('Test environment detected, skipping camera initialization');
-      // Create a mock scanner for testing
-      this.html5QrCode = {
-        getState: () => 0,
-        start: () => Promise.resolve(),
-        stop: () => Promise.resolve()
-      } as any;
-      return;
-    }
-
-    // First ensure classes are loaded
-    await this.loadHtml5QrcodeClasses();
-
-    // Verify classes loaded correctly
-    if (!this.Html5QrcodeClass) {
-      throw new Error('Html5QrcodeClass not loaded properly');
-    }
-
-    console.log('Html5QrcodeClass loaded:', typeof this.Html5QrcodeClass);
-    console.log('Starting initialization with UUID:', this.uuidGeneric);
-
-    const strategies = [
-      // Strategy 1: Basic config without formats first
-      () => {
-        console.log('Trying strategy 1: Basic config without formats');
-        const config: any = {
-          verbose: false,
-          useBarCodeDetectorIfSupported: true
-        };
-        return new this.Html5QrcodeClass(this.uuidGeneric, config);
-      },
-
-      // Strategy 2: With supported formats (only if previous works)
-      () => {
-        console.log('Trying strategy 2: With supported formats');
-        // Ensure supportedFormats is safe to use
-        const safeFormats = Array.isArray(this.supportedFormats) ? this.supportedFormats : [0, 1, 2]; // QR, CODE_128, EAN_13
-        console.log('Using formats:', safeFormats);
-        const config: any = {
-          verbose: false,
-          formatsToSupport: safeFormats,
-          useBarCodeDetectorIfSupported: true
-        };
-        return new this.Html5QrcodeClass(this.uuidGeneric, config);
-      },
-
-      // Strategy 3: Minimal config
-      () => {
-        console.log('Trying strategy 3: Minimal config');
-        return new this.Html5QrcodeClass(this.uuidGeneric, { verbose: false });
-      },
-
-      // Strategy 4: No config
-      () => {
-        console.log('Trying strategy 4: No config');
-        return new this.Html5QrcodeClass(this.uuidGeneric);
-      }
-    ];
-
-    for (let i = 0; i < strategies.length; i++) {
-      try {
-        console.log(`Trying initialization strategy ${i + 1}...`);
-        this.html5QrCode = strategies[i]();
-        console.log(`Strategy ${i + 1} successful`);
-        return;
-      } catch (error) {
-        console.warn(`Strategy ${i + 1} failed:`, error.message);
-        if (i === strategies.length - 1) {
-          throw error; // Re-throw if all strategies failed
-        }
-      }
-    }
-  }
-
-  /**
-   * Component cleanup - stop scanner and clear resources
-   */
-  disconnectedCallback(): void {
-    this.isDestroyed = true;
-    this.clearTimers();
-
-    if (this.html5QrCode) {
-      this.html5QrCode.stop().catch(error => {
-        console.warn('Error during cleanup:', error);
-      });
-    }
-  }
-
+  private handleCameraChange = (event: Event) => {
+    const select = event.target as HTMLSelectElement;
+    this.switchCamera(select.value);
+  };
 
   render() {
     const hostStyle = {
       'width': this.width,
       'height': this.height,
-      'overflow': 'hidden',
       'display': 'inline-block',
+      'position': 'relative',
+      'overflow': 'hidden',
       'border-radius': '8px',
       'background-color': '#000'
     };
 
     return (
-      <Host style={hostStyle}>
-        <div id={this.uuidGeneric} style={{ width: '100%', height: '100%' }}></div>
+      <Host style={hostStyle} debug={this.debug}>
+        {/* Video element for camera feed */}
+        <video
+          ref={el => this.videoElement = el}
+          id={`video-${this.uuidGeneric}`}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover'
+          }}
+          playsInline
+          muted
+          aria-label={this.accessibilityLabel}
+          aria-describedby={this.ariaDescribedby}
+        />
+
+        {/* Camera controls overlay */}
+        {this.showCameraSelector && this.availableCameras.length > 1 && (
+          <div class="camera-controls">
+            <select onChange={this.handleCameraChange}>
+              {this.availableCameras.map(camera => (
+                <option
+                  key={camera.deviceId}
+                  value={camera.deviceId}
+                  selected={camera.deviceId === this.selectedCameraId}
+                >
+                  {camera.label || `Camera ${camera.deviceId.slice(0, 8)}`}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Debug info overlay */}
+        {this.debug && this.debugInfo && (
+          <div class="debug-overlay">
+            <p class="debug-message">{this.debugInfo}</p>
+          </div>
+        )}
+
+        {/* Error message overlay */}
+        {this.errorMessage && (
+          <div class="error-overlay">
+            <p class="error-message">{this.errorMessage}</p>
+          </div>
+        )}
+
+        {/* Status indicator */}
+        {this.isScanning && (
+          <div class="scanning-indicator" data-debug-info={this.debugInfo}>
+            <div class="scanning-frame"></div>
+          </div>
+        )}
+
+        {/* Value display for accessibility */}
+        <input
+          type="hidden"
+          name={this.name}
+          value={this.value}
+          required={this.required}
+          disabled={this.disabled}
+          readonly={this.readonly}
+        />
       </Host>
     );
   }

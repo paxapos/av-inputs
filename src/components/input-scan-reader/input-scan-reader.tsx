@@ -21,6 +21,10 @@ export class InputScanReader {
   @State() readingEnabled = false;
   @State() scannedText = '';
   @State() timeout: NodeJS.Timeout | null = null;
+  @State() isCapturing = false;
+
+  // Add missing property for tracking input timing
+  private lastInputTime: number = 0;
 
   /**
    * Standard form input properties
@@ -365,11 +369,58 @@ export class InputScanReader {
   }
 
   /**
+   * Handle input change events
+   */
+  private handleInputChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.scannedText = target.value;
+    this.value = target.value;
+    this.inputChange.emit(event);
+  }
+
+  /**
+   * Start scanning for barcode input
+   */
+  @Method()
+  async start(): Promise<void> {
+    if (this.disabled) return;
+
+    this.readingEnabled = true;
+    document.addEventListener('keydown', this.onKeydownHandler.bind(this));
+  }
+
+  /**
+   * Stop scanning for barcode input
+   */
+  @Method()
+  async stop(): Promise<void> {
+    this.readingEnabled = false;
+    document.removeEventListener('keydown', this.onKeydownHandler.bind(this));
+    this.reset();
+  }
+
+  /**
+   * Check if any input element is currently focused
+   */
+  private isAnyInputFocused(): boolean {
+    const activeElement = document.activeElement;
+    if (!activeElement) return false;
+
+    const inputTags = ['input', 'textarea', 'select'];
+    const isInput = inputTags.includes(activeElement.tagName.toLowerCase());
+    const isContentEditable = activeElement.getAttribute('contenteditable') === 'true';
+
+    return isInput || isContentEditable;
+  }
+
+  /**
    * Reset scanner state
    */
   private reset(): void {
     this.scannedText = '';
     this.reading = false;
+    this.isCapturing = false;
+    this.lastInputTime = 0;
   }
 
   /**
@@ -400,10 +451,23 @@ export class InputScanReader {
       return;
     }
 
+    // Don't intercept if another input is focused
+    if (this.isAnyInputFocused()) {
+      return;
+    }
+
+    // Don't intercept if user is typing in other elements
+    if (event.target !== document.body && event.target !== this.el) {
+      return;
+    }
+
     // Handle completion keys
     if (event.code === 'Enter' || event.code === 'NumpadEnter' || event.code === 'Tab') {
-      event.preventDefault();
-      this.onEnterHandler();
+      if (this.isCapturing) {
+        event.preventDefault();
+        this.onEnterHandler();
+        this.isCapturing = false;
+      }
       return;
     }
 
@@ -414,64 +478,37 @@ export class InputScanReader {
 
     // Handle special keys
     if (event.key === 'Backspace') {
-      event.preventDefault();
-      this.scannedText = this.scannedText.slice(0, -1);
+      if (this.isCapturing) {
+        event.preventDefault();
+        this.scannedText = this.scannedText.slice(0, -1);
+      }
       return;
     }
 
     if (event.key === 'Escape') {
-      event.preventDefault();
-      this.reset();
+      if (this.isCapturing) {
+        event.preventDefault();
+        this.reset();
+        this.isCapturing = false;
+      }
       return;
     }
 
     // Handle printable characters
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      event.preventDefault();
-      this.scannedText += event.key;
-      this.reading = true;
+      // Only prevent default and capture if we detect rapid input (scanner behavior)
+      // or if we're already capturing
+      const now = Date.now();
+      const isRapidInput = this.lastInputTime && (now - this.lastInputTime) < 50; // Less than 50ms between keystrokes
+
+      if (this.isCapturing || isRapidInput || this.scannedText.length === 0) {
+        event.preventDefault();
+        this.scannedText += event.key;
+        this.reading = true;
+        this.isCapturing = true;
+        this.lastInputTime = now;
+      }
     }
-  }
-
-  /**
-   * Global keydown listener
-   */
-  @Listen('keydown', { target: 'document' })
-  handleKeyDown(ev: KeyboardEvent): void {
-    if (this.readingEnabled) {
-      this.onKeydownHandler(ev);
-    }
-  }
-
-  /**
-   * Start scanning mode
-   */
-  @Method()
-  async start(): Promise<void> {
-    this.readingEnabled = true;
-    this.reset();
-
-    if (this.autoFocus) {
-      this.focusGained.emit();
-    }
-  }
-
-  /**
-   * Stop scanning mode
-   */
-  @Method()
-  async stop(): Promise<void> {
-    this.readingEnabled = false;
-    this.reset();
-    this.clearTimeout();
-  }
-
-  /**
-   * Handle manual input changes
-   */
-  private handleInputChange(ev: Event): void {
-    const target = ev.target as HTMLInputElement;
-    this.scannedText = target.value;
   }
 
   /**
@@ -479,6 +516,7 @@ export class InputScanReader {
    */
   disconnectedCallback(): void {
     this.clearTimeout();
+    document.removeEventListener('keydown', this.onKeydownHandler.bind(this));
   }
 
   /**

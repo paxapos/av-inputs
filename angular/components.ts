@@ -8,22 +8,22 @@ import { Components } from 'av-inputs';
 
 
 @ProxyCmp({
-  inputs: ['accessibilityLabel', 'ariaDescribedby', 'autoFocus', 'autoStart', 'cameraConfig', 'cameraId', 'disabled', 'facingMode', 'height', 'maxlength', 'minlength', 'name', 'pattern', 'placeholder', 'readonly', 'required', 'supportedFormats', 'tabOrder', 'validationMessage', 'value', 'width'],
-  methods: ['getState', 'stop', 'getFormValue', 'setFormValue', 'checkValidity', 'setFocus', 'setBlur', 'start', 'getCameras']
+  inputs: ['accessibilityLabel', 'ariaDescribedby', 'autoFocus', 'autoStart', 'cameraId', 'debug', 'disabled', 'facingMode', 'height', 'maxlength', 'minlength', 'name', 'pattern', 'placeholder', 'readonly', 'required', 'scanInterval', 'showCameraSelector', 'supportedFormats', 'tabOrder', 'validationMessage', 'value', 'width'],
+  methods: ['start', 'stop', 'getFormValue', 'setFormValue', 'checkValidity', 'setFocus', 'setBlur', 'getCameras', 'switchCamera', 'getState']
 })
 @Component({
   selector: 'input-barcode',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: '<ng-content></ng-content>',
   // eslint-disable-next-line @angular-eslint/no-inputs-metadata-property
-  inputs: ['accessibilityLabel', 'ariaDescribedby', 'autoFocus', 'autoStart', 'cameraConfig', 'cameraId', 'disabled', 'facingMode', 'height', 'maxlength', 'minlength', 'name', 'pattern', 'placeholder', 'readonly', 'required', 'supportedFormats', 'tabOrder', 'validationMessage', 'value', 'width'],
+  inputs: ['accessibilityLabel', 'ariaDescribedby', 'autoFocus', 'autoStart', 'cameraId', 'debug', 'disabled', 'facingMode', 'height', 'maxlength', 'minlength', 'name', 'pattern', 'placeholder', 'readonly', 'required', 'scanInterval', 'showCameraSelector', 'supportedFormats', 'tabOrder', 'validationMessage', 'value', 'width'],
 })
 export class InputBarcode {
   protected el: HTMLInputBarcodeElement;
   constructor(c: ChangeDetectorRef, r: ElementRef, protected z: NgZone) {
     c.detach();
     this.el = r.nativeElement;
-    proxyOutputs(this, this.el, ['inputChange', 'valueChange', 'focusGained', 'focusLost', 'validationFailed', 'scan']);
+    proxyOutputs(this, this.el, ['inputChange', 'valueChange', 'focusGained', 'focusLost', 'validationFailed', 'scan', 'scanStart', 'scanStop', 'permissionGranted', 'permissionDenied', 'scanError']);
   }
 }
 
@@ -55,6 +55,26 @@ export declare interface InputBarcode extends Components.InputBarcode {
    * Emitted when a barcode is successfully scanned
    */
   scan: EventEmitter<CustomEvent<string>>;
+  /**
+   * Emitted when scanning starts
+   */
+  scanStart: EventEmitter<CustomEvent<void>>;
+  /**
+   * Emitted when scanning stops
+   */
+  scanStop: EventEmitter<CustomEvent<void>>;
+  /**
+   * Emitted when camera permission is granted
+   */
+  permissionGranted: EventEmitter<CustomEvent<void>>;
+  /**
+   * Emitted when camera permission is denied
+   */
+  permissionDenied: EventEmitter<CustomEvent<void>>;
+  /**
+   * Emitted when an error occurs
+   */
+  scanError: EventEmitter<CustomEvent<string>>;
 }
 
 

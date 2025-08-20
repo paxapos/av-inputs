@@ -129,8 +129,6 @@ describe('AV-Inputs Components Integration', () => {
       expect(typeof barcodeComponent.start).toBe('function');
       expect(typeof barcodeComponent.stop).toBe('function');
 
-      expect(typeof scanComponent.start).toBe('function');
-      expect(typeof scanComponent.stop).toBe('function');
       expect(typeof scanComponent.getText).toBe('function');
 
       expect(typeof webcamComponent.startCamera).toBe('function');

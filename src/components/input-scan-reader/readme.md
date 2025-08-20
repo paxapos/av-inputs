@@ -150,7 +150,7 @@ Type: `Promise<void>`
 
 ### `start() => Promise<void>`
 
-Start scanning mode
+Start scanning for barcode input
 
 #### Returns
 
@@ -160,7 +160,7 @@ Type: `Promise<void>`
 
 ### `stop() => Promise<void>`
 
-Stop scanning mode
+Stop scanning for barcode input
 
 #### Returns
 

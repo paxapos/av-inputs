@@ -1,3 +1,190 @@
 :host {
   display: block;
+  position: relative;
+  border: 2px solid var(--av-border-color, #e0e0e0);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--av-background-color, #000);
+}
+
+:host([disabled]) {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+:host([readonly]) {
+  border-color: var(--av-readonly-border-color, #ccc);
+}
+
+/* Camera controls overlay */
+.camera-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+}
+
+.camera-controls select {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  max-width: 150px;
+}
+
+/* Error overlay */
+.error-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20;
+}
+
+.error-message {
+  color: var(--av-error-color, #ff6b6b);
+  text-align: center;
+  padding: 16px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  max-width: 90%;
+}
+
+/* Scanning indicator */
+.scanning-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 15;
+  pointer-events: none;
+}
+
+.scanning-frame {
+  width: 200px;
+  height: 200px;
+  border: 2px solid var(--av-primary-color, #4CAF50);
+  border-radius: 8px;
+  position: relative;
+  animation: scanning-pulse 2s infinite;
+  box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.3);
+}
+
+.scanning-frame::before,
+.scanning-frame::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--av-primary-color, #4CAF50);
+}
+
+.scanning-frame::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+
+.scanning-frame::after {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
+
+@keyframes scanning-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+/* Video element styling */
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+  display: block;
+}
+
+/* Debug overlay for development */
+:host([debug]) .scanning-indicator::after {
+  content: attr(data-debug-info);
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  font-size: 10px;
+  border-radius: 4px;
+  z-index: 25;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .camera-controls select {
+    font-size: 11px;
+    padding: 3px 6px;
+    max-width: 120px;
+  }
+
+  .scanning-frame {
+    width: 150px;
+    height: 150px;
+  }
+
+  .error-message {
+    font-size: 13px;
+    padding: 12px;
+  }
+}
+
+/* Focus states for accessibility */
+:host(:focus-within) {
+  outline: 2px solid var(--av-focus-color, #2196F3);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :host {
+    border-width: 3px;
+  }
+
+  .scanning-frame {
+    border-width: 3px;
+  }
+
+  .error-overlay {
+    background: rgba(0, 0, 0, 0.95);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .scanning-frame {
+    animation: none;
+  }
+
+  @keyframes scanning-pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
 }

@@ -5,6 +5,7 @@
  * It contains typing information for all components that exist in this project.
  */
 import { HTMLStencilElement, JSXBase } from "@stencil/core/internal";
+import { BarcodeFormat } from "@zxing/library";
 import { Event } from "@stencil/core";
 import { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 import { CameraDirection } from "./utils/camera.service";
@@ -13,6 +14,7 @@ import { DetectionImg } from "./utils/facepi.service";
 import { FaceLandmarkerResult } from "@mediapipe/tasks-vision";
 import { WebcamError } from "./components/input-file-from-webcam/input-file-from-webcam";
 import { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
+export { BarcodeFormat } from "@zxing/library";
 export { Event } from "@stencil/core";
 export { LabeledDescriptorsArray } from "./components/input-face-api-webcam/TrainedModel";
 export { CameraDirection } from "./utils/camera.service";
@@ -23,8 +25,8 @@ export { WebcamError } from "./components/input-file-from-webcam/input-file-from
 export { InputScanData } from "./components/input-scan-reader/input-scan-reader.types";
 export namespace Components {
     /**
-     * Camera-based barcode scanner component optimized for real-time scanning
-     * with intelligent duplicate prevention and error recovery
+     * Camera-based barcode scanner component using ZXing library
+     * Optimized for cross-browser compatibility and mobile support
      * Functions as a form input element with standard input properties
      */
     interface InputBarcode {
@@ -45,10 +47,6 @@ export namespace Components {
          */
         "autoStart": boolean;
         /**
-          * Camera configuration for optimal performance 10 FPS provides good balance between performance and accuracy
-         */
-        "cameraConfig": any;
-        /**
           * Specific camera device ID to use (optional)
          */
         "cameraId"?: string;
@@ -56,6 +54,10 @@ export namespace Components {
           * Check validity of current value
          */
         "checkValidity": () => Promise<boolean>;
+        /**
+          * Enable debug mode for troubleshooting
+         */
+        "debug"?: boolean;
         /**
           * Whether the input is disabled
          */
@@ -65,10 +67,9 @@ export namespace Components {
          */
         "facingMode": 'user' | 'environment';
         /**
-          * Get available cameras for the device
-          * @returns Promise resolving to array of camera devices
+          * Get available cameras
          */
-        "getCameras": () => Promise<any[]>;
+        "getCameras": () => Promise<MediaDeviceInfo[]>;
         /**
           * Get form value for form submission
          */
@@ -76,7 +77,7 @@ export namespace Components {
         /**
           * Get current scanner state
          */
-        "getState": () => Promise<any | null>;
+        "getState": () => Promise<{ isScanning: boolean; hasPermission: boolean; errorMessage: string; }>;
         /**
           * Height of the camera viewport
          */
@@ -110,6 +111,10 @@ export namespace Components {
          */
         "required"?: boolean;
         /**
+          * Scan interval in milliseconds
+         */
+        "scanInterval": number;
+        /**
           * Blur the scanner (stop scanning)
          */
         "setBlur": () => Promise<void>;
@@ -122,17 +127,25 @@ export namespace Components {
          */
         "setFormValue": (value: string) => Promise<void>;
         /**
-          * Start the barcode scanner
+          * Show camera selection controls
+         */
+        "showCameraSelector": boolean;
+        /**
+          * Start barcode scanning
          */
         "start": () => Promise<void>;
         /**
-          * Stop the scanner and clean up resources
+          * Stop barcode scanning
          */
         "stop": () => Promise<void>;
         /**
-          * Supported barcode and QR code formats for scanning Optimized selection for best performance Using format constants compatible with html5-qrcode v2.3.8+
+          * Supported barcode and QR code formats for scanning
          */
-        "supportedFormats": number[];
+        "supportedFormats": BarcodeFormat[];
+        /**
+          * Switch camera
+         */
+        "switchCamera": (cameraId: string) => Promise<void>;
         /**
           * Tab order for keyboard navigation
          */
@@ -611,11 +624,11 @@ export namespace Components {
          */
         "setFormValue": (value: string) => Promise<void>;
         /**
-          * Start scanning mode
+          * Start scanning for barcode input
          */
         "start": () => Promise<void>;
         /**
-          * Stop scanning mode
+          * Stop scanning for barcode input
          */
         "stop": () => Promise<void>;
         /**
@@ -656,10 +669,15 @@ declare global {
         "focusLost": FocusEvent;
         "validationFailed": Event;
         "scan": string;
+        "scanStart": void;
+        "scanStop": void;
+        "permissionGranted": void;
+        "permissionDenied": void;
+        "scanError": string;
     }
     /**
-     * Camera-based barcode scanner component optimized for real-time scanning
-     * with intelligent duplicate prevention and error recovery
+     * Camera-based barcode scanner component using ZXing library
+     * Optimized for cross-browser compatibility and mobile support
      * Functions as a form input element with standard input properties
      */
     interface HTMLInputBarcodeElement extends Components.InputBarcode, HTMLStencilElement {
@@ -780,8 +798,8 @@ declare global {
 }
 declare namespace LocalJSX {
     /**
-     * Camera-based barcode scanner component optimized for real-time scanning
-     * with intelligent duplicate prevention and error recovery
+     * Camera-based barcode scanner component using ZXing library
+     * Optimized for cross-browser compatibility and mobile support
      * Functions as a form input element with standard input properties
      */
     interface InputBarcode {
@@ -802,13 +820,13 @@ declare namespace LocalJSX {
          */
         "autoStart"?: boolean;
         /**
-          * Camera configuration for optimal performance 10 FPS provides good balance between performance and accuracy
-         */
-        "cameraConfig"?: any;
-        /**
           * Specific camera device ID to use (optional)
          */
         "cameraId"?: string;
+        /**
+          * Enable debug mode for troubleshooting
+         */
+        "debug"?: boolean;
         /**
           * Whether the input is disabled
          */
@@ -846,9 +864,29 @@ declare namespace LocalJSX {
          */
         "onInputChange"?: (event: InputBarcodeCustomEvent<Event>) => void;
         /**
+          * Emitted when camera permission is denied
+         */
+        "onPermissionDenied"?: (event: InputBarcodeCustomEvent<void>) => void;
+        /**
+          * Emitted when camera permission is granted
+         */
+        "onPermissionGranted"?: (event: InputBarcodeCustomEvent<void>) => void;
+        /**
           * Emitted when a barcode is successfully scanned
          */
         "onScan"?: (event: InputBarcodeCustomEvent<string>) => void;
+        /**
+          * Emitted when an error occurs
+         */
+        "onScanError"?: (event: InputBarcodeCustomEvent<string>) => void;
+        /**
+          * Emitted when scanning starts
+         */
+        "onScanStart"?: (event: InputBarcodeCustomEvent<void>) => void;
+        /**
+          * Emitted when scanning stops
+         */
+        "onScanStop"?: (event: InputBarcodeCustomEvent<void>) => void;
         /**
           * Emitted when input validation fails (standard form event)
          */
@@ -874,9 +912,17 @@ declare namespace LocalJSX {
          */
         "required"?: boolean;
         /**
-          * Supported barcode and QR code formats for scanning Optimized selection for best performance Using format constants compatible with html5-qrcode v2.3.8+
+          * Scan interval in milliseconds
          */
-        "supportedFormats"?: number[];
+        "scanInterval"?: number;
+        /**
+          * Show camera selection controls
+         */
+        "showCameraSelector"?: boolean;
+        /**
+          * Supported barcode and QR code formats for scanning
+         */
+        "supportedFormats"?: BarcodeFormat[];
         /**
           * Tab order for keyboard navigation
          */
@@ -1339,8 +1385,8 @@ declare module "@stencil/core" {
     export namespace JSX {
         interface IntrinsicElements {
             /**
-             * Camera-based barcode scanner component optimized for real-time scanning
-             * with intelligent duplicate prevention and error recovery
+             * Camera-based barcode scanner component using ZXing library
+             * Optimized for cross-browser compatibility and mobile support
              * Functions as a form input element with standard input properties
              */
             "input-barcode": LocalJSX.InputBarcode & JSXBase.HTMLAttributes<HTMLInputBarcodeElement>;

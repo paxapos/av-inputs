@@ -55,7 +55,7 @@
     "@mediapipe/tasks-vision": "0.10.21",
     "@stencil/core": "4.31.0",
     "@tensorflow/tfjs": "4.22.0",
-    "html5-qrcode": "2.3.4",
+    "@zxing/library": "^0.21.3",
     "ml-distance-euclidean": "^2.0.0",
     "uuid": "11.1.0"
   },

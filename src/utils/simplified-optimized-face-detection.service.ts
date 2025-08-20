@@ -192,7 +192,6 @@ export class SimplifiedOptimizedFaceDetectionService {
     this.isInitialized = false;
     this.isInitializing = false;
     this.lastDetectionTime = 0;
-    this.detectionQueue = null;
   }
 }
 

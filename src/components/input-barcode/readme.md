@@ -2,14 +2,17 @@
 
 ## 📷 Camera-Based Barcode Scanner Component
 
-A high-performance web component for scanning barcodes and QR codes using device camera. Built with html5-qrcode library, optimized for real-time scanning with minimal CPU usage and maximum compatibility across devices.
+A high-performance web component for scanning barcodes and QR codes using device camera. Built with ZXing library for maximum cross-browser compatibility and mobile support, including Capacitor apps.
 
 ### 🎯 Key Features
-- **Real-time scanning**: Optimized camera feed processing at 10 FPS for balance between performance and accuracy
-- **Multi-format support**: Supports 17+ barcode formats including QR codes, Code 128, EAN, UPC, PDF417, and more
+- **Cross-platform compatibility**: Works reliably across all modern browsers and mobile devices
+- **Capacitor ready**: Optimized for hybrid mobile applications
+- **Multi-format support**: Supports 13+ barcode formats including QR codes, Code 128, EAN, UPC, PDF417, and more
 - **Smart duplicate prevention**: Intelligent filtering to prevent multiple reads of the same code
-- **Auto-restart capability**: Automatic recovery from camera errors
-- **Mobile optimized**: Works seamlessly on mobile devices with front/back camera switching
+- **Form integration**: Acts as a standard form input with validation support
+- **Camera management**: Automatic camera selection with manual override options
+- **Error recovery**: Robust error handling with user-friendly messages
+- **Accessibility**: Full keyboard navigation and screen reader support
 
 ### 🔧 Use Cases
 - Inventory management systems
@@ -17,59 +20,74 @@ A high-performance web component for scanning barcodes and QR codes using device
 - Product information lookup
 - Event check-in systems
 - Asset tracking
+- Mobile commerce applications
 
 ### ⚡ Performance Optimizations
-- Debounced scanning to prevent duplicate reads
-- Optimized camera settings for best performance/quality ratio
-- Memory-efficient video processing
+- Efficient ZXing-based barcode detection
+- Configurable scan intervals for optimal performance
+- Memory-efficient camera stream management
 - Background error handling without UI blocking
+- Automatic resource cleanup
+
+### 🚀 Cross-Platform Support
+- **Web browsers**: Chrome, Firefox, Safari, Edge
+- **Mobile browsers**: iOS Safari, Chrome Mobile, Samsung Internet
+- **Capacitor apps**: iOS and Android hybrid applications
+- **PWAs**: Progressive Web Applications with camera access
 
 <!-- Auto Generated Below -->
 
 
 ## Overview
 
-Camera-based barcode scanner component optimized for real-time scanning
-with intelligent duplicate prevention and error recovery
+Camera-based barcode scanner component using ZXing library
+Optimized for cross-browser compatibility and mobile support
 Functions as a form input element with standard input properties
 
 ## Properties
 
-| Property             | Attribute             | Description                                                                                                                                             | Type                      | Default                                                                                                                                                                                                                                                                                                                                           |
-| -------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accessibilityLabel` | `accessibility-label` | ARIA label for accessibility                                                                                                                            | `string`                  | `'Barcode scanner input'`                                                                                                                                                                                                                                                                                                                         |
-| `ariaDescribedby`    | `aria-describedby`    | ARIA description for accessibility                                                                                                                      | `string`                  | `undefined`                                                                                                                                                                                                                                                                                                                                       |
-| `autoFocus`          | `auto-focus`          | Auto-focus the scanner when component loads                                                                                                             | `boolean`                 | `false`                                                                                                                                                                                                                                                                                                                                           |
-| `autoStart`          | `auto-start`          | Auto-start scanning when component loads                                                                                                                | `boolean`                 | `true`                                                                                                                                                                                                                                                                                                                                            |
-| `cameraConfig`       | `camera-config`       | Camera configuration for optimal performance 10 FPS provides good balance between performance and accuracy                                              | `any`                     | `{     fps: 10,     qrbox: { width: 250, height: 250 },     aspectRatio: 1.0   }`                                                                                                                                                                                                                                                                 |
-| `cameraId`           | `camera-id`           | Specific camera device ID to use (optional)                                                                                                             | `string`                  | `undefined`                                                                                                                                                                                                                                                                                                                                       |
-| `disabled`           | `disabled`            | Whether the input is disabled                                                                                                                           | `boolean`                 | `false`                                                                                                                                                                                                                                                                                                                                           |
-| `facingMode`         | `facing-mode`         | Camera facing mode: 'user' for front camera, 'environment' for back camera                                                                              | `"environment" \| "user"` | `'environment'`                                                                                                                                                                                                                                                                                                                                   |
-| `height`             | `height`              | Height of the camera viewport                                                                                                                           | `string`                  | `'200px'`                                                                                                                                                                                                                                                                                                                                         |
-| `maxlength`          | `maxlength`           | Maximum length for scanned value                                                                                                                        | `number`                  | `undefined`                                                                                                                                                                                                                                                                                                                                       |
-| `minlength`          | `minlength`           | Minimum length for scanned value                                                                                                                        | `number`                  | `undefined`                                                                                                                                                                                                                                                                                                                                       |
-| `name`               | `name`                | The name attribute for form submission                                                                                                                  | `string`                  | `undefined`                                                                                                                                                                                                                                                                                                                                       |
-| `pattern`            | `pattern`             | Pattern for input validation (regex)                                                                                                                    | `string`                  | `undefined`                                                                                                                                                                                                                                                                                                                                       |
-| `placeholder`        | `placeholder`         | Placeholder text when no value is present                                                                                                               | `string`                  | `'Scan a barcode or QR code'`                                                                                                                                                                                                                                                                                                                     |
-| `readonly`           | `readonly`            | Whether the input is readonly                                                                                                                           | `boolean`                 | `false`                                                                                                                                                                                                                                                                                                                                           |
-| `required`           | `required`            | Whether the input is required for form validation                                                                                                       | `boolean`                 | `false`                                                                                                                                                                                                                                                                                                                                           |
-| `supportedFormats`   | `supported-formats`   | Supported barcode and QR code formats for scanning Optimized selection for best performance Using format constants compatible with html5-qrcode v2.3.8+ | `number[]`                | `[     0,  // QR_CODE     1,  // CODE_128     2,  // EAN_13     3,  // EAN_8     4,  // UPC_A     5,  // UPC_E     6,  // CODE_39     7,  // CODE_93     8,  // CODABAR     9,  // ITF     10, // AZTEC     11, // DATA_MATRIX     12, // PDF_417     13, // MAXICODE     14, // RSS_14     15, // RSS_EXPANDED     16  // UPC_EAN_EXTENSION   ]` |
-| `tabOrder`           | `tab-order`           | Tab order for keyboard navigation                                                                                                                       | `number`                  | `undefined`                                                                                                                                                                                                                                                                                                                                       |
-| `validationMessage`  | `validation-message`  | Form validation message                                                                                                                                 | `string`                  | `undefined`                                                                                                                                                                                                                                                                                                                                       |
-| `value`              | `value`               | The value of the input (last scanned data)                                                                                                              | `string`                  | `''`                                                                                                                                                                                                                                                                                                                                              |
-| `width`              | `width`               | Width of the camera viewport                                                                                                                            | `string`                  | `'400px'`                                                                                                                                                                                                                                                                                                                                         |
+| Property             | Attribute              | Description                                                                | Type                      | Default                                                                                                                                                                                                                                                                                                                                                       |
+| -------------------- | ---------------------- | -------------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accessibilityLabel` | `accessibility-label`  | ARIA label for accessibility                                               | `string`                  | `'Barcode scanner input'`                                                                                                                                                                                                                                                                                                                                     |
+| `ariaDescribedby`    | `aria-describedby`     | ARIA description for accessibility                                         | `string`                  | `undefined`                                                                                                                                                                                                                                                                                                                                                   |
+| `autoFocus`          | `auto-focus`           | Auto-focus the scanner when component loads                                | `boolean`                 | `false`                                                                                                                                                                                                                                                                                                                                                       |
+| `autoStart`          | `auto-start`           | Auto-start scanning when component loads                                   | `boolean`                 | `true`                                                                                                                                                                                                                                                                                                                                                        |
+| `cameraId`           | `camera-id`            | Specific camera device ID to use (optional)                                | `string`                  | `undefined`                                                                                                                                                                                                                                                                                                                                                   |
+| `debug`              | `debug`                | Enable debug mode for troubleshooting                                      | `boolean`                 | `false`                                                                                                                                                                                                                                                                                                                                                       |
+| `disabled`           | `disabled`             | Whether the input is disabled                                              | `boolean`                 | `false`                                                                                                                                                                                                                                                                                                                                                       |
+| `facingMode`         | `facing-mode`          | Camera facing mode: 'user' for front camera, 'environment' for back camera | `"environment" \| "user"` | `'environment'`                                                                                                                                                                                                                                                                                                                                               |
+| `height`             | `height`               | Height of the camera viewport                                              | `string`                  | `'200px'`                                                                                                                                                                                                                                                                                                                                                     |
+| `maxlength`          | `maxlength`            | Maximum length for scanned value                                           | `number`                  | `undefined`                                                                                                                                                                                                                                                                                                                                                   |
+| `minlength`          | `minlength`            | Minimum length for scanned value                                           | `number`                  | `undefined`                                                                                                                                                                                                                                                                                                                                                   |
+| `name`               | `name`                 | The name attribute for form submission                                     | `string`                  | `undefined`                                                                                                                                                                                                                                                                                                                                                   |
+| `pattern`            | `pattern`              | Pattern for input validation (regex)                                       | `string`                  | `undefined`                                                                                                                                                                                                                                                                                                                                                   |
+| `placeholder`        | `placeholder`          | Placeholder text when no value is present                                  | `string`                  | `'Scan a barcode or QR code'`                                                                                                                                                                                                                                                                                                                                 |
+| `readonly`           | `readonly`             | Whether the input is readonly                                              | `boolean`                 | `false`                                                                                                                                                                                                                                                                                                                                                       |
+| `required`           | `required`             | Whether the input is required for form validation                          | `boolean`                 | `false`                                                                                                                                                                                                                                                                                                                                                       |
+| `scanInterval`       | `scan-interval`        | Scan interval in milliseconds                                              | `number`                  | `100`                                                                                                                                                                                                                                                                                                                                                         |
+| `showCameraSelector` | `show-camera-selector` | Show camera selection controls                                             | `boolean`                 | `false`                                                                                                                                                                                                                                                                                                                                                       |
+| `supportedFormats`   | `supported-formats`    | Supported barcode and QR code formats for scanning                         | `BarcodeFormat[]`         | `[     BarcodeFormat.QR_CODE,     BarcodeFormat.CODE_128,     BarcodeFormat.EAN_13,     BarcodeFormat.EAN_8,     BarcodeFormat.UPC_A,     BarcodeFormat.UPC_E,     BarcodeFormat.CODE_39,     BarcodeFormat.CODE_93,     BarcodeFormat.CODABAR,     BarcodeFormat.ITF,     BarcodeFormat.AZTEC,     BarcodeFormat.DATA_MATRIX,     BarcodeFormat.PDF_417   ]` |
+| `tabOrder`           | `tab-order`            | Tab order for keyboard navigation                                          | `number`                  | `undefined`                                                                                                                                                                                                                                                                                                                                                   |
+| `validationMessage`  | `validation-message`   | Form validation message                                                    | `string`                  | `undefined`                                                                                                                                                                                                                                                                                                                                                   |
+| `value`              | `value`                | The value of the input (last scanned data)                                 | `string`                  | `''`                                                                                                                                                                                                                                                                                                                                                          |
+| `width`              | `width`                | Width of the camera viewport                                               | `string`                  | `'400px'`                                                                                                                                                                                                                                                                                                                                                     |
 
 
 ## Events
 
-| Event              | Description                                                 | Type                      |
-| ------------------ | ----------------------------------------------------------- | ------------------------- |
-| `focusGained`      | Emitted when component gains focus (standard form event)    | `CustomEvent<FocusEvent>` |
-| `focusLost`        | Emitted when component loses focus (standard form event)    | `CustomEvent<FocusEvent>` |
-| `inputChange`      | Emitted when input value changes (standard form event)      | `CustomEvent<Event>`      |
-| `scan`             | Emitted when a barcode is successfully scanned              | `CustomEvent<string>`     |
-| `validationFailed` | Emitted when input validation fails (standard form event)   | `CustomEvent<Event>`      |
-| `valueChange`      | Emitted when input value is committed (standard form event) | `CustomEvent<Event>`      |
+| Event               | Description                                                 | Type                      |
+| ------------------- | ----------------------------------------------------------- | ------------------------- |
+| `focusGained`       | Emitted when component gains focus (standard form event)    | `CustomEvent<FocusEvent>` |
+| `focusLost`         | Emitted when component loses focus (standard form event)    | `CustomEvent<FocusEvent>` |
+| `inputChange`       | Emitted when input value changes (standard form event)      | `CustomEvent<Event>`      |
+| `permissionDenied`  | Emitted when camera permission is denied                    | `CustomEvent<void>`       |
+| `permissionGranted` | Emitted when camera permission is granted                   | `CustomEvent<void>`       |
+| `scan`              | Emitted when a barcode is successfully scanned              | `CustomEvent<string>`     |
+| `scanError`         | Emitted when an error occurs                                | `CustomEvent<string>`     |
+| `scanStart`         | Emitted when scanning starts                                | `CustomEvent<void>`       |
+| `scanStop`          | Emitted when scanning stops                                 | `CustomEvent<void>`       |
+| `validationFailed`  | Emitted when input validation fails (standard form event)   | `CustomEvent<Event>`      |
+| `valueChange`       | Emitted when input value is committed (standard form event) | `CustomEvent<Event>`      |
 
 
 ## Methods
@@ -84,15 +102,15 @@ Type: `Promise<boolean>`
 
 
 
-### `getCameras() => Promise<any[]>`
+### `getCameras() => Promise<MediaDeviceInfo[]>`
 
-Get available cameras for the device
+Get available cameras
 
 #### Returns
 
-Type: `Promise<any[]>`
+Type: `Promise<MediaDeviceInfo[]>`
 
-Promise resolving to array of camera devices
+
 
 ### `getFormValue() => Promise<string>`
 
@@ -104,13 +122,13 @@ Type: `Promise<string>`
 
 
 
-### `getState() => Promise<any | null>`
+### `getState() => Promise<{ isScanning: boolean; hasPermission: boolean; errorMessage: string; }>`
 
 Get current scanner state
 
 #### Returns
 
-Type: `Promise<any>`
+Type: `Promise<{ isScanning: boolean; hasPermission: boolean; errorMessage: string; }>`
 
 
 
@@ -152,7 +170,7 @@ Type: `Promise<void>`
 
 ### `start() => Promise<void>`
 
-Start the barcode scanner
+Start barcode scanning
 
 #### Returns
 
@@ -162,7 +180,23 @@ Type: `Promise<void>`
 
 ### `stop() => Promise<void>`
 
-Stop the scanner and clean up resources
+Stop barcode scanning
+
+#### Returns
+
+Type: `Promise<void>`
+
+
+
+### `switchCamera(cameraId: string) => Promise<void>`
+
+Switch camera
+
+#### Parameters
+
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| `cameraId` | `string` |             |
 
 #### Returns
 

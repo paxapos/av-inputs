@@ -38,37 +38,39 @@ Functions as a form input element for facial recognition data
 
 ## Properties
 
-| Property             | Attribute             | Description                                                                                                           | Type                                            | Default                                  |
-| -------------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------- |
-| `accessibilityLabel` | `accessibility-label` | ARIA label for accessibility                                                                                          | `string`                                        | `'Face detection and recognition input'` |
-| `ariaDescribedby`    | `aria-describedby`    | ARIA description for accessibility                                                                                    | `string`                                        | `undefined`                              |
-| `autoCapture`        | `auto-capture`        | Enable automatic photo capture when face is detected                                                                  | `boolean`                                       | `true`                                   |
-| `autoFocus`          | `auto-focus`          | Auto-focus the detection when component loads                                                                         | `boolean`                                       | `false`                                  |
-| `autoStart`          | `auto-start`          | Auto-start detection when component loads                                                                             | `boolean`                                       | `true`                                   |
-| `captureDelay`       | `capture-delay`       | Delay between automatic photo captures in milliseconds                                                                | `number`                                        | `3000`                                   |
-| `captureThreshold`   | `capture-threshold`   | Minimum confidence score for face detection to trigger photo capture                                                  | `number`                                        | `0.8`                                    |
-| `customValidation`   | `custom-validation`   |                                                                                                                       | `(value: string) => boolean`                    | `undefined`                              |
-| `detectionTimer`     | `detection-timer`     | Detection timer interval in milliseconds                                                                              | `number`                                        | `1500`                                   |
-| `disabled`           | `disabled`            | Whether the input is disabled                                                                                         | `boolean`                                       | `false`                                  |
-| `enableDetection`    | `enable-detection`    | Enable or disable face detection                                                                                      | `boolean`                                       | `true`                                   |
-| `facingMode`         | `facing-mode`         | Facing mode options following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value | `CameraDirection.Front \| CameraDirection.Rear` | `CameraDirection.Front`                  |
-| `flipButtonText`     | `flip-button-text`    | Text for the flip camera button                                                                                       | `string`                                        | `'Flip Camera'`                          |
-| `height`             | `height`              | Height of the video element                                                                                           | `number`                                        | `460`                                    |
-| `name`               | `name`                | The name attribute for form submission                                                                                | `string`                                        | `undefined`                              |
-| `placeholder`        | `placeholder`         | Placeholder text when no face is detected                                                                             | `string`                                        | `'No face detected'`                     |
-| `readonly`           | `readonly`            | Whether the input is readonly                                                                                         | `boolean`                                       | `false`                                  |
-| `required`           | `required`            | Whether the input is required for form validation                                                                     | `boolean`                                       | `false`                                  |
-| `scoreThreshold`     | `score-threshold`     | Score threshold to detect a face                                                                                      | `number`                                        | `0.65`                                   |
-| `showBoundingBoxes`  | `show-bounding-boxes` | Show bounding boxes around detected faces                                                                             | `boolean`                                       | `true`                                   |
-| `showControls`       | `show-controls`       | Show control buttons for starting/stopping detection                                                                  | `boolean`                                       | `true`                                   |
-| `showLandmarks`      | `show-landmarks`      | Show face landmarks on detected faces                                                                                 | `boolean`                                       | `false`                                  |
-| `startButtonText`    | `start-button-text`   | Text for the start detection button                                                                                   | `string`                                        | `'Start Detection'`                      |
-| `stopButtonText`     | `stop-button-text`    | Text for the stop detection button                                                                                    | `string`                                        | `'Stop Detection'`                       |
-| `tabOrder`           | `tab-order`           | Tab order for keyboard navigation                                                                                     | `number`                                        | `undefined`                              |
-| `trainedModel`       | `trained-model`       | Trained models to use for recognition and best match                                                                  | `LabeledDescriptors[]`                          | `undefined`                              |
-| `validationMessage`  | `validation-message`  | Form validation message                                                                                               | `string`                                        | `undefined`                              |
-| `value`              | `value`               | The value of the input (JSON string of face detection data)                                                           | `string`                                        | `''`                                     |
-| `width`              | `width`               | Width of the video element                                                                                            | `number`                                        | `460`                                    |
+| Property                | Attribute                 | Description                                                                                                           | Type                                            | Default                                  |
+| ----------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------- |
+| `accessibilityLabel`    | `accessibility-label`     | ARIA label for accessibility                                                                                          | `string`                                        | `'Face detection and recognition input'` |
+| `ariaDescribedby`       | `aria-describedby`        | ARIA description for accessibility                                                                                    | `string`                                        | `undefined`                              |
+| `autoCapture`           | `auto-capture`            | Enable automatic photo capture when face is detected                                                                  | `boolean`                                       | `true`                                   |
+| `autoFocus`             | `auto-focus`              | Auto-focus the detection when component loads                                                                         | `boolean`                                       | `false`                                  |
+| `autoStart`             | `auto-start`              | Auto-start detection when component loads                                                                             | `boolean`                                       | `true`                                   |
+| `captureDelay`          | `capture-delay`           | Delay between automatic photo captures in milliseconds                                                                | `number`                                        | `3000`                                   |
+| `captureThreshold`      | `capture-threshold`       | Minimum confidence score for face detection to trigger photo capture                                                  | `number`                                        | `0.8`                                    |
+| `customValidation`      | `custom-validation`       |                                                                                                                       | `(value: string) => boolean`                    | `undefined`                              |
+| `detectionMode`         | `detection-mode`          | Detection mode: 'interval' for automatic detection every X ms, 'manual' for on-demand detection                       | `"interval" \| "manual"`                        | `'interval'`                             |
+| `detectionTimer`        | `detection-timer`         | Detection timer interval in milliseconds                                                                              | `number`                                        | `1500`                                   |
+| `disabled`              | `disabled`                | Whether the input is disabled                                                                                         | `boolean`                                       | `false`                                  |
+| `enableDetection`       | `enable-detection`        | Enable or disable face detection                                                                                      | `boolean`                                       | `true`                                   |
+| `facingMode`            | `facing-mode`             | Facing mode options following https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackConstraints/facingMode#value | `CameraDirection.Front \| CameraDirection.Rear` | `CameraDirection.Front`                  |
+| `flipButtonText`        | `flip-button-text`        | Text for the flip camera button                                                                                       | `string`                                        | `'Flip Camera'`                          |
+| `height`                | `height`                  | Height of the video element                                                                                           | `number`                                        | `460`                                    |
+| `name`                  | `name`                    | The name attribute for form submission                                                                                | `string`                                        | `undefined`                              |
+| `placeholder`           | `placeholder`             | Placeholder text when no face is detected                                                                             | `string`                                        | `'No face detected'`                     |
+| `readonly`              | `readonly`                | Whether the input is readonly                                                                                         | `boolean`                                       | `false`                                  |
+| `required`              | `required`                | Whether the input is required for form validation                                                                     | `boolean`                                       | `false`                                  |
+| `scoreThreshold`        | `score-threshold`         | Score threshold to detect a face                                                                                      | `number`                                        | `0.65`                                   |
+| `showBoundingBoxes`     | `show-bounding-boxes`     | Show bounding boxes around detected faces                                                                             | `boolean`                                       | `true`                                   |
+| `showControls`          | `show-controls`           | Show control buttons for starting/stopping detection                                                                  | `boolean`                                       | `true`                                   |
+| `showLandmarks`         | `show-landmarks`          | Show face landmarks on detected faces                                                                                 | `boolean`                                       | `false`                                  |
+| `startButtonText`       | `start-button-text`       | Text for the start detection button                                                                                   | `string`                                        | `'Start Detection'`                      |
+| `stopButtonText`        | `stop-button-text`        | Text for the stop detection button                                                                                    | `string`                                        | `'Stop Detection'`                       |
+| `tabOrder`              | `tab-order`               | Tab order for keyboard navigation                                                                                     | `number`                                        | `undefined`                              |
+| `trainedModel`          | `trained-model`           | Trained models to use for recognition and best match                                                                  | `LabeledDescriptors[]`                          | `undefined`                              |
+| `useOptimizedDetection` | `use-optimized-detection` | Use optimized Web Worker for face detection (recommended for better performance)                                      | `boolean`                                       | `true`                                   |
+| `validationMessage`     | `validation-message`      | Form validation message                                                                                               | `string`                                        | `undefined`                              |
+| `value`                 | `value`                   | The value of the input (JSON string of face detection data)                                                           | `string`                                        | `''`                                     |
+| `width`                 | `width`                   | Width of the video element                                                                                            | `number`                                        | `460`                                    |
 
 
 ## Events
@@ -80,7 +82,7 @@ Functions as a form input element for facial recognition data
 | `cameraStopped`     | Event emitted when camera stops                        | `CustomEvent<void>`                                          |
 | `detectionStarted`  | Event emitted when detection starts                    | `CustomEvent<void>`                                          |
 | `detectionStopped`  | Event emitted when detection stops                     | `CustomEvent<void>`                                          |
-| `faceDetected`      | Event emitted when a face is detected in video stream  | `CustomEvent<DetectionImg>`                                  |
+| `faceDetected`      | Event emitted when a face is detected in video stream  | `CustomEvent<iFaceDetected>`                                 |
 | `faceStopDetection` | Event emitted when face detection was stopped          | `CustomEvent<void>`                                          |
 | `facingModeChanged` | Event emitted when facing mode changes                 | `CustomEvent<CameraDirection.Front \| CameraDirection.Rear>` |
 | `focusGained`       | Standard focus event                                   | `CustomEvent<FocusEvent>`                                    |
@@ -103,6 +105,16 @@ Type: `Promise<boolean>`
 
 
 
+### `detectFaceManually() => Promise<iFaceDetected | null>`
+
+Manually trigger a single face detection
+
+#### Returns
+
+Type: `Promise<iFaceDetected>`
+
+Promise with detection result including landmarks
+
 ### `getBlobImageDescriptors(blob: Blob) => Promise<FaceLandmarkerResult>`
 
 Giving a blob image, get the face landmarks
@@ -118,6 +130,26 @@ Giving a blob image, get the face landmarks
 Type: `Promise<FaceLandmarkerResult>`
 
 face landmarks
+
+### `getCurrentConfidence() => Promise<number | null>`
+
+Get current face confidence score
+
+#### Returns
+
+Type: `Promise<number>`
+
+Confidence score (0-1) or null if no face detected
+
+### `getCurrentLandmarks() => Promise<any[] | null>`
+
+Get current face landmarks if a face is detected
+
+#### Returns
+
+Type: `Promise<any[]>`
+
+Array of landmark points or null if no face detected
 
 ### `getDiagnosticInfo() => Promise<any>`
 
@@ -205,6 +237,22 @@ Set custom validity
 | Name      | Type     | Description |
 | --------- | -------- | ----------- |
 | `message` | `string` |             |
+
+#### Returns
+
+Type: `Promise<void>`
+
+
+
+### `setDetectionMode(mode: "interval" | "manual") => Promise<void>`
+
+Set detection mode programmatically
+
+#### Parameters
+
+| Name   | Type                     | Description                                                |
+| ------ | ------------------------ | ---------------------------------------------------------- |
+| `mode` | `"interval" \| "manual"` | 'interval' for automatic detection, 'manual' for on-demand |
 
 #### Returns
 
