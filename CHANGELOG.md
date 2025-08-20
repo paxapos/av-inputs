@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.0.0] - 2025-08-20
+
+### Changes
+- Implement feature X to enhance user experience and fix bug Y in module Z
+- Implement feature X to enhance user experience and optimize performance
+- feat(input-barcode): update to ZXing library for improved compatibility and add new features
+- Merge branch 'main' of github.com:paxapos/av-inputs
+- feat: Add modern SVG icons for face detection component
+
+
 ## [1.0.14] - 2025-08-17
 
 ### Changes
