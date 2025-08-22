@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.0] - 2025-08-22
+
+### Changes
+- feat: update package version to 2.0.0 and export additional types and interfaces in index.ts
+
+
 ## [2.0.0] - 2025-08-20
 
 ### Changes
