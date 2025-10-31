@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.1.2] - 2025-10-31
+
+### Changes
+- fix: add missing components/index.ts and update dependencies to latest versions
+- chore: bump version to 2.1.0
+- feat: update package version to 2.0.0 and export additional types and interfaces in index.ts
+- chore: bump version to 2.0.0
+- Implement feature X to enhance user experience and fix bug Y in module Z
+
+
 ## [2.1.0] - 2025-08-22
 
 ### Changes
