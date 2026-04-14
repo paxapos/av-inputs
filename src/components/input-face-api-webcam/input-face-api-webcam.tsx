@@ -480,7 +480,7 @@ export class InputFaceApiWebcam {
     }
 
     let lm;
-    if ( !blob ) {
+    if ( blob ) {
       lm = await faceapiService.getFaceLandmarksFromBlob( blob )
     } else {
       lm = await this.getFaceLandMarks()

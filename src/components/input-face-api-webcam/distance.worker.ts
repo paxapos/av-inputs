@@ -1,26 +1,6 @@
 import { NormalizedLandmark } from "@mediapipe/tasks-vision";
 import { LabeledDescriptors, LabeledDescriptorsArray } from "./TrainedModel";
-import { tensor } from "@tensorflow/tfjs";
 
-
-
-export async function tsDistance(v1: NormalizedLandmark[], v2: NormalizedLandmark[]) {
-    // Vectors
-    const t = tensor([1212,12]).print();
-    
-    console.info("el tensor es: ", t, v1, v2)
-    return t
-    /*
-    a = tf.placeholder(tf.float32, shape=[600, 52])
-    b = tf.placeholder(tf.float32, shape=[16000, 52])
-    # Cosine similarity
-    similarity = tf.reduce_sum(a[:, tf.newaxis] * b, axis=-1)
-    # Only necessary if vectors are not normalized
-    similarity /= tf.norm(a[:, tf.newaxis], axis=-1) * tf.norm(b, axis=-1)
-    # If you prefer the distance measure
-    distance = 1 - similarity
-    */
-}
 
 export async function getDistance(v1: NormalizedLandmark[], v2: NormalizedLandmark[]) {
     if ( v1.length !== v2.length ) throw new Error("v1 and v2 must have the same length")
